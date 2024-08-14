@@ -4,7 +4,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <InvariantGlobalization>true</InvariantGlobalization>
+    <InvariantGlobalization>flase</InvariantGlobalization>
     <RootNamespace>MRC_API</RootNamespace>
     <UserSecretsId>a7f015b0-8ddf-44a3-ab8e-8cbc617a6724</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
@@ -21,12 +21,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Business\Business.csproj" />
     <ProjectReference Include="..\Repository\Repository.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Payload\Request\" />
-    <Folder Include="Service\Interface\" />
-    <Folder Include="Service\Implement\" />
   </ItemGroup>
 
 </Project>
