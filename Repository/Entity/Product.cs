@@ -5,7 +5,7 @@ namespace Repository.Entity;
 
 public partial class Product
 {
-    public string Id { get; set; } = null!;
+    public Guid Id { get; set; }
 
     public string ProductName { get; set; } = null!;
 
@@ -15,9 +15,11 @@ public partial class Product
 
     public string Status { get; set; } = null!;
 
-    public string CategoryId { get; set; } = null!;
+    public Guid CategoryId { get; set; }
 
-    public int ImageId { get; set; }
+    public DateTime? InsDate { get; set; }
+
+    public DateTime? UpDate { get; set; }
 
     public virtual Category Category { get; set; } = null!;
 
