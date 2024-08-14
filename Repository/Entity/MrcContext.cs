@@ -27,9 +27,9 @@ public partial class MrcContext : DbContext
 
     public virtual DbSet<User> Users { get; set; }
 
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) { }
-//#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-//        => optionsBuilder.UseSqlServer("Server=QUANGHUY\\QHUY;database=MRC;user=sa;password=12345;TrustServerCertificate=True");
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
+        => optionsBuilder.UseSqlServer("Server=QUANGHUY\\QHUY;database=MRC;user=sa;password=12345;TrustServerCertificate=True");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -39,7 +39,10 @@ public partial class MrcContext : DbContext
 
             entity.ToTable("Category");
 
-            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Id)
+                .HasMaxLength(255)
+                .IsUnicode(false)
+                .HasColumnName("id");
             entity.Property(e => e.CategoryName)
                 .HasMaxLength(255)
                 .HasColumnName("categoryName");
@@ -51,11 +54,17 @@ public partial class MrcContext : DbContext
 
             entity.ToTable("Image");
 
-            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Id)
+                .HasMaxLength(255)
+                .IsUnicode(false)
+                .HasColumnName("id");
             entity.Property(e => e.LinkImage)
                 .HasMaxLength(255)
                 .HasColumnName("linkImage");
-            entity.Property(e => e.ProductId).HasColumnName("productId");
+            entity.Property(e => e.ProductId)
+                .HasMaxLength(255)
+                .IsUnicode(false)
+                .HasColumnName("productId");
 
             entity.HasOne(d => d.Product).WithMany(p => p.Images)
                 .HasForeignKey(d => d.ProductId)
@@ -68,7 +77,10 @@ public partial class MrcContext : DbContext
 
             entity.ToTable("Order");
 
-            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Id)
+                .HasMaxLength(255)
+                .IsUnicode(false)
+                .HasColumnName("id");
             entity.Property(e => e.CreateDate).HasColumnName("createDate");
             entity.Property(e => e.Status)
                 .HasMaxLength(50)
@@ -77,7 +89,10 @@ public partial class MrcContext : DbContext
             entity.Property(e => e.TotalPrice)
                 .HasColumnType("decimal(18, 2)")
                 .HasColumnName("totalPrice");
-            entity.Property(e => e.UserId).HasColumnName("userId");
+            entity.Property(e => e.UserId)
+                .HasMaxLength(255)
+                .IsUnicode(false)
+                .HasColumnName("userId");
 
             entity.HasOne(d => d.User).WithMany(p => p.Orders)
                 .HasForeignKey(d => d.UserId)
@@ -88,12 +103,21 @@ public partial class MrcContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("PK__OrderDet__3213E83FACD9307B");
 
-            entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.OrderId).HasColumnName("orderId");
+            entity.Property(e => e.Id)
+                .HasMaxLength(255)
+                .IsUnicode(false)
+                .HasColumnName("id");
+            entity.Property(e => e.OrderId)
+                .HasMaxLength(255)
+                .IsUnicode(false)
+                .HasColumnName("orderId");
             entity.Property(e => e.Price)
                 .HasColumnType("decimal(18, 2)")
                 .HasColumnName("price");
-            entity.Property(e => e.ProductId).HasColumnName("productId");
+            entity.Property(e => e.ProductId)
+                .HasMaxLength(255)
+                .IsUnicode(false)
+                .HasColumnName("productId");
             entity.Property(e => e.Quantity).HasColumnName("quantity");
 
             entity.HasOne(d => d.Order).WithMany(p => p.OrderDetails)
@@ -111,8 +135,14 @@ public partial class MrcContext : DbContext
 
             entity.ToTable("Product");
 
-            entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.CategoryId).HasColumnName("categoryId");
+            entity.Property(e => e.Id)
+                .HasMaxLength(255)
+                .IsUnicode(false)
+                .HasColumnName("id");
+            entity.Property(e => e.CategoryId)
+                .HasMaxLength(255)
+                .IsUnicode(false)
+                .HasColumnName("categoryId");
             entity.Property(e => e.Description)
                 .HasMaxLength(255)
                 .HasColumnName("description");
@@ -140,7 +170,10 @@ public partial class MrcContext : DbContext
 
             entity.HasIndex(e => e.UserName, "User_index_0");
 
-            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Id)
+                .HasMaxLength(255)
+                .IsUnicode(false)
+                .HasColumnName("id");
             entity.Property(e => e.Email)
                 .HasMaxLength(255)
                 .IsUnicode(false)
@@ -157,6 +190,10 @@ public partial class MrcContext : DbContext
                 .HasMaxLength(255)
                 .IsUnicode(false)
                 .HasColumnName("password");
+            entity.Property(e => e.Role)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .HasColumnName("role");
             entity.Property(e => e.Status)
                 .HasMaxLength(255)
                 .HasColumnName("status");

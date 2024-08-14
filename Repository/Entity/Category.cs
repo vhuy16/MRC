@@ -5,7 +5,7 @@ namespace Repository.Entity;
 
 public partial class Category
 {
-    public int Id { get; set; }
+    public string Id { get; set; } = null!;
 
     public string? CategoryName { get; set; }
 

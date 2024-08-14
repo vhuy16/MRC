@@ -5,9 +5,9 @@ namespace Repository.Entity;
 
 public partial class Order
 {
-    public int Id { get; set; }
+    public string Id { get; set; } = null!;
 
-    public int? UserId { get; set; }
+    public string? UserId { get; set; }
 
     public decimal? TotalPrice { get; set; }
 
