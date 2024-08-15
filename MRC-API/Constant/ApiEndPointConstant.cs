@@ -13,7 +13,10 @@
         public static class User
         {
             public const string UserEndPoint = ApiEndpoint + "/user";
-            public const string RegisterAdmin = UserEndPoint + "admin";
+            public const string RegisterAdmin = UserEndPoint + "/admin";
+            public const string RegisterManager = UserEndPoint + "/Manager";
+            public const string RegisterCustomer = UserEndPoint + "/Customer";
+            public const string Login = UserEndPoint + "/login";
         }
     }
 }
