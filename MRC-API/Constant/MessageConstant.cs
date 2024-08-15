@@ -10,5 +10,10 @@
         {
             public const string InvalidUsernameOrPassword = "Tên đăng nhập hoặc mật khẩu không chính xác";
         }
+
+        public static class PatternMessage
+        {
+            public const string EmailIncorrect = "Email không đúng định dạng";
+        }
     }
 }

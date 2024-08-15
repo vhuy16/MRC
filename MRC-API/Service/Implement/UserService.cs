@@ -2,6 +2,7 @@
 using Bean_Mind.API.Utils;
 using Business.Interface;
 using Microsoft.AspNetCore.Identity.Data;
+using MRC_API.Constant;
 using MRC_API.Payload.Request.User;
 using MRC_API.Payload.Response.User;
 using MRC_API.Service.Interface;
@@ -9,6 +10,7 @@ using MRC_API.Utils;
 using Repository.Entity;
 using Repository.Enum;
 using System.Linq.Expressions;
+using System.Text.RegularExpressions;
 
 namespace MRC_API.Service.Implement
 {
@@ -28,7 +30,7 @@ namespace MRC_API.Service.Implement
                 Password = PasswordUtil.HashPassword(createNewAccountRequest.Password),
                 InsDate = TimeUtils.GetCurrentSEATime(),
                 UpDate = TimeUtils.GetCurrentSEATime(),
-                Role = RoleEnum.Customer.GetDescriptionFromEnum()
+                Role = RoleEnum.Admin.GetDescriptionFromEnum()
 
             };
             await _unitOfWork.GetRepository<User>().InsertAsync(newUser);
@@ -48,11 +50,18 @@ namespace MRC_API.Service.Implement
         public async Task<CreateNewAccountResponse> CreateNewManagerAccount(CreateNewAccountRequest createNewAccountRequest)
         {
             _logger.LogInformation($"create new user with {createNewAccountRequest.UserName}");
+
+            string emailPattern = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
+            if (!Regex.IsMatch(createNewAccountRequest.Email, emailPattern))
+            {
+                throw new BadHttpRequestException(MessageConstant.PatternMessage.EmailIncorrect);
+            }
             User newUser = new User()
             {
                 Id = Guid.NewGuid(),
                 UserName = createNewAccountRequest.UserName,
                 Password = PasswordUtil.HashPassword(createNewAccountRequest.Password),
+                Email = createNewAccountRequest.Email,
                 InsDate = TimeUtils.GetCurrentSEATime(),
                 UpDate = TimeUtils.GetCurrentSEATime(),
                 Role = RoleEnum.Manager.GetDescriptionFromEnum()
@@ -67,6 +76,7 @@ namespace MRC_API.Service.Implement
                 {
                     Username = newUser.UserName,
                     Password = newUser.Password,
+                    Email = newUser.Email
                 };
             }
             return createNewAccountResponse;
@@ -114,7 +124,7 @@ namespace MRC_API.Service.Implement
             Tuple<String, Guid> guildClaim = new Tuple<string, Guid>("userID", user.Id);
             LoginResponse loginResponse = new LoginResponse()
             {
-                RoleEnum = role,
+                RoleEnum = role.ToString(),
                 UserId = user.Id,
                 UserName = user.UserName,
             };

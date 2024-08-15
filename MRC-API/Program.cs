@@ -1,4 +1,5 @@
 using Microsoft.OpenApi.Models;
+using MRC_API.Middlewares;
 using Prepare;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -66,6 +67,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 app.UseHttpsRedirection();
 

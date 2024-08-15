@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Azure;
+using Bean_Mind.API.Utils;
+using Microsoft.AspNetCore.Mvc;
 using MRC_API.Constant;
 using MRC_API.Payload.Request.User;
 using MRC_API.Payload.Response;
@@ -30,15 +32,20 @@ namespace MRC_API.Controllers
 
         [HttpPost(ApiEndPointConstant.User.RegisterManager)]
         [ProducesResponseType(typeof(CreateNewAccountResponse), StatusCodes.Status200OK)]
-        [ProducesErrorResponseType(typeof(ProblemDetails))]
+        [ProducesErrorResponseType(typeof(BadRequestObjectResult))]
         public async Task<IActionResult> CreateNewMangerAccount([FromBody] CreateNewAccountRequest createNewAccountRequest)
         {
             CreateNewAccountResponse createNewAccountResponse = await _userService.CreateNewManagerAccount(createNewAccountRequest);
             if (createNewAccountResponse == null)
             {
-                return Problem(MessageConstant.UserMessage.CreateUserAdminFail);
+                return BadRequest(new ErrorResponse()
+                {
+                    StatusCode = StatusCodes.Status400BadRequest,
+                    Error = "Failed to create teacher",
+                    TimeStamp = TimeUtils.GetCurrentSEATime()
+                });
             }
-            return CreatedAtAction(nameof(CreateNewAccount), createNewAccountResponse);
+            return Ok(createNewAccountResponse);
         }
         [HttpPost(ApiEndPointConstant.User.RegisterCustomer)]
         [ProducesResponseType(typeof(CreateNewAccountResponse), StatusCodes.Status200OK)]

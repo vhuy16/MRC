@@ -8,9 +8,6 @@ namespace MRC_API.Payload.Request.User
         public string UserName { get; set; }
         [Required(ErrorMessage = "Name is missing")]
         public string Password { get; set; }
-        public CreateNewAccountRequest()
-        {
-
-        }
+        public string Email { get; set; }
     }
 }

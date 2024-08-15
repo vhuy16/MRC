@@ -8,7 +8,7 @@ namespace MRC_API.Service.Interface
        Task<CreateNewAccountResponse> CreateNewAdminAccount(CreateNewAccountRequest createNewAccountRequest);
        Task<CreateNewAccountResponse> CreateNewManagerAccount(CreateNewAccountRequest createNewAccountRequest);
        Task<CreateNewAccountResponse> CreateNewCustomerAccount(CreateNewAccountRequest createNewAccountRequest);
-       Task<LoginResponse> Login(Payload.Request.User.LoginRequest loginRequest);
+       Task<LoginResponse> Login(LoginRequest loginRequest);
 
     }
 }
