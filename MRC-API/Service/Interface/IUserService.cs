@@ -5,7 +5,10 @@ namespace MRC_API.Service.Interface
 {
     public interface IUserService
     {
-       Task<CreateNewAccountResponse> CreateNewAccount(CreateNewAccountRequest createNewAccountRequest);
+       Task<CreateNewAccountResponse> CreateNewAdminAccount(CreateNewAccountRequest createNewAccountRequest);
+       Task<CreateNewAccountResponse> CreateNewManagerAccount(CreateNewAccountRequest createNewAccountRequest);
+       Task<CreateNewAccountResponse> CreateNewCustomerAccount(CreateNewAccountRequest createNewAccountRequest);
+       Task<LoginResponse> Login(Payload.Request.User.LoginRequest loginRequest);
 
     }
 }
