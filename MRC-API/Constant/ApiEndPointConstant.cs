@@ -24,5 +24,10 @@
             public const string CategoryEndPoint = ApiEndpoint + "/category";
             public const string CreateNewCategory = CategoryEndPoint;
         }
+        public static class Product
+        {
+            public const string ProductEndpoint = ApiEndpoint + "/Product";
+            public const string CreateNewProduct = ProductEndpoint;
+        }
     }
 }

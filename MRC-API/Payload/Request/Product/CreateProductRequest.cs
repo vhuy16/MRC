@@ -14,6 +14,6 @@ namespace MRC_API.Payload.Request.Product
 
         public Guid CategoryId { get; set; }
 
-        public virtual ICollection<Image> Images { get; set; } = new List<Image>();
+        //public Image ImageLink { get; set; }
     }
 }
