@@ -25,5 +25,7 @@ public partial class User
 
     public DateTime? UpDate { get; set; }
 
+    public string? PhoneNumber { get; set; }
+
     public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
 }
