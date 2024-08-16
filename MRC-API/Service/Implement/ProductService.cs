@@ -7,30 +7,48 @@ using MRC_API.Service.Interface;
 using MRC_API.Utils;
 using Repository.Entity;
 using Repository.Enum;
+using System.Net.Http.Headers;
+using System.Text.Json;
 
 namespace MRC_API.Service.Implement
 {
     public class ProductService : BaseService<Product>, IProductService
     {
+        private const string FirebaseStorageBaseUrl = "https://firebasestorage.googleapis.com/v0/b/mrc-firebase-d6e85.appspot.com/o";
         public ProductService(IUnitOfWork<MrcContext> unitOfWork, ILogger<Product> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
         }
         public async Task<CreateProductResponse> CreateProduct(CreateProductRequest createProductRequest)
         {
+            
             Product product = new Product()
             {
                 Id = Guid.NewGuid(),
                 ProductName = createProductRequest.ProductName,
                 CategoryId = createProductRequest.CategoryId,
                 Description = createProductRequest.Description,
-                //Images = createProductRequest.ImageLink
                 InsDate = TimeUtils.GetCurrentSEATime(),
                 UpDate = TimeUtils.GetCurrentSEATime(),
                 Quantity = createProductRequest.Quantity,
                 Status = StatusEnum.Available.GetDescriptionFromEnum(),
-                
+                Images = new List<Image>()               
             };
 
+            if (createProductRequest.ImageLink != null && createProductRequest.ImageLink.Any())
+            {
+                var imageUrls = await UploadFilesToFirebase(createProductRequest.ImageLink);
+                foreach (var imageUrl in imageUrls)
+                {
+                    product.Images.Add(new Image 
+                    {
+                        Id = Guid.NewGuid(),
+                        ProductId = product.Id,
+                        InsDate = TimeUtils.GetCurrentSEATime(),
+                        UpDate = TimeUtils.GetCurrentSEATime(),
+                        LinkImage = imageUrl 
+                    });
+                }
+            } 
             await _unitOfWork.GetRepository<Product>().InsertAsync(product);
             bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
             CreateProductResponse createProductResponse = null;
@@ -41,7 +59,7 @@ namespace MRC_API.Service.Implement
                 {
                     Id = product.Id,
                     Description = product.Description,
-                    Images = product.Images,
+                    Images = product.Images.Select(i => i.LinkImage).ToList(),
                     ProductName = product.ProductName,
                     Quantity = product.Quantity,
                     CategoryName = category.CategoryName,
@@ -49,6 +67,61 @@ namespace MRC_API.Service.Implement
 
             }
             return createProductResponse;
+        }
+        private async Task<List<string>> UploadFilesToFirebase(List<IFormFile> formFiles)
+        {
+            var uploadedUrls = new List<string>();
+
+            try
+            {
+                using (var client = new HttpClient())
+                {
+                    foreach (var formFile in formFiles)
+                    {
+                        if (formFile.Length > 0)
+                        {
+                            string fileName = Path.GetFileName(formFile.FileName);
+                            string firebaseStorageUrl = $"{FirebaseStorageBaseUrl}?uploadType=media&name=images/{Guid.NewGuid()}_{fileName}";
+
+                            using (var stream = new MemoryStream())
+                            {
+                                await formFile.CopyToAsync(stream);
+                                stream.Position = 0;
+                                var content = new ByteArrayContent(stream.ToArray());
+                                content.Headers.ContentType = new MediaTypeHeaderValue(formFile.ContentType);
+
+                                var response = await client.PostAsync(firebaseStorageUrl, content);
+                                if (response.IsSuccessStatusCode)
+                                {
+                                    var responseBody = await response.Content.ReadAsStringAsync();
+                                    var downloadUrl = ParseDownloadUrl(responseBody, fileName);
+                                    uploadedUrls.Add(downloadUrl);
+                                }
+                                else
+                                {
+                                    var errorMessage = $"Error uploading file {fileName} to Firebase Storage. Status Code: {response.StatusCode}\nContent: {await response.Content.ReadAsStringAsync()}";
+
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+
+            }
+
+            return uploadedUrls;
+        }
+
+        private string ParseDownloadUrl(string responseBody, string fileName)
+        {
+            // This assumes the response contains a JSON object with the field "name" which is the path to the uploaded file.
+            var json = JsonDocument.Parse(responseBody);
+            var nameElement = json.RootElement.GetProperty("name");
+            var downloadUrl = $"{FirebaseStorageBaseUrl}/{Uri.EscapeDataString(nameElement.GetString())}?alt=media";
+            return downloadUrl;
         }
     }
 }

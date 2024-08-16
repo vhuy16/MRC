@@ -14,6 +14,6 @@ namespace MRC_API.Payload.Request.Product
 
         public Guid CategoryId { get; set; }
 
-        //public Image ImageLink { get; set; }
+        public List<IFormFile> ImageLink { get; set; } = new List<IFormFile>();
     }
 }
