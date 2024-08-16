@@ -17,7 +17,7 @@ namespace MRC_API.Controllers
         [HttpPost(ApiEndPointConstant.Product.CreateNewProduct)]
         [ProducesResponseType(typeof(CreateProductResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
-        public async Task<IActionResult> CreateProduct(CreateProductRequest createProductRequest)
+        public async Task<IActionResult> CreateProduct([FromForm] CreateProductRequest createProductRequest)
         {
            CreateProductResponse createProductResponse = await _productService.CreateProduct(createProductRequest);
             if(createProductResponse == null)
