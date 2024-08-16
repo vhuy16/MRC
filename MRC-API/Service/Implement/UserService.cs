@@ -10,6 +10,7 @@ using MRC_API.Utils;
 using Repository.Entity;
 using Repository.Enum;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Text.RegularExpressions;
 
 namespace MRC_API.Service.Implement
@@ -28,6 +29,11 @@ namespace MRC_API.Service.Implement
             {
                 throw new BadHttpRequestException(MessageConstant.PatternMessage.EmailIncorrect);
             }
+            string phonePattern = @"^0\d{9}$";
+            if (!Regex.IsMatch(createNewAccountRequest.PhoneNumber, phonePattern))
+            {
+                throw new BadHttpRequestException(MessageConstant.PatternMessage.PhoneIncorrect);
+            }
             User newUser = new User()
             {
                 Id = Guid.NewGuid(),
@@ -36,6 +42,7 @@ namespace MRC_API.Service.Implement
                 InsDate = TimeUtils.GetCurrentSEATime(),
                 UpDate = TimeUtils.GetCurrentSEATime(),
                 Gender = createNewAccountRequest.Gender.GetDescriptionFromEnum().ToString(),
+                PhoneNumber = createNewAccountRequest.PhoneNumber,
                 Role = RoleEnum.Admin.GetDescriptionFromEnum()
 
             };
@@ -62,6 +69,32 @@ namespace MRC_API.Service.Implement
             {
                 throw new BadHttpRequestException(MessageConstant.PatternMessage.EmailIncorrect);
             }
+            string phonePattern = @"^0\d{9}$";
+            if (!Regex.IsMatch(createNewAccountRequest.PhoneNumber, phonePattern))
+            {
+                throw new BadHttpRequestException(MessageConstant.PatternMessage.PhoneIncorrect);
+            }
+            var manager = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
+                predicate: m => m.UserName.Equals(createNewAccountRequest.UserName));
+
+            if (manager != null)
+            {
+                throw new BadHttpRequestException(MessageConstant.UserMessage.AccountExisted);
+            }
+            var managerPhone = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
+                predicate: m => m.PhoneNumber.Equals(createNewAccountRequest.PhoneNumber));
+
+            if (managerPhone != null)
+            {
+                throw new BadHttpRequestException(MessageConstant.UserMessage.PhoneExisted);
+            }
+            var managerEmail = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
+                predicate: m => m.Email.Equals(createNewAccountRequest.Email));
+
+            if (managerEmail != null)
+            {
+                throw new BadHttpRequestException(MessageConstant.UserMessage.EmailExisted);
+            }
             User newUser = new User()
             {
                 Id = Guid.NewGuid(),
@@ -72,6 +105,7 @@ namespace MRC_API.Service.Implement
                 InsDate = TimeUtils.GetCurrentSEATime(),
                 UpDate = TimeUtils.GetCurrentSEATime(),
                 //Status = true,
+                PhoneNumber = createNewAccountRequest.PhoneNumber,
                 Gender = createNewAccountRequest.Gender.GetDescriptionFromEnum().ToString(),
                 Role = RoleEnum.Manager.GetDescriptionFromEnum()
 
@@ -88,7 +122,8 @@ namespace MRC_API.Service.Implement
                     Password = newUser.Password,
                     Email = newUser.Email,
                     FullName = newUser.FullName,
-                    Gender = gender
+                    Gender = gender,
+                    PhoneNumber = newUser.PhoneNumber
                 };
             }
             return createNewAccountResponse;
@@ -102,18 +137,48 @@ namespace MRC_API.Service.Implement
             {
                 throw new BadHttpRequestException(MessageConstant.PatternMessage.EmailIncorrect);
             }
+            string phonePattern = @"^0\d{9}$";
+            if (!Regex.IsMatch(createNewAccountRequest.PhoneNumber, phonePattern))
+            {
+                throw new BadHttpRequestException(MessageConstant.PatternMessage.PhoneIncorrect);
+            }
+            var manager = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
+                predicate: m => m.UserName.Equals(createNewAccountRequest.UserName));
+
+            if (manager != null)
+            {
+                throw new BadHttpRequestException(MessageConstant.UserMessage.AccountExisted);
+            }
+            var managerPhone = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
+                predicate: m => m.PhoneNumber.Equals(createNewAccountRequest.PhoneNumber));
+
+            if (managerPhone != null)
+            {
+                throw new BadHttpRequestException(MessageConstant.UserMessage.PhoneExisted);
+            }
+            var managerEmail = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
+                predicate: m => m.Email.Equals(createNewAccountRequest.Email));
+
+            if (managerEmail != null)
+            {
+                throw new BadHttpRequestException(MessageConstant.UserMessage.EmailExisted);
+            }
             User newUser = new User()
             {
                 Id = Guid.NewGuid(),
                 UserName = createNewAccountRequest.UserName,
                 Password = PasswordUtil.HashPassword(createNewAccountRequest.Password),
+                FullName = createNewAccountRequest.FullName,
+                Email = createNewAccountRequest.Email,
                 InsDate = TimeUtils.GetCurrentSEATime(),
                 UpDate = TimeUtils.GetCurrentSEATime(),
-                Role = RoleEnum.Customer.GetDescriptionFromEnum()
-
+                Role = RoleEnum.Customer.GetDescriptionFromEnum(),
+                PhoneNumber = createNewAccountRequest.PhoneNumber,
+                Gender = createNewAccountRequest.Gender.GetDescriptionFromEnum().ToString()
             };
             await _unitOfWork.GetRepository<User>().InsertAsync(newUser);
             bool isSuccesfully = await _unitOfWork.CommitAsync() > 0;
+            GenderEnum gender = EnumUtil.ParseEnum<GenderEnum>(newUser.Gender);
             CreateNewAccountResponse createNewAccountResponse = null;
             if (isSuccesfully)
             {
@@ -121,6 +186,10 @@ namespace MRC_API.Service.Implement
                 {
                     Username = newUser.UserName,
                     Password = newUser.Password,
+                    Email = newUser.Email,
+                    FullName = newUser.FullName,
+                    Gender = gender,
+                    PhoneNumber = newUser.PhoneNumber
                 };
             }
             return createNewAccountResponse;
