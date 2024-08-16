@@ -18,5 +18,11 @@
             public const string RegisterCustomer = UserEndPoint + "/Customer";
             public const string Login = UserEndPoint + "/login";
         }
+
+        public static class Category
+        {
+            public const string CategoryEndPoint = ApiEndpoint + "/category";
+            public const string CreateNewCategory = CategoryEndPoint;
+        }
     }
 }

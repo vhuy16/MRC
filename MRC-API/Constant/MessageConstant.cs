@@ -5,6 +5,9 @@
         public static class UserMessage
         {
             public const string CreateUserAdminFail = "tạo tài khoản admin thất bại";
+            public const string AccountExisted = "Tài khoản đã tồn tại";
+            public const string EmailExisted = "Email đã tồn tại";
+            public const string PhoneExisted = "Số điện thoại đã tồn tại";
         }
         public static class LoginMessage
         {
@@ -14,6 +17,12 @@
         public static class PatternMessage
         {
             public const string EmailIncorrect = "Email không đúng định dạng";
+            public const string PhoneIncorrect = "Số điện thoại không định dạng";
+        }
+
+        public static class CategoryMessage
+        {
+            public const string CreateCategoryFail = "Tạo mới category thất bại";
         }
     }
 }
