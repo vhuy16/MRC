@@ -19,11 +19,11 @@ namespace MRC_API.Service.Implement
         {
             Product product = new Product()
             {
-                Id = new Guid(),
+                Id = Guid.NewGuid(),
                 ProductName = createProductRequest.ProductName,
                 CategoryId = createProductRequest.CategoryId,
                 Description = createProductRequest.Description,
-                Images = createProductRequest.Images,
+                //Images = createProductRequest.ImageLink
                 InsDate = TimeUtils.GetCurrentSEATime(),
                 UpDate = TimeUtils.GetCurrentSEATime(),
                 Quantity = createProductRequest.Quantity,

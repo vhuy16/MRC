@@ -24,5 +24,9 @@
         {
             public const string CreateCategoryFail = "Tạo mới category thất bại";
         }
+        public static class ProductMessage
+        {
+            public const string CreateProductFail = "Tạo mới sản phẩm thất bại";
+        }
     }
 }
