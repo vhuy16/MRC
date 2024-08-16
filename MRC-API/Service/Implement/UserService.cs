@@ -23,6 +23,11 @@ namespace MRC_API.Service.Implement
         public async Task<CreateNewAccountResponse> CreateNewAdminAccount(CreateNewAccountRequest createNewAccountRequest)
         {
             _logger.LogInformation($"create new user with {createNewAccountRequest.UserName}");
+            string emailPattern = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
+            if (!Regex.IsMatch(createNewAccountRequest.Email, emailPattern))
+            {
+                throw new BadHttpRequestException(MessageConstant.PatternMessage.EmailIncorrect);
+            }
             User newUser = new User()
             {
                 Id = Guid.NewGuid(),
@@ -30,6 +35,7 @@ namespace MRC_API.Service.Implement
                 Password = PasswordUtil.HashPassword(createNewAccountRequest.Password),
                 InsDate = TimeUtils.GetCurrentSEATime(),
                 UpDate = TimeUtils.GetCurrentSEATime(),
+                Gender = createNewAccountRequest.Gender.GetDescriptionFromEnum().ToString(),
                 Role = RoleEnum.Admin.GetDescriptionFromEnum()
 
             };
@@ -61,14 +67,18 @@ namespace MRC_API.Service.Implement
                 Id = Guid.NewGuid(),
                 UserName = createNewAccountRequest.UserName,
                 Password = PasswordUtil.HashPassword(createNewAccountRequest.Password),
+                FullName = createNewAccountRequest.FullName,
                 Email = createNewAccountRequest.Email,
                 InsDate = TimeUtils.GetCurrentSEATime(),
                 UpDate = TimeUtils.GetCurrentSEATime(),
+                //Status = true,
+                Gender = createNewAccountRequest.Gender.GetDescriptionFromEnum().ToString(),
                 Role = RoleEnum.Manager.GetDescriptionFromEnum()
 
             };
             await _unitOfWork.GetRepository<User>().InsertAsync(newUser);
             bool isSuccesfully = await _unitOfWork.CommitAsync() > 0;
+            GenderEnum gender = EnumUtil.ParseEnum<GenderEnum>(newUser.Gender);
             CreateNewAccountResponse createNewAccountResponse = null;
             if (isSuccesfully)
             {
@@ -76,7 +86,9 @@ namespace MRC_API.Service.Implement
                 {
                     Username = newUser.UserName,
                     Password = newUser.Password,
-                    Email = newUser.Email
+                    Email = newUser.Email,
+                    FullName = newUser.FullName,
+                    Gender = gender
                 };
             }
             return createNewAccountResponse;
@@ -84,6 +96,12 @@ namespace MRC_API.Service.Implement
         public async Task<CreateNewAccountResponse> CreateNewCustomerAccount(CreateNewAccountRequest createNewAccountRequest)
         {
             _logger.LogInformation($"create new user with {createNewAccountRequest.UserName}");
+
+            string emailPattern = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
+            if (!Regex.IsMatch(createNewAccountRequest.Email, emailPattern))
+            {
+                throw new BadHttpRequestException(MessageConstant.PatternMessage.EmailIncorrect);
+            }
             User newUser = new User()
             {
                 Id = Guid.NewGuid(),
