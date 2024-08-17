@@ -13,5 +13,7 @@ public partial class Category
 
     public DateTime? UpDate { get; set; }
 
+    public string? Status { get; set; }
+
     public virtual ICollection<Product> Products { get; set; } = new List<Product>();
 }

@@ -6,6 +6,7 @@ using MRC_API.Payload.Request.User;
 using MRC_API.Payload.Response;
 using MRC_API.Payload.Response.User;
 using MRC_API.Service.Interface;
+using Repository.Paginate;
 
 namespace MRC_API.Controllers
 {
@@ -77,6 +78,47 @@ namespace MRC_API.Controllers
             }
             return Ok(loginResponse);
         }
-        
+
+        [HttpDelete(ApiEndPointConstant.User.DeleteUser)]
+        [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(ProblemDetails))]
+        public async Task<IActionResult> DeleteUser([FromRoute] Guid id)
+        {
+            var response = await _userService.DeleteUser(id);
+            return Ok(response);
+        }
+
+        [HttpGet(ApiEndPointConstant.User.GetAllUser)]
+        [ProducesResponseType(typeof(IPaginate<GetUserResponse>), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(ProblemDetails))]
+        public async Task<IActionResult> GetAllCategory([FromQuery] int? page, [FromQuery] int? size)
+        {
+            int pageNumber = page ?? 1;
+            int pageSize = size ?? 10;
+            var response = await _userService.GetAllUser(pageNumber, pageSize);
+            if (response == null)
+            {
+                return Problem(MessageConstant.UserMessage.UserIsEmpty);
+            }
+            return Ok(response);
+        }
+
+        [HttpGet(ApiEndPointConstant.User.GetUser)]
+        [ProducesResponseType(typeof(GetUserResponse), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(ProblemDetails))]
+        public async Task<IActionResult> GetUser([FromRoute] Guid id)
+        {
+            var response = await _userService.GetUser(id);
+            return Ok(response);
+        }
+
+        [HttpPut(ApiEndPointConstant.User.UpdateUser)]
+        [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(ProblemDetails))]
+        public async Task<IActionResult> UpdateCategory([FromRoute] Guid id, [FromBody] UpdateUserRequest updateUserRequest)
+        {
+            var response = await _userService.UpdateUser(id, updateUserRequest);
+            return Ok(response);
+        }
     }
 }

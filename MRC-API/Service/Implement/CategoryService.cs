@@ -1,10 +1,14 @@
 ﻿using AutoMapper;
 using Bean_Mind.API.Utils;
 using Business.Interface;
+using MRC_API.Constant;
 using MRC_API.Payload.Request.Category;
 using MRC_API.Payload.Response.Category;
 using MRC_API.Service.Interface;
+using MRC_API.Utils;
 using Repository.Entity;
+using Repository.Enum;
+using Repository.Paginate;
 
 namespace MRC_API.Service.Implement
 {
@@ -16,12 +20,19 @@ namespace MRC_API.Service.Implement
 
         public async Task<CreateNewCategoryResponse> CreateNewCategory(CreateNewCategoryRequest createNewCategoryRequest)
         {
+            var categoryExist = await _unitOfWork.GetRepository<Category>().SingleOrDefaultAsync(
+                predicate: c => c.CategoryName.Equals(createNewCategoryRequest.CategoryName) && c.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
+            if(categoryExist != null)
+            {
+                throw new BadHttpRequestException(MessageConstant.CategoryMessage.CategoryExisted);
+            }
             Category category = new Category()
             {
                 Id = Guid.NewGuid(),
                 CategoryName = createNewCategoryRequest.CategoryName,
                 InsDate = TimeUtils.GetCurrentSEATime(),
                 UpDate = TimeUtils.GetCurrentSEATime(),
+                Status = StatusEnum.Available.GetDescriptionFromEnum()
             };
 
             await _unitOfWork.GetRepository<Category>().InsertAsync(category);
@@ -36,6 +47,51 @@ namespace MRC_API.Service.Implement
                 };
             }
             return createNewCategoryResponse;
+        }
+
+        public async Task<IPaginate<GetCategoryResponse>> GetAllCategory(int page, int size)
+        {
+            var categories = await _unitOfWork.GetRepository<Category>().GetPagingListAsync(
+                selector: c => new GetCategoryResponse() 
+                { 
+                    CategoryId = c.Id,
+                    CategoryName = c.CategoryName,
+                },
+                predicate: c => c.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()),
+                size: size,
+                page: page);
+            return categories;
+        }
+
+        public async Task<GetCategoryResponse> GetCategory(Guid id)
+        {
+            var category = await _unitOfWork.GetRepository<Category>().SingleOrDefaultAsync(
+                selector: c => new GetCategoryResponse()
+                {
+                    CategoryId = c.Id,
+                    CategoryName = c.CategoryName,
+                },
+                predicate: c => c.Id.Equals(id) && c.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
+            if(category == null)
+            {
+                throw new BadHttpRequestException(MessageConstant.CategoryMessage.CategoryNotExist);
+            }
+            return category;
+        }
+
+        public async Task<bool> UpdateCategory(Guid id, UpdateCategoryRequest updateCategoryRequest)
+        {
+            var category = await _unitOfWork.GetRepository<Category>().SingleOrDefaultAsync(
+                predicate: c => c.Id.Equals(id) && c.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
+            if (category == null)
+            {
+                throw new BadHttpRequestException(MessageConstant.CategoryMessage.CategoryNotExist);
+            }
+            category.CategoryName = string.IsNullOrEmpty(updateCategoryRequest.CategoryName) ? category.CategoryName : updateCategoryRequest.CategoryName;
+            category.UpDate = TimeUtils.GetCurrentSEATime();
+            _unitOfWork.GetRepository<Category>().UpdateAsync(category);
+            bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
+            return isSuccessful;
         }
     }
 }
