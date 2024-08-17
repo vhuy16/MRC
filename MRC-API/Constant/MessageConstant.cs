@@ -23,10 +23,16 @@
         public static class CategoryMessage
         {
             public const string CreateCategoryFail = "Tạo mới category thất bại";
+            public const string CategoryNotExist = "Category không tồn tại";
         }
         public static class ProductMessage
         {
             public const string CreateProductFail = "Tạo mới sản phẩm thất bại";
+
+            public static string ProductNameExisted = "Sản Phẩm đã tồn tại";
+
+            public static string NegativeQuantity = "Số lượng phải lớn hơn 0";
+            public static string ProductIsEmpty = "không có sản phẩm nào";
         }
     }
 }

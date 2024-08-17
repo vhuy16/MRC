@@ -28,6 +28,7 @@
         {
             public const string ProductEndpoint = ApiEndpoint + "/Product";
             public const string CreateNewProduct = ProductEndpoint;
+            public const string GetListProducts = ProductEndpoint;
         }
     }
 }
