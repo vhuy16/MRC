@@ -1,12 +1,14 @@
 ﻿using AutoMapper;
 using Bean_Mind.API.Utils;
 using Business.Interface;
+using MRC_API.Constant;
 using MRC_API.Payload.Request.Product;
 using MRC_API.Payload.Response.Product;
 using MRC_API.Service.Interface;
 using MRC_API.Utils;
 using Repository.Entity;
 using Repository.Enum;
+using Repository.Paginate;
 using System.Net.Http.Headers;
 using System.Text.Json;
 
@@ -20,7 +22,25 @@ namespace MRC_API.Service.Implement
         }
         public async Task<CreateProductResponse> CreateProduct(CreateProductRequest createProductRequest)
         {
-            
+            // kiểm tra categoryID
+            // kiểm tra tên product
+            // quantity không đc là số âm
+            var cateCheck = await _unitOfWork.GetRepository<Category>().SingleOrDefaultAsync(
+                predicate: c => c.Id.Equals(createProductRequest.CategoryId));
+            if (cateCheck == null)
+            {
+                throw new BadHttpRequestException(MessageConstant.CategoryMessage.CategoryNotExist);
+            }
+            var prodCheck = await _unitOfWork.GetRepository<Product>().SingleOrDefaultAsync(
+                predicate: p => p.ProductName.Equals(createProductRequest.ProductName));
+            if (prodCheck != null)
+            {
+                throw new BadHttpRequestException(MessageConstant.ProductMessage.ProductNameExisted);
+            }
+            if(createProductRequest.Quantity < 0)
+            {
+                throw new BadHttpRequestException(MessageConstant.ProductMessage.NegativeQuantity);
+            }
             Product product = new Product()
             {
                 Id = Guid.NewGuid(),
@@ -67,6 +87,24 @@ namespace MRC_API.Service.Implement
 
             }
             return createProductResponse;
+        }
+        public async Task<IPaginate<GetProductResponse>> GetListProduct(int page, int size)
+        { 
+            var products = await _unitOfWork.GetRepository<Product>().GetPagingListAsync(
+                selector: s => new GetProductResponse
+                {
+                    Id = s.Id,
+                    CategoryName = s.Category.CategoryName,
+                    Description = s.Description,
+                    Images = s.Images.Select(i => i.LinkImage).ToList(),
+                    ProductName = s.ProductName,
+                    Quantity = s.Quantity,
+                },
+                predicate: p => p.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()),
+                page : page,
+                size : size
+                );
+            return products;
         }
         private async Task<List<string>> UploadFilesToFirebase(List<IFormFile> formFiles)
         {
