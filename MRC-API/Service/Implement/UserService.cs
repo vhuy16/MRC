@@ -3,12 +3,14 @@ using Bean_Mind.API.Utils;
 using Business.Interface;
 using Microsoft.AspNetCore.Identity.Data;
 using MRC_API.Constant;
+using MRC_API.Payload.Request.Category;
 using MRC_API.Payload.Request.User;
 using MRC_API.Payload.Response.User;
 using MRC_API.Service.Interface;
 using MRC_API.Utils;
 using Repository.Entity;
 using Repository.Enum;
+using Repository.Paginate;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -39,6 +41,7 @@ namespace MRC_API.Service.Implement
                 Id = Guid.NewGuid(),
                 UserName = createNewAccountRequest.UserName,
                 Password = PasswordUtil.HashPassword(createNewAccountRequest.Password),
+                Status = StatusEnum.Available.GetDescriptionFromEnum(),
                 InsDate = TimeUtils.GetCurrentSEATime(),
                 UpDate = TimeUtils.GetCurrentSEATime(),
                 Gender = createNewAccountRequest.Gender.GetDescriptionFromEnum().ToString(),
@@ -102,6 +105,7 @@ namespace MRC_API.Service.Implement
                 Password = PasswordUtil.HashPassword(createNewAccountRequest.Password),
                 FullName = createNewAccountRequest.FullName,
                 Email = createNewAccountRequest.Email,
+                Status = StatusEnum.Available.GetDescriptionFromEnum(),
                 InsDate = TimeUtils.GetCurrentSEATime(),
                 UpDate = TimeUtils.GetCurrentSEATime(),
                 //Status = true,
@@ -170,6 +174,7 @@ namespace MRC_API.Service.Implement
                 Password = PasswordUtil.HashPassword(createNewAccountRequest.Password),
                 FullName = createNewAccountRequest.FullName,
                 Email = createNewAccountRequest.Email,
+                Status = StatusEnum.Available.GetDescriptionFromEnum(),
                 InsDate = TimeUtils.GetCurrentSEATime(),
                 UpDate = TimeUtils.GetCurrentSEATime(),
                 Role = RoleEnum.Customer.GetDescriptionFromEnum(),
@@ -220,5 +225,73 @@ namespace MRC_API.Service.Implement
             return loginResponse;
         }
 
+        public async Task<bool> DeleteUser(Guid id)
+        {
+            var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
+                predicate: u => u.Id.Equals(id) && u.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
+            if (user == null)
+            {
+                throw new BadHttpRequestException(MessageConstant.UserMessage.UserNotExist);
+            }
+            user.Status = StatusEnum.Unavailable.GetDescriptionFromEnum();
+            user.UpDate = TimeUtils.GetCurrentSEATime();
+            _unitOfWork.GetRepository<User>().UpdateAsync(user);
+            bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
+            return isSuccessful;
+        }
+
+        public async Task<IPaginate<GetUserResponse>> GetAllUser(int page, int size)
+        {
+            var users = await _unitOfWork.GetRepository<User>().GetPagingListAsync(
+                selector: u => new GetUserResponse()
+                {
+                    UserId = u.Id,
+                    FullName = u.FullName,
+                    Email = u.Email,
+                    PhoneNumber = u.PhoneNumber,
+                    Gender = u.Gender,
+                },
+                predicate: u => u.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()),
+                page: page,
+                size: size);
+            return users;
+        }
+
+        public async Task<GetUserResponse> GetUser(Guid id)
+        {
+            var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
+                selector: u => new GetUserResponse()
+                {
+                    UserId = u.Id,
+                    Email = u.Email,
+                    FullName= u.FullName,
+                    PhoneNumber = u.PhoneNumber,
+                    Gender = u.Gender
+                },
+                predicate: u => u.Id.Equals(id) && u.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
+            if (user == null)
+            {
+                throw new BadHttpRequestException(MessageConstant.UserMessage.UserNotExist);
+            }
+            return user;
+        }
+
+        public async Task<bool> UpdateUser(Guid id, UpdateUserRequest updateUserRequest)
+        {
+            var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
+                predicate: u => u.Id.Equals(id) && u.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
+            if (user == null)
+            {
+                throw new BadHttpRequestException(MessageConstant.UserMessage.UserNotExist);
+            }
+            user.FullName = string.IsNullOrEmpty(updateUserRequest.FullName) ? user.FullName : updateUserRequest.FullName;
+            user.Email = string.IsNullOrEmpty(updateUserRequest.Email) ? user.Email : updateUserRequest.Email;
+            user.PhoneNumber = string.IsNullOrEmpty(updateUserRequest.PhoneNumber) ? user.PhoneNumber : updateUserRequest.PhoneNumber;
+            user.Gender = updateUserRequest.Gender.HasValue ? updateUserRequest.Gender.GetDescriptionFromEnum() : user.Gender.GetDescriptionFromEnum();
+            user.UpDate = TimeUtils.GetCurrentSEATime();
+            _unitOfWork.GetRepository<User>().UpdateAsync(user);
+            bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
+            return isSuccessful;
+        }
     }
 }
