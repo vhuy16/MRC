@@ -8,6 +8,9 @@
             public const string AccountExisted = "Tài khoản đã tồn tại";
             public const string EmailExisted = "Email đã tồn tại";
             public const string PhoneExisted = "Số điện thoại đã tồn tại";
+            public const string UserNotExist = "Người dùng không tồn tại";
+            public const string UserIsEmpty = "Không có người dùng";
+
         }
         public static class LoginMessage
         {
@@ -23,6 +26,9 @@
         public static class CategoryMessage
         {
             public const string CreateCategoryFail = "Tạo mới category thất bại";
+            public const string CategoryIsEmpty = "Category trống";
+            public const string CategoryExisted = "Category đã tồn tại";
+            public const string CategoryNotExist = "Category không tồn tại";
         }
         public static class ProductMessage
         {
