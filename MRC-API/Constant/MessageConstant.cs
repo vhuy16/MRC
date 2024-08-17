@@ -26,6 +26,7 @@
         public static class CategoryMessage
         {
             public const string CreateCategoryFail = "Tạo mới category thất bại";
+
             public const string CategoryIsEmpty = "Category trống";
             public const string CategoryExisted = "Category đã tồn tại";
 
