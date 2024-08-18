@@ -37,6 +37,9 @@
             public const string ProductEndpoint = ApiEndpoint + "/Product";
             public const string CreateNewProduct = ProductEndpoint;
             public const string GetListProducts = ProductEndpoint;
+            public const string GetListProductsByCategoryId = ProductEndpoint +"/{id}" + "/Category";
+            public const string UpdateProduct = ProductEndpoint + "/{id}";
+            public const string DeleteProduct = ProductEndpoint + "/{id}";
         }
     }
 }
