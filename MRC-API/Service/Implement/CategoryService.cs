@@ -61,6 +61,15 @@ namespace MRC_API.Service.Implement
                 predicate: p => p.CategoryId.Equals(category.Id) && p.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
             foreach(var product in products)
             {
+                var images = await _unitOfWork.GetRepository<Image>().GetListAsync(
+                    predicate: i => i.ProductId.Equals(product.Id));
+                if (images != null)
+                {
+                    foreach(var image in images)
+                    {
+                        _unitOfWork.GetRepository<Image>().DeleteAsync(image);
+                    }
+                }
                 product.Status = StatusEnum.Unavailable.GetDescriptionFromEnum();
                 product.UpDate = TimeUtils.GetCurrentSEATime();
                 _unitOfWork.GetRepository<Product>().UpdateAsync(product);
