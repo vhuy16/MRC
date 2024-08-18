@@ -10,5 +10,6 @@ namespace MRC_API.Service.Interface
         Task<IPaginate<GetCategoryResponse>> GetAllCategory(int page, int size);
         Task<GetCategoryResponse> GetCategory(Guid id);
         Task<bool> UpdateCategory(Guid id, UpdateCategoryRequest updateCategoryRequest);
+        Task<bool> DeleteCategory(Guid id);
     }
 }

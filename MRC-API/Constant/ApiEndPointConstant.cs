@@ -30,6 +30,7 @@
             public const string GetAllCategory = CategoryEndPoint;
             public const string GetCategory = CategoryEndPoint + "/{id}";
             public const string UpdateCategory = CategoryEndPoint + "/{id}";
+            public const string DeleteCategory = CategoryEndPoint + "/{id}";
         }
         public static class Product
         {

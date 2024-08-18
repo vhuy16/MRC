@@ -10,6 +10,7 @@
             public const string PhoneExisted = "Số điện thoại đã tồn tại";
             public const string UserNotExist = "Người dùng không tồn tại";
             public const string UserIsEmpty = "Không có người dùng";
+            public const string AccountNotExist = "Tài khoản không tồn tại";
 
         }
         public static class LoginMessage
