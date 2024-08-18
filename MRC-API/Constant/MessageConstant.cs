@@ -37,9 +37,11 @@
             public const string CreateProductFail = "Tạo mới sản phẩm thất bại";
 
             public static string ProductNameExisted = "Sản Phẩm đã tồn tại";
-
+            public static string ProductNotExist = "Sản phẩm không tồn tại";
             public static string NegativeQuantity = "Số lượng phải lớn hơn 0";
             public static string ProductIsEmpty = "không có sản phẩm nào";
+
+            public static string ProductIdEmpty = "Id của sản phẩm bị trống";
         }
     }
 }
