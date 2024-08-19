@@ -1,16 +1,19 @@
 ﻿using AutoMapper;
+using Azure.Core;
 using Bean_Mind.API.Utils;
 using Business.Interface;
 using Microsoft.AspNetCore.Identity.Data;
 using MRC_API.Constant;
 using MRC_API.Payload.Request.Category;
 using MRC_API.Payload.Request.User;
+using MRC_API.Payload.Response.GoogleAuth;
 using MRC_API.Payload.Response.User;
 using MRC_API.Service.Interface;
 using MRC_API.Utils;
 using Repository.Entity;
 using Repository.Enum;
 using Repository.Paginate;
+using System.Data;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -296,6 +299,62 @@ namespace MRC_API.Service.Implement
             _unitOfWork.GetRepository<User>().UpdateAsync(user);
             bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
             return isSuccessful;
+        }
+
+        public async Task<string> CreateTokenByEmail(string email)
+        {
+            if (string.IsNullOrEmpty(email))
+            {
+                throw new ArgumentException("Username cannot be null or empty", nameof(email));
+            }
+            var account = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
+                predicate: p => p.Email.Equals(email)
+            );
+            if (account == null) throw new BadHttpRequestException("Account not found");
+            var guidClaim = new Tuple<string, Guid>("userId", account.Id);
+            var token = JwtUtil.GenerateJwtToken(account, guidClaim);
+            // _logger.LogInformation($"Token: {token} ");
+            return token;
+        }
+
+        public async Task<bool> GetAccountByEmail(string email)
+        {
+            if (email == null) throw new BadHttpRequestException("Email cannot be null");
+
+            var account = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
+                predicate: p => p.Email.Equals(email)
+            );
+            return account != null;
+        }
+
+        public async Task<CreateNewAccountResponse> CreateNewUserAccountByGoogle(GoogleAuthResponse request)
+        {
+
+            var newUser = new User()
+            {
+                Id = Guid.NewGuid(),
+                Email = request.Email,
+                FullName = request.FullName,
+                UserName = request.Email.Split("@")[0],
+                Role = RoleEnum.Customer.GetDescriptionFromEnum(),
+                Status = StatusEnum.Available.GetDescriptionFromEnum(),
+                Password = PasswordUtil.HashPassword("12345678"),
+                InsDate = TimeUtils.GetCurrentSEATime(),
+                UpDate = TimeUtils.GetCurrentSEATime()
+            };
+            await _unitOfWork.GetRepository<User>().InsertAsync(newUser);
+            CreateNewAccountResponse response = null;
+            bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
+            if (isSuccessful)
+            {
+
+                response = new CreateNewAccountResponse()
+                {
+                    Email = newUser.Email, 
+                    FullName = newUser.FullName
+                };
+            }
+            return response;
         }
     }
 }
