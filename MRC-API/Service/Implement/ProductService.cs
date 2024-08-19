@@ -13,6 +13,7 @@ using Repository.Paginate;
 using System.Drawing;
 using System.Net.Http.Headers;
 using System.Text.Json;
+using Image = Repository.Entity.Image;
 
 
 
@@ -69,7 +70,7 @@ namespace MRC_API.Service.Implement
                         ProductId = product.Id,
                         InsDate = TimeUtils.GetCurrentSEATime(),
                         UpDate = TimeUtils.GetCurrentSEATime(),
-                        LinkImage = imageUrl 
+                        LinkImage = imageUrl
                     });
                 }
             } 
