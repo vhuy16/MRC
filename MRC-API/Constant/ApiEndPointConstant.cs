@@ -40,5 +40,10 @@
             public const string UpdateProduct = ProductEndpoint + "/{id}";
             public const string DeleteProduct = ProductEndpoint + "/{id}";
         }
+        public static class Order
+        {
+            public const string OrderEndpoint = ApiEndpoint + "/Order";
+            public const string CreateNewOrder = OrderEndpoint;
+        }
     }
 }
