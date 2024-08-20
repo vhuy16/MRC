@@ -65,5 +65,14 @@ namespace MRC_API.Controllers
             var response = await _categoryService.UpdateCategory(id, updateCategoryRequest);
             return Ok(response);
         }
+
+        [HttpDelete(ApiEndPointConstant.Category.DeleteCategory)]
+        [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(ProblemDetails))]
+        public async Task<IActionResult> DeleteCategory([FromRoute] Guid id)
+        {
+            var response = await _categoryService.DeleteCategory(id);
+            return Ok(response);
+        }
     }
 }

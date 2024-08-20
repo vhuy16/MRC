@@ -49,6 +49,29 @@ namespace MRC_API.Service.Implement
             return createNewCategoryResponse;
         }
 
+        public async Task<bool> DeleteCategory(Guid id)
+        {
+            var category = await _unitOfWork.GetRepository<Category>().SingleOrDefaultAsync(
+                predicate: c => c.Id.Equals(id) && c.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
+            if (category == null)
+            {
+                throw new BadHttpRequestException(MessageConstant.CategoryMessage.CategoryNotExist);
+            }
+            var products = await _unitOfWork.GetRepository<Product>().GetListAsync(
+                predicate: p => p.CategoryId.Equals(category.Id) && p.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
+            foreach(var product in products)
+            {
+                product.Status = StatusEnum.Unavailable.GetDescriptionFromEnum();
+                product.UpDate = TimeUtils.GetCurrentSEATime();
+                _unitOfWork.GetRepository<Product>().UpdateAsync(product);
+            }
+            category.Status = StatusEnum.Unavailable.GetDescriptionFromEnum();
+            category.UpDate = TimeUtils.GetCurrentSEATime();
+            _unitOfWork.GetRepository<Category>().UpdateAsync(category);
+            bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
+            return isSuccessful;
+        }
+
         public async Task<IPaginate<GetCategoryResponse>> GetAllCategory(int page, int size)
         {
             var categories = await _unitOfWork.GetRepository<Category>().GetPagingListAsync(

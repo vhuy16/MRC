@@ -206,11 +206,15 @@ namespace MRC_API.Service.Implement
                   p.Password.Equals(PasswordUtil.HashPassword(loginRequest.Password)) &&
                   (p.Role == RoleEnum.Manager.GetDescriptionFromEnum() ||
                    p.Role == RoleEnum.Admin.GetDescriptionFromEnum() ||
-                   p.Role == RoleEnum.Customer.GetDescriptionFromEnum());
+                   p.Role == RoleEnum.Customer.GetDescriptionFromEnum()) &&
+                   p.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum());
             
             User user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: searchFilter);
 
-            if (user == null) return null;
+            if (user == null)
+            {
+                throw new BadHttpRequestException(MessageConstant.UserMessage.AccountNotExist);
+            };
 
             RoleEnum role = EnumUtil.ParseEnum<RoleEnum>(user.Role);
             Tuple<String, Guid> guildClaim = new Tuple<string, Guid>("userID", user.Id);
