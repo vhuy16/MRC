@@ -46,7 +46,7 @@
         {
             public const string OrderEndpoint = ApiEndpoint + "/Order";
             public const string CreateNewOrder = OrderEndpoint;
-
+        }
 
         public static class GoogleAuthentication
         {
