@@ -4,9 +4,12 @@
 
 using Business.Implement;
 using Business.Interface;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Identity.Client;
 using Microsoft.IdentityModel.Tokens;
 using MRC_API.Service.Implement;
@@ -30,22 +33,41 @@ namespace Prepare
             return services;
         }
 
+        private static string CreateClientId(IConfiguration configuration)
+        {
+            var clientId = configuration.GetValue<string>("Oauth:ClientId");
+            return clientId;
+        }
+        private static string CreateClientSecret(IConfiguration configuration)
+        {
+            var clientSecret = configuration.GetValue<string>("Oauth:ClientSecret");
+            return clientSecret;
+        }
+
         public static IServiceCollection AddCustomServices(this IServiceCollection services)
         {
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<ICategoryService, CategoryService>();
             services.AddScoped<IProductService, ProductService>();
+
             services.AddScoped<IOrderService, OrderService>();
+
+            services.AddScoped<IGoogleAuthenticationService, GoogleAuthenticationService>();
+
 
             return services;
         }
 
         public static IServiceCollection AddJwtValidation(this IServiceCollection services)
         {
+            IConfiguration configuration = new ConfigurationBuilder()
+            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true).Build();
             services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                 options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
             }).AddJwtBearer(options =>
             {
                 options.TokenValidationParameters = new TokenValidationParameters()
@@ -58,7 +80,15 @@ namespace Prepare
                         new SymmetricSecurityKey(
                             Encoding.UTF8.GetBytes("0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"))
                 };
-            });
+            })
+            .AddCookie()
+            .AddGoogle(options =>
+            {
+            options.ClientId = CreateClientId(configuration);
+            options.ClientSecret = CreateClientSecret(configuration);
+            options.SaveTokens = true;
+
+            }); 
             return services;
         }
         private static string GetConnectionString()

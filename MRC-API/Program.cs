@@ -15,6 +15,7 @@ builder.Services.AddJwtValidation();
 builder.Services.AddDatabase();
 builder.Services.AddUnitOfWork();
 builder.Services.AddCustomServices();
+builder.Services.AddJwtValidation();
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
 builder.Services.AddCors(options =>
@@ -71,6 +72,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
+
+app.UseAuthentication();
 
 app.UseHttpsRedirection();
 
