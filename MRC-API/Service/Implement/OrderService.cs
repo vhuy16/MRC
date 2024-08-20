@@ -65,11 +65,14 @@ namespace MRC_API.Service.Implement
                         Quantity = orderDetail.quantity,
                         Price = product.Price
                     };
+                    product.Quantity = product.Quantity - newOrderDetail.Quantity.Value;
+                    _unitOfWork.GetRepository<Product>().UpdateAsync(product);
 
                     order.OrderDetails.Add(newOrderDetail);
                     await _unitOfWork.GetRepository<OrderDetail>().InsertAsync(newOrderDetail);
                     totalPrice += newOrderDetail.Quantity * newOrderDetail.Price;
                 }
+
 
                 order.TotalPrice = totalPrice;
                 await _unitOfWork.GetRepository<Order>().InsertAsync(order);
