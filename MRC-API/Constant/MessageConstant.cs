@@ -44,5 +44,10 @@
 
             public static string ProductIdEmpty = "Id của sản phẩm bị trống";
         }
+
+        public static class OrderMessage
+        {
+            public const string CreateOrderFail = "Tạo hoá đơn thất bại";
+        }
     }
 }

@@ -42,11 +42,18 @@
             public const string DeleteProduct = ProductEndpoint + "/{id}";
         }
 
+        public static class Order
+        {
+            public const string OrderEndpoint = ApiEndpoint + "/Order";
+            public const string CreateNewOrder = OrderEndpoint;
+
+
         public static class GoogleAuthentication
         {
             public const string GoogleAuthenticationEndpoint = ApiEndpoint + "/google-auth";
             public const string GoogleLogin = GoogleAuthenticationEndpoint + "/login";
             public const string GoogleSignIn = GoogleAuthenticationEndpoint + "/signin-google/";
+
         }
     }
 }

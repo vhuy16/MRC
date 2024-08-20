@@ -28,4 +28,8 @@
     <ProjectReference Include="..\Repository\Repository.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Payload\Response\OrderDetail\" />
+  </ItemGroup>
+
 </Project>

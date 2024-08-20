@@ -52,8 +52,7 @@ public partial class MrcContext : DbContext
                 .HasColumnName("insDate");
             entity.Property(e => e.Status)
                 .HasMaxLength(50)
-                .IsUnicode(false)
-                .HasColumnName("status");
+                .IsUnicode(false);
             entity.Property(e => e.UpDate)
                 .HasColumnType("datetime")
                 .HasColumnName("upDate");
@@ -158,6 +157,9 @@ public partial class MrcContext : DbContext
             entity.Property(e => e.InsDate)
                 .HasColumnType("datetime")
                 .HasColumnName("insDate");
+            entity.Property(e => e.Price)
+                .HasColumnType("decimal(18, 0)")
+                .HasColumnName("price");
             entity.Property(e => e.ProductName)
                 .HasMaxLength(255)
                 .HasColumnName("productName");

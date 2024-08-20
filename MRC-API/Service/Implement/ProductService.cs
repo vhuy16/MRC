@@ -54,6 +54,7 @@ namespace MRC_API.Service.Implement
                 Description = createProductRequest.Description,
                 InsDate = TimeUtils.GetCurrentSEATime(),
                 UpDate = TimeUtils.GetCurrentSEATime(),
+                Price = createProductRequest.Price,
                 Quantity = createProductRequest.Quantity,
                 Status = StatusEnum.Available.GetDescriptionFromEnum(),
                 Images = new List<Image>()               

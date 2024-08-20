@@ -49,7 +49,11 @@ namespace Prepare
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<ICategoryService, CategoryService>();
             services.AddScoped<IProductService, ProductService>();
+
+            services.AddScoped<IOrderService, OrderService>();
+
             services.AddScoped<IGoogleAuthenticationService, GoogleAuthenticationService>();
+
 
             return services;
         }
