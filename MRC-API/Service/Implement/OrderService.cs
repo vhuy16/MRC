@@ -83,6 +83,8 @@ namespace MRC_API.Service.Implement
                         Quantity = orderDetail.quantity,
                         Price = product.Price
                     };
+                    product.Quantity = product.Quantity - newOrderDetail.Quantity.Value;
+                    _unitOfWork.GetRepository<Product>().UpdateAsync(product);
 
                     product.Quantity -= orderDetail.quantity; // Decrease the quantity of the product
 
@@ -92,6 +94,7 @@ namespace MRC_API.Service.Implement
                     await _unitOfWork.GetRepository<OrderDetail>().InsertAsync(newOrderDetail);
                     _unitOfWork.GetRepository<Product>().UpdateAsync(product); // Update the product quantity in the database
                 }
+                order.TotalPrice = totalPrice;
 
                 await _unitOfWork.GetRepository<Order>().InsertAsync(order);
                 bool isSuccessOrder = await _unitOfWork.CommitAsync() > 0;
