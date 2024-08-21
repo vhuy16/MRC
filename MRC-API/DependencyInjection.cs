@@ -53,7 +53,7 @@ namespace Prepare
             services.AddScoped<IOrderService, OrderService>();
 
             services.AddScoped<IGoogleAuthenticationService, GoogleAuthenticationService>();
-
+            services.AddScoped<ICartService, CartService>();
 
             return services;
         }
