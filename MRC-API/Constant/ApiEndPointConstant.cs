@@ -55,5 +55,11 @@
             public const string GoogleSignIn = GoogleAuthenticationEndpoint + "/signin-google/";
 
         }
+
+        public static class Cart
+        {
+            public const string CartEndPoint = ApiEndpoint + "/Cart";
+            public const string CreateNewCart = CartEndPoint;
+        }
     }
 }

@@ -29,6 +29,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Payload\Request\Cart\" />
     <Folder Include="Payload\Response\OrderDetail\" />
   </ItemGroup>
 
