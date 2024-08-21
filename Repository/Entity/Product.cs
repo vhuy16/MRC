@@ -23,6 +23,8 @@ public partial class Product
 
     public decimal? Price { get; set; }
 
+    public virtual ICollection<CartItem> CartItems { get; set; } = new List<CartItem>();
+
     public virtual Category Category { get; set; } = null!;
 
     public virtual ICollection<Image> Images { get; set; } = new List<Image>();
