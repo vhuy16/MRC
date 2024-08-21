@@ -18,14 +18,15 @@ namespace MRC_API.Controllers
         [HttpPost(ApiEndPointConstant.Cart.CreateNewCart)]
         [ProducesResponseType(typeof(CreateNewCartResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
-        public async Task<IActionResult> CreateNewCategory()
+        public async Task<IActionResult> CreateNewCart()
         {
             CreateNewCartResponse createNewCartResponse = await _cartService.CreateCart();
             if (createNewCartResponse == null)
             {
                 return Problem(MessageConstant.CategoryMessage.CreateCategoryFail);
             }
-            return CreatedAtAction(nameof(CreateNewCategory), createNewCartResponse);
+            return CreatedAtAction(nameof(CreateNewCart), createNewCartResponse);
         }
+
     }
 }
