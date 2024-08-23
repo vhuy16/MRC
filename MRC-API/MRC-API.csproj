@@ -11,6 +11,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Payload\Request\Cart\**" />
+    <Content Remove="Payload\Request\Cart\**" />
+    <EmbeddedResource Remove="Payload\Request\Cart\**" />
+    <None Remove="Payload\Request\Cart\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="AutoMapper" Version="13.0.1" />
     <PackageReference Include="FirebaseStorage.net" Version="1.0.3" />
     <PackageReference Include="Google.Apis" Version="1.68.0" />
@@ -29,7 +36,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Payload\Request\Cart\" />
     <Folder Include="Payload\Response\OrderDetail\" />
   </ItemGroup>
 

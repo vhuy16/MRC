@@ -1,7 +1,9 @@
 ﻿
 using Microsoft.AspNetCore.Mvc;
 using MRC_API.Constant;
+using MRC_API.Payload.Request.CartItem;
 using MRC_API.Payload.Response.Cart;
+using MRC_API.Payload.Response.CartItem;
 using MRC_API.Service.Implement;
 using MRC_API.Service.Interface;
 
@@ -15,18 +17,57 @@ namespace MRC_API.Controllers
             _cartService = cartService;
         }
 
-        [HttpPost(ApiEndPointConstant.Cart.CreateNewCart)]
-        [ProducesResponseType(typeof(CreateNewCartResponse), StatusCodes.Status200OK)]
+        [HttpPost(ApiEndPointConstant.Cart.AddCartItem)]
+        [ProducesResponseType(typeof(AddCartItemResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
-        public async Task<IActionResult> CreateNewCart()
+        public async Task<IActionResult> AddCartItem([FromBody] AddCartItemRequest addCartItemRequest)
         {
-            CreateNewCartResponse createNewCartResponse = await _cartService.CreateCart();
-            if (createNewCartResponse == null)
+            AddCartItemResponse addCartItemResponse = await _cartService.AddCartItem(addCartItemRequest);
+            if (addCartItemResponse == null)
             {
-                return Problem(MessageConstant.CategoryMessage.CreateCategoryFail);
+                return Problem(MessageConstant.CartMessage.AddCartItemFail);
             }
-            return CreatedAtAction(nameof(CreateNewCart), createNewCartResponse);
+            return CreatedAtAction(nameof(AddCartItem), addCartItemResponse);
         }
 
+        [HttpDelete(ApiEndPointConstant.Cart.DeleteCartItem)]
+        [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(ProblemDetails))]
+        public async Task<IActionResult> DeleteCartItem([FromRoute] Guid ItemId)
+        {
+            var response = await _cartService.DeleteCartItem(ItemId);
+            return Ok(response);
+        }
+
+        [HttpGet(ApiEndPointConstant.Cart.GetAllCart)]
+        [ProducesResponseType(typeof(List<GetAllCartItemResponse>), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(ProblemDetails))]
+        public async Task<IActionResult> GetAllCart()
+        {
+            var response = await _cartService.GetAllCartItem();
+            if (response == null)
+            {
+                return Problem(MessageConstant.CartMessage.CartItemIsEmpty);
+            }
+            return Ok(response);
+        }
+
+        [HttpDelete(ApiEndPointConstant.Cart.ClearCart)]
+        [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(ProblemDetails))]
+        public async Task<IActionResult> ClearAllCart()
+        {
+            var response = await _cartService.ClearCart();
+            return Ok(response);
+        }
+
+        [HttpGet(ApiEndPointConstant.Cart.GetCartSummary)]
+        [ProducesResponseType(typeof(CartSummayResponse), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(ProblemDetails))]
+        public async Task<IActionResult> GetCartSummary()
+        {
+            var response = await _cartService.GetCartSummary();
+            return Ok(response);
+        }
     }
 }

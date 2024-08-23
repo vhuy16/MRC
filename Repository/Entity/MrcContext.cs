@@ -46,6 +46,9 @@ public partial class MrcContext : DbContext
             entity.Property(e => e.InsDate)
                 .HasColumnType("datetime")
                 .HasColumnName("insDate");
+            entity.Property(e => e.Status)
+                .HasMaxLength(50)
+                .IsUnicode(false);
             entity.Property(e => e.UpDate)
                 .HasColumnType("datetime")
                 .HasColumnName("upDate");
@@ -62,6 +65,9 @@ public partial class MrcContext : DbContext
             entity.Property(e => e.InsDate)
                 .HasColumnType("datetime")
                 .HasColumnName("insDate");
+            entity.Property(e => e.Status)
+                .HasMaxLength(50)
+                .IsUnicode(false);
             entity.Property(e => e.UpDate)
                 .HasColumnType("datetime")
                 .HasColumnName("upDate");
