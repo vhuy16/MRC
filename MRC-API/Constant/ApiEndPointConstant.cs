@@ -21,6 +21,7 @@
             public const string GetAllUser = UserEndPoint;
             public const string GetUser = UserEndPoint + "/{id}";
             public const string UpdateUser = UserEndPoint + "/{id}";
+            public const string VerifyOtp = UserEndPoint + "/verify-otp";
         }
 
         public static class Category
@@ -46,6 +47,7 @@
         {
             public const string OrderEndpoint = ApiEndpoint + "/Order";
             public const string CreateNewOrder = OrderEndpoint;
+            public const string GetListOrder = OrderEndpoint;
         }
 
         public static class GoogleAuthentication
@@ -64,6 +66,11 @@
             public const string GetAllCart = CartEndPoint;
             public const string ClearCart = CartEndPoint + "/Clear-All";
             public const string GetCartSummary = CartEndPoint + "/Get-Summary";
+        }
+        public static class Email
+        {
+            public const string EmailPoint = ApiEndpoint + "/email";
+            public const string SendEmail = EmailPoint;
         }
     }
 }

@@ -10,6 +10,7 @@ using MRC_API.Service.Interface;
 using MRC_API.Utils;
 using Repository.Entity;
 using Repository.Enum;
+using Repository.Paginate;
 using System.Transactions;
 
 namespace MRC_API.Service.Implement
@@ -152,6 +153,26 @@ namespace MRC_API.Service.Implement
                 throw new BadHttpRequestException("An unexpected error occurred while creating the order.", ex);
             }
         }
-
+        public async Task<IPaginate<GetOrderResponse>> GetListOrder (int page, int size)
+        {
+            var orders = await _unitOfWork.GetRepository<Order>().GetPagingListAsync(
+                selector: s => new GetOrderResponse
+                {
+                    OrderId = s.Id,
+                    totalPrice = s.TotalPrice,
+                    OrderDetails = s.OrderDetails.Select(od => new GetOrderResponse.OrderDetailCreateResponseModel
+                    {
+                        
+                        price = od.Price,
+                        productName = od.Product.ProductName,
+                        quantity = od.Quantity
+                    }).ToList()
+                },
+                page: page,
+                size: size,
+                predicate: od => od.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum())
+                );
+            return orders;
+        }
     }
 }

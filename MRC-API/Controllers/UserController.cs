@@ -120,5 +120,15 @@ namespace MRC_API.Controllers
             var response = await _userService.UpdateUser(id, updateUserRequest);
             return Ok(response);
         }
+        [HttpPost(ApiEndPointConstant.User.VerifyOtp)]
+        [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(ProblemDetails))]
+        public async Task<IActionResult> VerifyOtp([FromBody] VerifyOtpRequest verifyOtpRequest)
+        {
+            // Gọi phương thức dịch vụ để xác thực OTP
+            bool isOtpValid = await _userService.VerifyOtp(verifyOtpRequest.UserId, verifyOtpRequest.otpCheck);
+
+            return Ok(isOtpValid);
+        }
     }
 }

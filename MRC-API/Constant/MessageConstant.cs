@@ -48,6 +48,35 @@
         public static class OrderMessage
         {
             public const string CreateOrderFail = "Tạo hoá đơn thất bại";
+            public const string OrderIsEmpty = "Không có hoá đơn nào";
+        }
+        public static class EmailMessage
+        {
+            public const string InvalidEmailRequest = "thông tin mail không hợp lệ";
+            public const string EmailSentSuccessfully = "mail đã được gửi thành công";
+            public const string EmailSendFail = "gửi mail thất bại";
+           
+        }
+        public static class EmailTemplates
+        {
+            public const string WelcomeSubject = "Welcome to MRC!";
+
+            public const string WelcomeMessage = @"
+    <html>
+    <body>
+        <h2>Welcome to MRC, {0}!</h2>
+        <p>Dear {0},</p>
+        <p>Thank you for joining MRC. Your account has been successfully created.</p>
+        <p>Here are your account details:</p>
+        <ul>
+            <li><strong>Username:</strong> {1}</li>
+        </ul>
+        <p>We are excited to have you on board and look forward to serving you.</p>
+        <p>If you have any questions or need assistance, feel free to reach out to our support team.</p>
+        <p>Best regards,</p>
+        <p><strong>The MRC Team</strong></p>
+    </body>
+    </html>";
         }
 
         public static class CartMessage
