@@ -30,7 +30,21 @@ namespace MRC_API.Controllers
             return CreatedAtAction(nameof(CreateProduct), createProductResponse);
         }
 
-        
+        [HttpGet(ApiEndPointConstant.Product.GetListProducts)]
+        [ProducesResponseType(typeof(IPaginate<GetProductResponse>), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(ProblemDetails))]
+        public async Task<IActionResult> GetListProduct([FromQuery] int? page, [FromQuery] int? size)
+        {
+            int pageNumber = page ?? 1;
+            int pageSize = size ?? 10;
+            var response = await _productService.GetListProduct(pageNumber, pageSize);
+            if (response == null)
+            {
+                return Problem(MessageConstant.ProductMessage.ProductIsEmpty);
+            }
+            return Ok(response);
+        }
+
 
         [HttpGet(ApiEndPointConstant.Product.GetListProductsByCategoryId)]
         [ProducesResponseType(typeof(IPaginate<GetProductResponse>), StatusCodes.Status200OK)]
