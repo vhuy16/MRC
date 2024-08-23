@@ -15,6 +15,8 @@ public partial class CartItem
 
     public DateTime? UpDate { get; set; }
 
+    public string? Status { get; set; }
+
     public virtual Cart Cart { get; set; } = null!;
 
     public virtual Product Product { get; set; } = null!;

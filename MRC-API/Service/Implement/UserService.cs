@@ -3,6 +3,7 @@ using Azure.Core;
 using Bean_Mind.API.Utils;
 using Business.Interface;
 using Microsoft.AspNetCore.Identity.Data;
+using MimeKit;
 using MRC_API.Constant;
 using MRC_API.Payload.Request.Category;
 using MRC_API.Payload.Request.User;
@@ -10,6 +11,7 @@ using MRC_API.Payload.Response.GoogleAuth;
 using MRC_API.Payload.Response.User;
 using MRC_API.Service.Interface;
 using MRC_API.Utils;
+using Newtonsoft.Json;
 using Repository.Entity;
 using Repository.Enum;
 using Repository.Paginate;
@@ -17,13 +19,18 @@ using System.Data;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using static System.Net.WebRequestMethods;
 
 namespace MRC_API.Service.Implement
 {
     public class UserService : BaseService<UserService>, IUserService
     {
-        public UserService(IUnitOfWork<MrcContext> unitOfWork, ILogger<UserService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor) : base(unitOfWork, logger, mapper, httpContextAccessor)
-        {
+        private readonly IEmailSender _emailSender;
+
+        public UserService(IUnitOfWork<MrcContext> unitOfWork, ILogger<UserService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IEmailSender emailSender) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        {  
+
+            _emailSender = emailSender;
         }
 
         public async Task<CreateNewAccountResponse> CreateNewAdminAccount(CreateNewAccountRequest createNewAccountRequest)
@@ -63,6 +70,9 @@ namespace MRC_API.Service.Implement
                     Password = newUser.Password,
                 };
             }
+            string subject = "Welcome to MRC!";
+            string message = $"Dear {newUser.UserName},\n\nYour admin account has been successfully created.";
+            await _emailSender.SendEmailAsync(newUser.Email, subject, message);
             return createNewAccountResponse;
         }
 
@@ -101,6 +111,7 @@ namespace MRC_API.Service.Implement
             {
                 throw new BadHttpRequestException(MessageConstant.UserMessage.EmailExisted);
             }
+
             User newUser = new User()
             {
                 Id = Guid.NewGuid(),
@@ -117,6 +128,7 @@ namespace MRC_API.Service.Implement
                 Role = RoleEnum.Manager.GetDescriptionFromEnum()
 
             };
+
             await _unitOfWork.GetRepository<User>().InsertAsync(newUser);
             bool isSuccesfully = await _unitOfWork.CommitAsync() > 0;
             GenderEnum gender = EnumUtil.ParseEnum<GenderEnum>(newUser.Gender);
@@ -129,11 +141,34 @@ namespace MRC_API.Service.Implement
                     Password = newUser.Password,
                     Email = newUser.Email,
                     FullName = newUser.FullName,
-                    Gender = gender,
+                    Gender = EnumUtil.ParseEnum<GenderEnum>(newUser.Gender),
                     PhoneNumber = newUser.PhoneNumber
                 };
+
+              
+               
             }
             return createNewAccountResponse;
+        }
+        public async Task<bool> VerifyOtp (Guid UserId, string otpCheck)
+        {
+            var otp = await _unitOfWork.GetRepository<Otp>().SingleOrDefaultAsync(predicate: p => p.OtpCode.Equals(otpCheck) && p.UserId.Equals(UserId));
+            if(otp != null && TimeUtils.GetCurrentSEATime() < otp.ExpiresAt && otp.IsValid == true)
+            {
+                var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: u => u.Id.Equals(UserId));
+                if(user != null)
+                {
+                    user.Status = StatusEnum.Available.GetDescriptionFromEnum();
+                    _unitOfWork.GetRepository<User>().UpdateAsync(user);
+                    _unitOfWork.GetRepository<Otp>().DeleteAsync(otp); // Delete the OTP record
+                
+                    
+                    await _unitOfWork.CommitAsync();
+                    return true;
+                }
+
+            }
+            return false;
         }
         public async Task<CreateNewAccountResponse> CreateNewCustomerAccount(CreateNewAccountRequest createNewAccountRequest)
         {
@@ -177,7 +212,7 @@ namespace MRC_API.Service.Implement
                 Password = PasswordUtil.HashPassword(createNewAccountRequest.Password),
                 FullName = createNewAccountRequest.FullName,
                 Email = createNewAccountRequest.Email,
-                Status = StatusEnum.Available.GetDescriptionFromEnum(),
+                Status = StatusEnum.Unavailable.GetDescriptionFromEnum(),
                 InsDate = TimeUtils.GetCurrentSEATime(),
                 UpDate = TimeUtils.GetCurrentSEATime(),
                 Role = RoleEnum.Customer.GetDescriptionFromEnum(),
@@ -199,6 +234,25 @@ namespace MRC_API.Service.Implement
                     Gender = gender,
                     PhoneNumber = newUser.PhoneNumber
                 };
+                // Generate and store OTP
+                string otp = OtpUltil.GenerateOtp();
+                var otpRecord = new Otp
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = newUser.Id,
+                    OtpCode = otp,
+                    CreateDate = TimeUtils.GetCurrentSEATime(),
+                    ExpiresAt = TimeUtils.GetCurrentSEATime().AddMinutes(10),
+                    IsValid = true
+                };
+                await _unitOfWork.GetRepository<Otp>().InsertAsync(otpRecord);
+                await _unitOfWork.CommitAsync();
+
+                // Send OTP email
+                await SendOtpEmail(newUser.Email, otp);
+
+                // Optionally, handle OTP expiration as discussed
+                ScheduleOtpCancellation(otpRecord.Id, TimeSpan.FromMinutes(10));
             }
             return createNewAccountResponse;
         }
@@ -355,6 +409,54 @@ namespace MRC_API.Service.Implement
                 };
             }
             return response;
+        }
+        private async Task ScheduleOtpCancellation(Guid otpId, TimeSpan delay)
+        {
+            await Task.Delay(delay);
+
+            var otpRepository = _unitOfWork.GetRepository<Otp>();
+            var otp = await otpRepository.SingleOrDefaultAsync(predicate: p => p.Id.Equals(otpId));
+
+            if (otp != null && otp.IsValid && TimeUtils.GetCurrentSEATime() >= otp.ExpiresAt)
+            {
+                otp.IsValid = false;
+                otpRepository.UpdateAsync(otp);
+                await _unitOfWork.CommitAsync();
+            }
+        }
+        private async Task SendOtpEmail(string email, string otp)
+        {
+            try
+            {
+                // Create a new MimeMessage instance
+                var message = new MimeMessage();
+
+                // Set the sender's email address
+                message.From.Add(new MailboxAddress("MRC", "mrc.web@outlook.com"));
+
+                // Set the recipient's email address
+                message.To.Add(new MailboxAddress("", email));
+
+                // Set the subject of the email
+                message.Subject = "Welcome to MRC";
+
+                // Create a body builder to construct the email body
+                var bodyBuilder = new BodyBuilder();
+
+                // Set the HTML content of the email, including the OTP (without unnecessary bold tags)
+                bodyBuilder.HtmlBody = $"Your OTP code is: {otp}. This code is valid for 10 minutes.";
+
+                // Set the body of the message
+                message.Body = bodyBuilder.ToMessageBody();
+
+                // Send the email using the _emailSender service (assuming it's properly configured)
+                await _emailSender.SendEmailAsync(email, message.Subject, message.Body.ToString());
+            }
+            catch (Exception ex)
+            {
+                // Handle email sending errors (optional)
+                Console.WriteLine($"Error sending OTP email: {ex.Message}");
+            }
         }
     }
 }
