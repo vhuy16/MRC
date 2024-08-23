@@ -49,5 +49,12 @@
         {
             public const string CreateOrderFail = "Tạo hoá đơn thất bại";
         }
+
+        public static class CartMessage
+        {
+            public const string AddCartItemFail = "Thêm vào giỏ hàng thất bại";
+            public const string CartItemNotExist = "Không có sản phẩm này trong giỏ hàng";
+            public const string CartItemIsEmpty = "Không có sản phẩm nào trong giỏ hàng";
+        }
     }
 }

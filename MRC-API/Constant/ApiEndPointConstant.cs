@@ -59,7 +59,11 @@
         public static class Cart
         {
             public const string CartEndPoint = ApiEndpoint + "/Cart";
-            public const string CreateNewCart = CartEndPoint;
+            public const string AddCartItem = CartEndPoint + "/Item";
+            public const string DeleteCartItem = CartEndPoint + "Item" + "/{ItemId}";
+            public const string GetAllCart = CartEndPoint;
+            public const string ClearCart = CartEndPoint + "/Clear-All";
+            public const string GetCartSummary = CartEndPoint + "/Get-Summary";
         }
     }
 }

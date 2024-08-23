@@ -149,24 +149,24 @@ namespace MRC_API.Service.Implement
             {
                 throw new BadHttpRequestException(MessageConstant.PatternMessage.PhoneIncorrect);
             }
-            var manager = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
+            var customer = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
                 predicate: m => m.UserName.Equals(createNewAccountRequest.UserName));
 
-            if (manager != null)
+            if (customer != null)
             {
                 throw new BadHttpRequestException(MessageConstant.UserMessage.AccountExisted);
             }
-            var managerPhone = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
+            var customerPhone = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
                 predicate: m => m.PhoneNumber.Equals(createNewAccountRequest.PhoneNumber));
 
-            if (managerPhone != null)
+            if (customerPhone != null)
             {
                 throw new BadHttpRequestException(MessageConstant.UserMessage.PhoneExisted);
             }
-            var managerEmail = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
+            var customerEmail = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
                 predicate: m => m.Email.Equals(createNewAccountRequest.Email));
 
-            if (managerEmail != null)
+            if (customerEmail != null)
             {
                 throw new BadHttpRequestException(MessageConstant.UserMessage.EmailExisted);
             }
@@ -185,6 +185,17 @@ namespace MRC_API.Service.Implement
                 Gender = createNewAccountRequest.Gender.GetDescriptionFromEnum().ToString()
             };
             await _unitOfWork.GetRepository<User>().InsertAsync(newUser);
+
+            Cart newCart = new Cart()
+            {
+                Id = Guid.NewGuid(),
+                UserId = newUser.Id,
+                Status = StatusEnum.Available.GetDescriptionFromEnum(),
+                InsDate = TimeUtils.GetCurrentSEATime(),
+                UpDate = TimeUtils.GetCurrentSEATime()
+            };
+            await _unitOfWork.GetRepository<Cart>().InsertAsync(newCart);
+
             bool isSuccesfully = await _unitOfWork.CommitAsync() > 0;
             GenderEnum gender = EnumUtil.ParseEnum<GenderEnum>(newUser.Gender);
             CreateNewAccountResponse createNewAccountResponse = null;
@@ -343,6 +354,17 @@ namespace MRC_API.Service.Implement
                 UpDate = TimeUtils.GetCurrentSEATime()
             };
             await _unitOfWork.GetRepository<User>().InsertAsync(newUser);
+
+            Cart newCart = new Cart()
+            {
+                Id = Guid.NewGuid(),
+                UserId = newUser.Id,
+                Status = StatusEnum.Available.GetDescriptionFromEnum(),
+                InsDate = TimeUtils.GetCurrentSEATime(),
+                UpDate = TimeUtils.GetCurrentSEATime()
+            };
+            await _unitOfWork.GetRepository<Cart>().InsertAsync(newCart);
+
             CreateNewAccountResponse response = null;
             bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
             if (isSuccessful)
