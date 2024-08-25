@@ -1,4 +1,5 @@
 using Microsoft.OpenApi.Models;
+using MRC_API.Infrastructure;
 using MRC_API.Middlewares;
 using Prepare;
 
@@ -11,7 +12,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddAuthentication();
-
+builder.Services.AddInfrastructure();
 builder.Services.AddDatabase();
 builder.Services.AddUnitOfWork();
 builder.Services.AddCustomServices();
