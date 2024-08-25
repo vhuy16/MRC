@@ -12,6 +12,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Identity.Client;
 using Microsoft.IdentityModel.Tokens;
+using MRC_API.Service;
 using MRC_API.Service.Implement;
 using MRC_API.Service.Interface;
 using Repository.Entity;
@@ -55,6 +56,7 @@ namespace Prepare
             services.AddScoped<IGoogleAuthenticationService, GoogleAuthenticationService>();
             services.AddScoped<ICartService, CartService>();
             services.AddScoped<IEmailSender, EmailSender>();
+            services.AddScoped<AzureDatabaseService>();
             return services;
         }
 

@@ -42,7 +42,7 @@ namespace MRC_API.Controllers
                 return BadRequest(new ErrorResponse()
                 {
                     StatusCode = StatusCodes.Status400BadRequest,
-                    Error = "Failed to create teacher",
+                    Error = "Failed to create manager",
                     TimeStamp = TimeUtils.GetCurrentSEATime()
                 });
             }
