@@ -130,5 +130,25 @@ namespace MRC_API.Controllers
 
             return Ok(isOtpValid);
         }
+
+        [HttpPost(ApiEndPointConstant.User.ForgotPassword)]
+        [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(ProblemDetails))]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
+        {
+            var response = await _userService.ForgotPassword(request);
+
+            return Ok(response);
+        }
+
+        [HttpPost(ApiEndPointConstant.User.VerifyAndResetPassword)]
+        [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(ProblemDetails))]
+        public async Task<IActionResult> VerifyAndResetPassword([FromRoute] Guid id,[FromBody] VerifyAndResetPasswordRequest request)
+        {
+            var response = await _userService.VerifyAndResetPassword(id, request);
+
+            return Ok(response);
+        }
     }
 }
