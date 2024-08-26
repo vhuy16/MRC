@@ -480,5 +480,70 @@ namespace MRC_API.Service.Implement
                 Console.WriteLine($"Error sending OTP email: {ex.Message}");
             }
         }
+
+        public async Task<bool> ForgotPassword(Payload.Request.User.ForgotPasswordRequest request)
+        {
+            string emailPattern = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
+            if (!Regex.IsMatch(request.Email, emailPattern))
+            {
+                throw new BadHttpRequestException(MessageConstant.PatternMessage.EmailIncorrect);
+            }
+
+            var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
+                predicate: u => u.Email.Equals(request.Email) && u.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
+
+            if (user == null) 
+            {
+                throw new BadHttpRequestException(MessageConstant.UserMessage.AccountNotExist);
+            }
+
+            string otp = OtpUltil.GenerateOtp();
+            var otpRecord = new Otp
+            {
+                Id = Guid.NewGuid(),
+                UserId = user.Id,
+                OtpCode = otp,
+                CreateDate = TimeUtils.GetCurrentSEATime(),
+                ExpiresAt = TimeUtils.GetCurrentSEATime().AddMinutes(10),
+                IsValid = true
+            };
+            await _unitOfWork.GetRepository<Otp>().InsertAsync(otpRecord);
+            await SendOtpEmail(user.Email, otp);
+            bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
+
+            return isSuccessful;
+
+        }
+
+        public async Task<bool> VerifyAndResetPassword(Guid id,VerifyAndResetPasswordRequest request)
+        {
+            var otp = await _unitOfWork.GetRepository<Otp>().SingleOrDefaultAsync(
+                predicate: o => o.OtpCode.Equals(request.Otp) && o.UserId.Equals(id));
+            if (otp == null)
+            {
+                throw new BadHttpRequestException("OTP không chính xác");
+            }
+
+            var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
+                predicate: u => u.Id.Equals(id) && u.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
+            if (user == null)
+            {
+                throw new BadHttpRequestException(MessageConstant.UserMessage.UserNotExist);
+            }
+
+            if (!request.NewPassword.Equals(request.ComfirmPassword))
+            {
+                throw new BadHttpRequestException("Mật khẩu xác nhận không trùng");
+            }
+
+            user.Password = PasswordUtil.HashPassword(request.NewPassword);
+            user.UpDate = TimeUtils.GetCurrentSEATime();
+            _unitOfWork.GetRepository<User>().UpdateAsync(user);
+
+            _unitOfWork.GetRepository<Otp>().DeleteAsync(otp);
+            await _unitOfWork.CommitAsync();
+            return true;
+
+        }
     }
 }

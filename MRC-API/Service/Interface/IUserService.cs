@@ -18,7 +18,9 @@ namespace MRC_API.Service.Interface
        Task<string> CreateTokenByEmail(string email);
 
        Task<bool> GetAccountByEmail(string email);
-        Task<bool> VerifyOtp(Guid UserId, string otpCheck);
+       Task<bool> VerifyOtp(Guid UserId, string otpCheck);
        Task<CreateNewAccountResponse> CreateNewUserAccountByGoogle(GoogleAuthResponse response);
+       Task<bool> ForgotPassword(ForgotPasswordRequest request);
+       Task<bool> VerifyAndResetPassword(Guid id,VerifyAndResetPasswordRequest request);
     }
 }

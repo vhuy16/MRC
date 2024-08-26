@@ -22,6 +22,8 @@
             public const string GetUser = UserEndPoint + "/{id}";
             public const string UpdateUser = UserEndPoint + "/{id}";
             public const string VerifyOtp = UserEndPoint + "/verify-otp";
+            public const string ForgotPassword = UserEndPoint + "/forgot-password";
+            public const string VerifyAndResetPassword = UserEndPoint + "/{id}" + "/forgot-password/verify";
         }
 
         public static class Category
