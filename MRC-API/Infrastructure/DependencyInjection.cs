@@ -16,7 +16,7 @@ namespace MRC_API.Infrastructure
                     .AddJob<OtpCleanupJob>(jobKey)
                     .AddTrigger(trigger => trigger
                                 .ForJob(jobKey)
-                                .WithCronSchedule("0 * * ? * *"));
+                                .WithCronSchedule("0 0 0 * * ?"));
             });
 
             services.AddQuartzHostedService();

@@ -305,9 +305,24 @@ namespace MRC_API.Service.Implement
             {
                 throw new BadHttpRequestException(MessageConstant.UserMessage.UserNotExist);
             }
+
+            var cart = await _unitOfWork.GetRepository<Cart>().SingleOrDefaultAsync(
+                predicate: c => c.UserId.Equals(user.Id));
+
+            var cartItems = await _unitOfWork.GetRepository<CartItem>().GetListAsync(predicate: ci => ci.CartId.Equals(cart.Id));
+            foreach(var cartItem in cartItems)
+            {
+            _unitOfWork.GetRepository<CartItem>().DeleteAsync(cartItem);
+            }
+
+            cart.Status = StatusEnum.Unavailable.GetDescriptionFromEnum();
+            cart.UpDate = TimeUtils.GetCurrentSEATime();
+            _unitOfWork.GetRepository<Cart>().UpdateAsync(cart);
+
             user.Status = StatusEnum.Unavailable.GetDescriptionFromEnum();
             user.UpDate = TimeUtils.GetCurrentSEATime();
             _unitOfWork.GetRepository<User>().UpdateAsync(user);
+
             bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
             return isSuccessful;
         }
@@ -510,7 +525,7 @@ namespace MRC_API.Service.Implement
             await _unitOfWork.GetRepository<Otp>().InsertAsync(otpRecord);
             await SendOtpEmail(user.Email, otp);
             bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
-
+            ScheduleOtpCancellation(otpRecord.Id, TimeSpan.FromMinutes(10));
             return isSuccessful;
 
         }

@@ -68,6 +68,7 @@
             public const string GetAllCart = CartEndPoint;
             public const string ClearCart = CartEndPoint + "/Clear-All";
             public const string GetCartSummary = CartEndPoint + "/Get-Summary";
+            public const string UpdateCartItem = CartEndPoint + "Item" + "/{ItemId}";
         }
         public static class Email
         {
