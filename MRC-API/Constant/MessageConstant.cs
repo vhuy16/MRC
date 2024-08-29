@@ -40,8 +40,8 @@
             public static string ProductNameExisted = "Sản Phẩm đã tồn tại";
             public static string ProductNotExist = "Sản phẩm không tồn tại";
             public static string NegativeQuantity = "Số lượng phải lớn hơn 0";
-            public static string ProductIsEmpty = "không có sản phẩm nào";
-
+            public static string ProductIsEmpty = "Không có sản phẩm nào";
+            public static string ProductNotEnough = "Số lượng trong kho không đủ";
             public static string ProductIdEmpty = "Id của sản phẩm bị trống";
         }
 
@@ -84,6 +84,7 @@
             public const string AddCartItemFail = "Thêm vào giỏ hàng thất bại";
             public const string CartItemNotExist = "Không có sản phẩm này trong giỏ hàng";
             public const string CartItemIsEmpty = "Không có sản phẩm nào trong giỏ hàng";
+            public const string NegativeQuantity = "Số lượng phải lớn hơn 0";
         }
     }
 }

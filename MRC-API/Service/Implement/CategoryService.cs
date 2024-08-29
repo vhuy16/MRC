@@ -70,6 +70,17 @@ namespace MRC_API.Service.Implement
                         _unitOfWork.GetRepository<Image>().DeleteAsync(image);
                     }
                 }
+
+                var cartItems = await _unitOfWork.GetRepository<CartItem>().GetListAsync(
+                    predicate: ci => ci.ProductId.Equals(product.Id));
+                if(cartItems != null)
+                {
+                    foreach(var cartItem in cartItems)
+                    {
+                        _unitOfWork.GetRepository<CartItem>().DeleteAsync(cartItem);
+                    }
+                }
+
                 product.Status = StatusEnum.Unavailable.GetDescriptionFromEnum();
                 product.UpDate = TimeUtils.GetCurrentSEATime();
                 _unitOfWork.GetRepository<Product>().UpdateAsync(product);

@@ -333,12 +333,23 @@ namespace MRC_API.Service.Implement
                 throw new BadHttpRequestException(MessageConstant.ProductMessage.ProductIsEmpty);
             }
             product.Status = StatusEnum.Unavailable.GetDescriptionFromEnum();
+
             var imageDelete = await _unitOfWork.GetRepository<Image>().GetListAsync(predicate: p => p.ProductId.Equals(product.Id));
             if(imageDelete != null)
             {
                 foreach(var img in imageDelete)
                 {
                     _unitOfWork.GetRepository<Image>().DeleteAsync(img);
+                }
+            }
+
+            var cartItems = await _unitOfWork.GetRepository<CartItem>().GetListAsync(
+                predicate: ci => ci.ProductId.Equals(ProductId));
+            if(cartItems != null) 
+            {
+                foreach (var cartItem in cartItems)
+                {
+                    _unitOfWork.GetRepository<CartItem>().DeleteAsync(cartItem);
                 }
             }
             _unitOfWork.GetRepository<Product>().UpdateAsync(product);

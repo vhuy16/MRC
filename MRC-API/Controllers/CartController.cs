@@ -69,5 +69,14 @@ namespace MRC_API.Controllers
             var response = await _cartService.GetCartSummary();
             return Ok(response);
         }
+
+        [HttpPut(ApiEndPointConstant.Cart.UpdateCartItem)]
+        [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(ProblemDetails))]
+        public async Task<IActionResult> UpdateCartItem([FromRoute] Guid ItemId, [FromBody] UpdateCartItemRequest updateCartItemRequest)
+        {
+            var response = await _cartService.UpdateCartItem(ItemId, updateCartItemRequest);
+            return Ok(response);
+        }
     }
 }
