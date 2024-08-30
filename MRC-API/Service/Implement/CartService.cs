@@ -249,15 +249,15 @@ namespace MRC_API.Service.Implement
                 predicate: ci => ci.Id.Equals(id) && ci.CartId.Equals(cart.Id) 
                 && ci.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
 
-            var product = await _unitOfWork.GetRepository<Product>().SingleOrDefaultAsync(
-                predicate: p => p.Id.Equals(existingCartItem.ProductId) && p.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
-
             if(existingCartItem == null)
             {
                 throw new BadHttpRequestException(MessageConstant.CartMessage.CartItemNotExist);
             }
 
-            if(updateCartItemRequest.Quantity <= 0)
+            var product = await _unitOfWork.GetRepository<Product>().SingleOrDefaultAsync(
+                predicate: p => p.Id.Equals(existingCartItem.ProductId) && p.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
+
+            if (updateCartItemRequest.Quantity <= 0)
             {
                 throw new BadHttpRequestException(MessageConstant.CartMessage.NegativeQuantity);
             }
