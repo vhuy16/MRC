@@ -41,27 +41,53 @@ namespace MRC_API.Service.Implement
                 throw new BadHttpRequestException(MessageConstant.ProductMessage.ProductNotExist);
             }
 
-            CartItem cartItem = new CartItem()
+            if (product.Quantity < addCartItemRequest.Quantity)
             {
-                Id = Guid.NewGuid(),
-                CartId = cart.Id,
-                ProductId = product.Id,
-                Status = StatusEnum.Available.GetDescriptionFromEnum(),
-                InsDate = TimeUtils.GetCurrentSEATime(),
-                UpDate = TimeUtils.GetCurrentSEATime()
-            };
+                throw new BadHttpRequestException(MessageConstant.ProductMessage.ProductNotEnough);
+            }
 
-            await _unitOfWork.GetRepository<CartItem>().InsertAsync(cartItem);
+            var existingCartItem = await _unitOfWork.GetRepository<CartItem>().SingleOrDefaultAsync(
+                predicate: ci => ci.CartId.Equals(cart.Id) && ci.ProductId.Equals(addCartItemRequest.ProductId)
+                && ci.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
+
+            if(existingCartItem != null)
+            {
+                existingCartItem.Quantity += addCartItemRequest.Quantity;
+                existingCartItem.UpDate = TimeUtils.GetCurrentSEATime();
+
+                if(product.Quantity < existingCartItem.Quantity)
+                {
+                    throw new BadHttpRequestException(MessageConstant.ProductMessage.ProductNotEnough);
+                }
+                _unitOfWork.GetRepository<CartItem>().UpdateAsync(existingCartItem);
+            }
+
+            else 
+            {
+                CartItem cartItem = new CartItem()
+                {
+                    Id = Guid.NewGuid(),
+                    CartId = cart.Id,
+                    ProductId = product.Id,
+                    Quantity = addCartItemRequest.Quantity,
+                    Status = StatusEnum.Available.GetDescriptionFromEnum(),
+                    InsDate = TimeUtils.GetCurrentSEATime(),
+                    UpDate = TimeUtils.GetCurrentSEATime()
+                };
+
+                await _unitOfWork.GetRepository<CartItem>().InsertAsync(cartItem);
+            }
+            
             bool isSuccesfully = await _unitOfWork.CommitAsync() > 0;
             AddCartItemResponse addCartItemResponse = null;
             if (isSuccesfully)
             {
                 addCartItemResponse = new AddCartItemResponse() 
                 {
-                    CartItemId = cartItem.Id,
+                    CartItemId = existingCartItem?.Id ?? cart.Id,
                     ProductId = product.Id,
                     ProductName = product.ProductName,
-                    Price = product.Price,
+                    Price = product.Price * addCartItemRequest.Quantity,
                 };
             }
             return addCartItemResponse;
@@ -192,8 +218,8 @@ namespace MRC_API.Service.Implement
 
             foreach (var cartItem in cartItems)
             {
-                totalItems++;
-                totalPrice += cartItem.Product.Price.Value;
+                totalItems += cartItem.Quantity;
+                totalPrice += cartItem.Product.Price.Value * cartItem.Quantity;
             }
 
             var response = new CartSummayResponse()
@@ -203,6 +229,50 @@ namespace MRC_API.Service.Implement
             };
 
             return response;
+        }
+
+        public async Task<bool> UpdateCartItem(Guid id, UpdateCartItemRequest updateCartItemRequest)
+        {
+            Guid? userId = UserUtil.GetAccountId(_httpContextAccessor.HttpContext);
+            var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
+                predicate: u => u.Id.Equals(userId) && u.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
+
+            if (user == null)
+            {
+                throw new BadHttpRequestException("You need log in.");
+            }
+
+            var cart = await _unitOfWork.GetRepository<Cart>().SingleOrDefaultAsync(
+                predicate: c => c.UserId.Equals(userId));
+
+            var existingCartItem = await _unitOfWork.GetRepository<CartItem>().SingleOrDefaultAsync(
+                predicate: ci => ci.Id.Equals(id) && ci.CartId.Equals(cart.Id) 
+                && ci.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
+
+            if(existingCartItem == null)
+            {
+                throw new BadHttpRequestException(MessageConstant.CartMessage.CartItemNotExist);
+            }
+
+            var product = await _unitOfWork.GetRepository<Product>().SingleOrDefaultAsync(
+                predicate: p => p.Id.Equals(existingCartItem.ProductId) && p.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
+
+            if (updateCartItemRequest.Quantity <= 0)
+            {
+                throw new BadHttpRequestException(MessageConstant.CartMessage.NegativeQuantity);
+            }
+
+            if(product.Quantity < updateCartItemRequest.Quantity)
+            {
+                throw new BadHttpRequestException(MessageConstant.ProductMessage.ProductNotEnough);
+            }
+
+            existingCartItem.Quantity = updateCartItemRequest.Quantity.HasValue ? updateCartItemRequest.Quantity.Value 
+                : existingCartItem.Quantity;
+            existingCartItem.UpDate = TimeUtils.GetCurrentSEATime();
+            _unitOfWork.GetRepository<CartItem>().UpdateAsync(existingCartItem);
+            bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
+            return isSuccessful;
         }
     }
 }
