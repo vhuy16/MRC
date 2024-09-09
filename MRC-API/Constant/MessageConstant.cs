@@ -13,6 +13,11 @@
             public const string AccountNotExist = "Tài khoản không tồn tại";
 
         }
+        public static class PaymentMessage
+        {
+            public const string CreatePaymentFail = "Failed to create payment URL.";
+            public const string PaymentNotFound = "Payment not found.";
+        }
         public static class LoginMessage
         {
             public const string InvalidUsernameOrPassword = "Tên đăng nhập hoặc mật khẩu không chính xác";

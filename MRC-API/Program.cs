@@ -1,22 +1,28 @@
 using Microsoft.OpenApi.Models;
 using MRC_API.Infrastructure;
 using MRC_API.Middlewares;
+using MRC_API.Payload.Response.Pay;
 using Prepare;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
+// Add Swagger/OpenAPI services
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// Add other custom services and configurations
 builder.Services.AddAuthentication();
 builder.Services.AddInfrastructure();
 builder.Services.AddDatabase();
 builder.Services.AddUnitOfWork();
 builder.Services.AddCustomServices();
 builder.Services.AddJwtValidation();
+builder.Services.Configure<PayOSSettings>(builder.Configuration.GetSection("PayOS"));
+
+builder.Services.AddHttpClientServices();
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
 builder.Services.AddCors(options =>
@@ -30,6 +36,7 @@ builder.Services.AddCors(options =>
         });
 });
 
+// Configure Swagger/OpenAPI
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Your API", Version = "v1" });
@@ -46,26 +53,29 @@ builder.Services.AddSwaggerGen(c =>
     c.AddSecurityDefinition("Bearer", securityScheme);
 
     var securityRequirement = new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
                 {
-                    {
-                        new OpenApiSecurityScheme
-                        {
-                            Reference = new OpenApiReference
-                            {
-                                Type = ReferenceType.SecurityScheme,
-                                Id = "Bearer",
-                            },
-                        },
-                        new string[] { }
-                    },
-                };
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer",
+                },
+            },
+            new string[] { }
+        },
+    };
     c.AddSecurityRequirement(securityRequirement);
 });
 
+// Add AutoMapper
 builder.Services.AddAutoMapper(typeof(Program).Assembly);
+
+// Build the application
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -75,11 +85,9 @@ if (app.Environment.IsDevelopment())
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 app.UseAuthentication();
-
 app.UseHttpsRedirection();
-
 app.UseAuthorization();
-
 app.MapControllers();
 
+// Run the application
 app.Run();
