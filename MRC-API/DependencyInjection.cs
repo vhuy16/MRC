@@ -56,7 +56,13 @@ namespace Prepare
             services.AddScoped<IGoogleAuthenticationService, GoogleAuthenticationService>();
             services.AddScoped<ICartService, CartService>();
             services.AddScoped<IEmailSender, EmailSender>();
+            services.AddScoped<IPayService, PayService>();
             services.AddScoped<AzureDatabaseService>();
+            return services;
+        }
+        public static IServiceCollection AddHttpClientServices(this IServiceCollection services)
+        {
+            services.AddHttpClient(); // Registers HttpClient
             return services;
         }
 

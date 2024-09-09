@@ -25,7 +25,11 @@
             public const string ForgotPassword = UserEndPoint + "/forgot-password";
             public const string VerifyAndResetPassword = UserEndPoint + "/{id}" + "/forgot-password/verify";
         }
-
+        public static class Payment
+        {
+            public const string CreatePaymentUrl = "api/payment/create-url";
+            public const string GetPaymentInfo = "api/payment/{paymentLinkId}";
+        }
         public static class Category
         {
             public const string CategoryEndPoint = ApiEndpoint + "/category";
