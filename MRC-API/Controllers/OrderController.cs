@@ -22,10 +22,10 @@ namespace MRC_API.Controllers
         [HttpPost(ApiEndPointConstant.Order.CreateNewOrder)]
         [ProducesResponseType(typeof(CreateOrderResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
-        public async Task<IActionResult> CreateOrder([FromBody] List<OrderDetailRequest> orderDetailRequests)
+        public async Task<IActionResult> CreateOrder()
         {
            
-           CreateOrderResponse createOrderResponse  = await _orderService.CreateOrder(orderDetailRequests);
+           CreateOrderResponse createOrderResponse  = await _orderService.CreateOrder();
             if (createOrderResponse == null)
             {
                 return Problem(MessageConstant.UserMessage.CreateUserAdminFail);

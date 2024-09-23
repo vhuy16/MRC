@@ -20,11 +20,11 @@ namespace MRC_API.Controllers
         [HttpPost(ApiEndPointConstant.Payment.CreatePaymentUrl)]
         [ProducesResponseType(typeof(CreatePaymentResult), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
-        public async Task<IActionResult> CreatePaymentUrl()
+        public async Task<IActionResult> CreatePaymentUrl([FromBody] List<Guid> cartItemsId)
         {
             try
             {
-                var result = await _payService.CreatePaymentUrlRegisterCreator();
+                var result = await _payService.CreatePaymentUrlRegisterCreator(cartItemsId);
                 if (result == null)
                 {
                     return Problem(MessageConstant.PaymentMessage.CreatePaymentFail);

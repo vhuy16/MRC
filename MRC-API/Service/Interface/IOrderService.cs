@@ -7,7 +7,8 @@ namespace MRC_API.Service.Interface
 {
     public interface IOrderService
     {
-        Task<CreateOrderResponse> CreateOrder( List<OrderDetailRequest> orderDetailRequests);
+        //Task<CreateOrderResponse> CreateOrder( List<OrderDetailRequest> orderDetailRequests);
+        Task<CreateOrderResponse> CreateOrder();
         Task<IPaginate<GetOrderResponse>> GetListOrder(int page, int size);
     }
 }
