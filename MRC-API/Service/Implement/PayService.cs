@@ -13,6 +13,8 @@ using Repository.Entity;
 using Repository.Enum;
 using System.Security.Cryptography;
 using System.Text;
+using MRC_API.Payload.Request.OrderDetail;
+using MRC_API.Payload.Request.Payment;
 
 namespace MRC_API.Service.Implement
 {
@@ -23,13 +25,15 @@ namespace MRC_API.Service.Implement
         private readonly PayOSSettings _payOSSettings;
         private readonly HttpClient _client;
         private readonly IUnitOfWork _unitOfWork;
-        public PayService(IOptions<PayOSSettings> settings, HttpClient client, IUnitOfWork<MrcContext> unitOfWork, ILogger<PayService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor)
+        private readonly IOrderService _oderServicer;
+        public PayService(IOptions<PayOSSettings> settings, HttpClient client, IUnitOfWork<MrcContext> unitOfWork, ILogger<PayService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IOrderService oderServicer)
        : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
             _payOSSettings = settings.Value; // Lấy giá trị từ IOptions
             _payOS = new PayOS(_payOSSettings.ClientId, _payOSSettings.ApiKey, _payOSSettings.ChecksumKey);
             _client = client;
             _unitOfWork = unitOfWork;
+            _oderServicer = oderServicer;
         }
         private string ComputeHmacSha256(string data, string checksumKey)
         {
@@ -39,7 +43,7 @@ namespace MRC_API.Service.Implement
                 return BitConverter.ToString(hash).Replace("-", "").ToLower();
             }
         }   
-        public async Task<CreatePaymentResult> CreatePaymentUrlRegisterCreator()
+        public async Task<CreatePaymentResult> CreatePaymentUrlRegisterCreator(List<Guid> cartItemsId)
         {
             try
             {
@@ -89,30 +93,42 @@ namespace MRC_API.Service.Implement
                     throw new BadHttpRequestException("Cart is empty.");
                 }
 
-                var cartItems = await _unitOfWork.GetRepository<CartItem>().GetListAsync(
-                    predicate: p => p.CartId.Equals(cart.Id));
-
+                List<CartItem> cartItems = new List<CartItem>();
+                foreach(var cartItemid in cartItemsId)
+                {
+                    var cartItem = await _unitOfWork.GetRepository<CartItem>().SingleOrDefaultAsync(predicate: p => p.Id.Equals(cartItemid)
+                                                                                                  && p.CartId.Equals(cart.Id));
+                    cartItems.Add(cartItem);
+                }
+               
+               
                 int totalPrice = 0;
                 var items = new List<ItemData>();
-
+               
                 // Lấy thông tin sản phẩm từ CartItems
                 foreach (var cartItem in cartItems)
                 {
-                    var product = await _unitOfWork.GetRepository<Product>().SingleOrDefaultAsync(
+                    
+                        var product = await _unitOfWork.GetRepository<Product>().SingleOrDefaultAsync(
                         predicate: p => p.Id.Equals(cartItem.ProductId));
 
-                    if (product == null)
-                    {
-                        throw new BadHttpRequestException($"Product with ID {cartItem.ProductId} does not exist.");
+                        if (product == null)
+                        {
+                            throw new BadHttpRequestException($"Product with ID {cartItem.ProductId} does not exist.");
+                        }
+
+                        // Tạo đối tượng ItemData và thêm vào danh sách
+                        var itemData = new ItemData(product.ProductName, cartItem.Quantity, (int)product.Price);
+                        items.Add(itemData);
+
+                        // Tính tổng giá trị
+                        totalPrice += cartItem.Quantity * (int)product.Price;
+
+                    cartItem.Status = StatusEnum.Pending.GetDescriptionFromEnum();
+                    _unitOfWork.GetRepository<CartItem>().UpdateAsync(cartItem);
                     }
+                  await _unitOfWork.CommitAsync();
 
-                    // Tạo đối tượng ItemData và thêm vào danh sách
-                    var itemData = new ItemData(product.ProductName, cartItem.Quantity, (int)product.Price);
-                    items.Add(itemData);
-
-                    // Tính tổng giá trị
-                    totalPrice += cartItem.Quantity * (int)product.Price;
-                }
 
                 // Thông tin người mua
                 string buyerName = user.FullName;
@@ -153,15 +169,35 @@ namespace MRC_API.Service.Implement
                     buyerName: buyerName,
                     buyerPhone: buyerPhone,
                     buyerEmail: buyerEmail,
+                    
                     buyerAddress: "HCM", // Nếu có
                     expiredAt: (int)expiredAt.ToUnixTimeSeconds()
                 );
-
+                
                 // Gọi API tạo thanh toán
                 var paymentResult = await _payOS.createPaymentLink(paymentData);
+                if (paymentResult != null)
+                {
+                    // Create payment record in the database
+                    var createPaymentRequest = new CreatePaymentRequest
+                    {
+                        
+                        Amount = totalPrice,
+                        PaymentMethod = "PayOS",  // Adjust based on your actual method
+                        Status = "Pending",  // You can adjust this status accordingly
+                        UserId = userId.Value
+                    };
+
+                    var paymentCreated = await CreatePayment(createPaymentRequest);
+                    if (!paymentCreated)
+                    {
+                        throw new Exception("Failed to create payment record.");
+                    }
+                }
 
                 return paymentResult;
             }
+
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error creating payment URL.");
@@ -213,10 +249,11 @@ namespace MRC_API.Service.Implement
                 }
 
                 var cartItems = await _unitOfWork.GetRepository<CartItem>().GetListAsync(
-                    predicate: p => p.CartId.Equals(cart.Id));
+                    predicate: p => p.CartId.Equals(cart.Id)
+                                && p.Status.Equals(StatusEnum.Pending.GetDescriptionFromEnum()));
 
                 int totalPrice = 0;
-                var items = new List<ItemData>();
+                var items = new List<CustomItemData>();
 
                 // Lấy thông tin sản phẩm từ CartItems
                 foreach (var cartItem in cartItems)
@@ -230,9 +267,8 @@ namespace MRC_API.Service.Implement
                     }
 
                     // Tạo đối tượng ItemData và thêm vào danh sách
-                    var itemData = new ItemData(product.ProductName, cartItem.Quantity, (int)product.Price);
+                    var itemData = new CustomItemData(product.ProductName, cartItem.Quantity, (int)product.Price, product.Id);
                     items.Add(itemData);
-
                     // Tính tổng giá trị
                     totalPrice += cartItem.Quantity * (int)product.Price;
                 }
@@ -251,6 +287,7 @@ namespace MRC_API.Service.Implement
                     BuyerPhone = buyerPhone,
                     BuyerEmail = buyerEmail,
                     Status = paymentInfo.Status,
+
                     // Add other properties as needed
                 };
 
@@ -264,15 +301,19 @@ namespace MRC_API.Service.Implement
 
                         if (product != null)
                         {
-                            product.Status = "Unavailable";
+                            // Update product quantity
+                            product.Quantity -= cartItem.Quantity;
                             _unitOfWork.GetRepository<Product>().UpdateAsync(product);
+
+                            // Update cart item status to "Paid"
+                            cartItem.Status = StatusEnum.Paid.GetDescriptionFromEnum();
+                            _unitOfWork.GetRepository<CartItem>().UpdateAsync(cartItem);
                         }
                     }
 
-                    // Save the changes to the database
+                    // Save changes to the database
                     await _unitOfWork.CommitAsync();
                 }
-
                 return extendedPaymentInfo;
             }
             catch (Exception ex)
@@ -280,6 +321,23 @@ namespace MRC_API.Service.Implement
                 _logger.LogError(ex, "An error occurred while getting payment info.");
                 throw new BadHttpRequestException("An error occurred while getting payment info.", ex);
             }
+        }
+        public async Task<bool> CreatePayment(CreatePaymentRequest createPaymentRequest)
+        {
+            var payment = new Payment
+            {
+                PaymentId = Guid.NewGuid(),
+                Amount = createPaymentRequest.Amount,
+                CreatedAt = TimeUtils.GetCurrentSEATime(),
+                UpdatedAt = TimeUtils.GetCurrentSEATime(),
+                PaymentMethod = createPaymentRequest.PaymentMethod,
+                Status = createPaymentRequest.Status,
+                UserId = createPaymentRequest.UserId,
+               
+            };
+            await _unitOfWork.GetRepository<Payment>().InsertAsync(payment);
+            bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
+            return isSuccessful;
         }
     }
     }

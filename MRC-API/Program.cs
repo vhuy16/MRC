@@ -12,7 +12,7 @@ builder.Services.AddControllers();
 // Add Swagger/OpenAPI services
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
+builder.Services.AddLazyResolution();
 // Add other custom services and configurations
 builder.Services.AddAuthentication();
 builder.Services.AddInfrastructure();

@@ -10,5 +10,8 @@ namespace Repository.Enum
     {
         Available,
         Unavailable,
+        Pending,
+        Paid,
+        Canceled,
     }
 }

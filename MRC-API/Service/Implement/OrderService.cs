@@ -17,63 +17,177 @@ namespace MRC_API.Service.Implement
 {
     public class OrderService : BaseService<OrderService>, IOrderService
     {
+        
         public OrderService(IUnitOfWork<MrcContext> unitOfWork, ILogger<OrderService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
+            
         }
 
-        public async Task<CreateOrderResponse> CreateOrder(List<OrderDetailRequest> orderDetailRequests)
+        //public async Task<CreateOrderResponse> CreateOrder(List<OrderDetailRequest> orderDetailRequests)
+        //{
+        //    try
+        //    {
+        //        Guid? userId = UserUtil.GetAccountId(_httpContextAccessor.HttpContext);
+        //        if (userId == null)
+        //        {
+        //            throw new BadHttpRequestException("User ID cannot be null.");
+        //        }
+
+        //        // Validate quantities in request
+        //        foreach (var orderDetail in orderDetailRequests)
+        //        {
+        //            if (orderDetail.quantity <= 0)
+        //            {
+        //                throw new BadHttpRequestException($"Invalid quantity {orderDetail.quantity} for product ID {orderDetail.productId}. Quantity must be greater than zero.");
+        //            }
+        //        }
+
+        //        // Fetch all product details at once to minimize database calls
+        //        var productIds = orderDetailRequests.Select(od => od.productId).ToList();
+        //        var productsList = await _unitOfWork.GetRepository<Product>()
+        //                                            .GetListAsync(predicate: p => productIds.Contains(p.Id));
+
+        //        if (productsList.Count != productIds.Count)
+        //        {
+        //            throw new BadHttpRequestException("One or more products do not exist.");
+        //        }
+
+        //        Order order = new Order
+        //        {
+        //            Id = Guid.NewGuid(),
+        //            InsDate = TimeUtils.GetCurrentSEATime(),
+        //            UpDate = TimeUtils.GetCurrentSEATime(),
+        //            UserId = userId,
+
+        //            Status = StatusEnum.Pending.GetDescriptionFromEnum(),
+        //            TotalPrice = 0, // Initialize with 0, we'll calculate this later
+        //            OrderDetails = new List<OrderDetail>()
+        //        };
+
+        //        foreach (var orderDetail in orderDetailRequests)
+        //        {
+        //            var product = productsList.FirstOrDefault(p => p.Id == orderDetail.productId);
+        //            if (product == null)
+        //            {
+        //                throw new BadHttpRequestException(MessageConstant.ProductMessage.ProductNotExist);
+        //            }
+
+        //            if (product.Quantity < orderDetail.quantity)
+        //            {
+        //                throw new BadHttpRequestException($"Not enough stock for product {product.ProductName}. Requested: {orderDetail.quantity}, Available: {product.Quantity}");
+        //            }
+
+        //            var newOrderDetail = new OrderDetail
+        //            {
+        //                Id = Guid.NewGuid(),
+        //                OrderId = order.Id,
+        //                ProductId = product.Id,
+        //                InsDate = TimeUtils.GetCurrentSEATime(),
+        //                UpDate = TimeUtils.GetCurrentSEATime(),
+        //                Quantity = orderDetail.quantity,
+        //                Price = product.Price
+        //            };
+        //            product.Quantity = product.Quantity - newOrderDetail.Quantity.Value;
+        //            _unitOfWork.GetRepository<Product>().UpdateAsync(product);
+
+        //            //product.Quantity -= orderDetail.quantity; // Decrease the quantity of the product
+
+        //            order.OrderDetails.Add(newOrderDetail);
+        //            order.TotalPrice += newOrderDetail.Quantity * newOrderDetail.Price;
+        //            order.PaymentId = orderDetail.paymentId;
+
+        //            await _unitOfWork.GetRepository<OrderDetail>().InsertAsync(newOrderDetail);
+        //            //_unitOfWork.GetRepository<Product>().UpdateAsync(product); // Update the product quantity in the database
+        //        }
+
+
+        //        await _unitOfWork.GetRepository<Order>().InsertAsync(order);
+        //        bool isSuccessOrder = await _unitOfWork.CommitAsync() > 0;
+
+        //        if (!isSuccessOrder)
+        //        {
+        //            throw new BadHttpRequestException(MessageConstant.OrderMessage.CreateOrderFail);
+        //        }
+
+        //        // Prepare response
+        //        var orderDetailsResponse = order.OrderDetails.Select(od =>
+        //        {
+        //            var product = productsList.First(p => p.Id == od.ProductId);
+        //            return new CreateOrderResponse.OrderDetailCreateResponse
+        //            {
+        //                price = product.Price,
+        //                productName = product.ProductName,
+        //                quantity = od.Quantity,
+        //            };
+        //        }).ToList();
+
+        //        return new CreateOrderResponse
+        //        {
+        //            totalPrice = order.TotalPrice,
+        //            OrderDetails = orderDetailsResponse
+        //        };
+        //    }
+        //    catch (DbUpdateConcurrencyException ex)
+        //    {
+        //        foreach (var entry in ex.Entries)
+        //        {
+        //            if (entry.Entity is Order)
+        //            {
+        //                var databaseValues = entry.GetDatabaseValues();
+        //                if (databaseValues == null)
+        //                {
+        //                    throw new BadHttpRequestException("The order was deleted by another user.");
+        //                }
+        //                throw new BadHttpRequestException("The order was updated by another user. Please refresh and try again.");
+        //            }
+        //            else if (entry.Entity is OrderDetail)
+        //            {
+        //                throw new BadHttpRequestException("Concurrency conflict occurred for OrderDetail.");
+        //            }
+        //        }
+        //        throw;
+        //    }
+        //    catch (BadHttpRequestException)
+        //    {
+        //        throw; // Re-throw specific exception
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        // Log the exception if needed
+        //        throw new BadHttpRequestException("An unexpected error occurred while creating the order.", ex);
+        //    }
+        //}
+        public async Task<CreateOrderResponse> CreateOrder()
         {
+            Guid? userId = UserUtil.GetAccountId(_httpContextAccessor.HttpContext);
+            if (userId == null)
+            {
+                throw new BadHttpRequestException("User ID cannot be null.");
+            }
+
             try
             {
-                Guid? userId = UserUtil.GetAccountId(_httpContextAccessor.HttpContext);
-                if (userId == null)
-                {
-                    throw new BadHttpRequestException("User ID cannot be null.");
-                }
-
-                // Validate quantities in request
-                foreach (var orderDetail in orderDetailRequests)
-                {
-                    if (orderDetail.quantity <= 0)
-                    {
-                        throw new BadHttpRequestException($"Invalid quantity {orderDetail.quantity} for product ID {orderDetail.productId}. Quantity must be greater than zero.");
-                    }
-                }
-
-                // Fetch all product details at once to minimize database calls
-                var productIds = orderDetailRequests.Select(od => od.productId).ToList();
-                var productsList = await _unitOfWork.GetRepository<Product>()
-                                                    .GetListAsync(predicate: p => productIds.Contains(p.Id));
-
-                if (productsList.Count != productIds.Count)
-                {
-                    throw new BadHttpRequestException("One or more products do not exist.");
-                }
-
+                var payment = await _unitOfWork.GetRepository<Payment>().SingleOrDefaultAsync(predicate: p => p.UserId.Equals(userId));
+                var cart = await _unitOfWork.GetRepository<Cart>().SingleOrDefaultAsync(predicate: p => p.UserId.Equals(userId));
+                var cartItems = await _unitOfWork.GetRepository<CartItem>().GetListAsync(predicate: p => p.CartId.Equals(cart.Id)
+                                                                                                && p.Status.Equals(StatusEnum.Paid.GetDescriptionFromEnum()));
+                decimal totalprice = 0;
+                
                 Order order = new Order
                 {
                     Id = Guid.NewGuid(),
+                    PaymentId = payment.PaymentId,
+                    TotalPrice = 0,
                     InsDate = TimeUtils.GetCurrentSEATime(),
-                    UpDate = TimeUtils.GetCurrentSEATime(),
                     UserId = userId,
-                    Status = StatusEnum.Available.GetDescriptionFromEnum(),
-                    TotalPrice = 0, // Initialize with 0, we'll calculate this later
+                    Status = payment.Status,
                     OrderDetails = new List<OrderDetail>()
                 };
-
-                foreach (var orderDetail in orderDetailRequests)
+                foreach (var cartItem in cartItems)
                 {
-                    var product = productsList.FirstOrDefault(p => p.Id == orderDetail.productId);
-                    if (product == null)
-                    {
-                        throw new BadHttpRequestException(MessageConstant.ProductMessage.ProductNotExist);
-                    }
-
-                    if (product.Quantity < orderDetail.quantity)
-                    {
-                        throw new BadHttpRequestException($"Not enough stock for product {product.ProductName}. Requested: {orderDetail.quantity}, Available: {product.Quantity}");
-                    }
-
+                    var product = await _unitOfWork.GetRepository<Product>().SingleOrDefaultAsync(
+                       predicate: p => p.Id.Equals(cartItem.ProductId));
+                    totalprice += cartItem.Quantity * (int)product.Price;                   
                     var newOrderDetail = new OrderDetail
                     {
                         Id = Guid.NewGuid(),
@@ -81,47 +195,53 @@ namespace MRC_API.Service.Implement
                         ProductId = product.Id,
                         InsDate = TimeUtils.GetCurrentSEATime(),
                         UpDate = TimeUtils.GetCurrentSEATime(),
-                        Quantity = orderDetail.quantity,
+                        Quantity = cartItem.Quantity,
                         Price = product.Price
                     };
-                    product.Quantity = product.Quantity - newOrderDetail.Quantity.Value;
-                    _unitOfWork.GetRepository<Product>().UpdateAsync(product);
-
-                    //product.Quantity -= orderDetail.quantity; // Decrease the quantity of the product
-
+                    order.TotalPrice = totalprice;
                     order.OrderDetails.Add(newOrderDetail);
-                    order.TotalPrice += newOrderDetail.Quantity * newOrderDetail.Price;
-
                     await _unitOfWork.GetRepository<OrderDetail>().InsertAsync(newOrderDetail);
-                    //_unitOfWork.GetRepository<Product>().UpdateAsync(product); // Update the product quantity in the database
                 }
-               
-
                 await _unitOfWork.GetRepository<Order>().InsertAsync(order);
                 bool isSuccessOrder = await _unitOfWork.CommitAsync() > 0;
-
                 if (!isSuccessOrder)
                 {
                     throw new BadHttpRequestException(MessageConstant.OrderMessage.CreateOrderFail);
                 }
 
-                // Prepare response
-                var orderDetailsResponse = order.OrderDetails.Select(od =>
+                // Delete CartItems with status "buyed"
+              
+
+                foreach (var cartItem in cartItems)
                 {
-                    var product = productsList.First(p => p.Id == od.ProductId);
-                    return new CreateOrderResponse.OrderDetailCreateResponse
+                    _unitOfWork.GetRepository<CartItem>().DeleteAsync(cartItem);
+                }
+                await _unitOfWork.CommitAsync(); // Commit after deletion
+
+                // Prepare response
+                var orderDetailsResponse = new List<CreateOrderResponse.OrderDetailCreateResponse>();
+                foreach (var od in order.OrderDetails)
+                {
+                    var product = await _unitOfWork.GetRepository<Product>().SingleOrDefaultAsync(predicate: p => p.Id.Equals(od.ProductId));
+                    if (product != null)
                     {
-                        price = product.Price,
-                        productName = product.ProductName,
-                        quantity = od.Quantity,
-                    };
-                }).ToList();
+                        orderDetailsResponse.Add(new CreateOrderResponse.OrderDetailCreateResponse
+                        {
+                            price = od.Price,
+                            productName = product.ProductName, // Get the product name
+                            quantity = od.Quantity
+                        });
+                    }
+                }
 
                 return new CreateOrderResponse
                 {
                     totalPrice = order.TotalPrice,
                     OrderDetails = orderDetailsResponse
                 };
+            
+              
+
             }
             catch (DbUpdateConcurrencyException ex)
             {
@@ -153,6 +273,7 @@ namespace MRC_API.Service.Implement
                 throw new BadHttpRequestException("An unexpected error occurred while creating the order.", ex);
             }
         }
+
         public async Task<IPaginate<GetOrderResponse>> GetListOrder (int page, int size)
         {
             var orders = await _unitOfWork.GetRepository<Order>().GetPagingListAsync(
@@ -174,5 +295,6 @@ namespace MRC_API.Service.Implement
                 );
             return orders;
         }
+
     }
 }

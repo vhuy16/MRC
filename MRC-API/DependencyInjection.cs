@@ -52,7 +52,7 @@ namespace Prepare
             services.AddScoped<IProductService, ProductService>();
 
             services.AddScoped<IOrderService, OrderService>();
-
+           
             services.AddScoped<IGoogleAuthenticationService, GoogleAuthenticationService>();
             services.AddScoped<ICartService, CartService>();
             services.AddScoped<IEmailSender, EmailSender>();
@@ -98,6 +98,21 @@ namespace Prepare
 
             }); 
             return services;
+        }
+     
+            public static IServiceCollection AddLazyResolution(this IServiceCollection services)
+            {
+                services.AddTransient(typeof(Lazy<>), typeof(LazyResolver<>));
+                return services;
+            }
+
+            private class LazyResolver<T> : Lazy<T> where T : class
+            {
+                public LazyResolver(IServiceProvider serviceProvider)
+                    : base(() => serviceProvider.GetRequiredService<T>())
+                {
+                }
+            
         }
         private static string GetConnectionString()
         {
