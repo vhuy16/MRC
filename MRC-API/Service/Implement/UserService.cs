@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+﻿ using AutoMapper;
 using Azure.Core;
 using Bean_Mind.API.Utils;
 using Business.Interface;
@@ -25,9 +25,9 @@ namespace MRC_API.Service.Implement
 {
     public class UserService : BaseService<UserService>, IUserService
     {
-        private readonly IEmailSender _emailSender;
+        private readonly IEmailSendersService _emailSender;
 
-        public UserService(IUnitOfWork<MrcContext> unitOfWork, ILogger<UserService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IEmailSender emailSender) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        public UserService(IUnitOfWork<MrcContext> unitOfWork, ILogger<UserService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IEmailSendersService emailSender) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {  
 
             _emailSender = emailSender;

@@ -1,33 +1,33 @@
-﻿using AutoMapper;
-using Azure.Core;
-using Business.Interface;
-using Microsoft.AspNetCore.Identity.UI.Services;
+﻿using Microsoft.Extensions.Options;
+using MRC_API.Payload.Request.Email;
 using MRC_API.Service.Interface;
-using Repository.Entity;
-using System.Net;
 using System.Net.Mail;
+using System.Net;
 
-namespace MRC_API.Service.Implement
+public class EmailSender : IEmailSendersService
 {
-    public class EmailSender : Interface.IEmailSender
-    {
+    private readonly string _emailAddress;
+    private readonly string _appPassword;
 
-        public Task SendEmailAsync(string email, string subject, string message)
-        {
-            var mail = "mrc.web@outlook.com";
-            var pwd = "mrcweb12345";
-            var client = new SmtpClient("smtp-mail.outlook.com", 587)
-            {
-                EnableSsl = true,
-                Credentials = new NetworkCredential(mail, pwd)
-            };
-            return client.SendMailAsync(
-                new MailMessage(from: mail,
-                                  to: email,
-                                  subject,
-                                  message)
-                );
-        }     
+    public EmailSender(IOptions<EmailSettings> emailSettings)
+    {
+        _emailAddress = emailSettings.Value.EmailAddress;
+        _appPassword = emailSettings.Value.AppPassword;
     }
-    
+
+    public Task SendEmailAsync(string email, string subject, string message)
+    {
+        var client = new SmtpClient("smtp-mail.outlook.com", 587)
+        {
+            EnableSsl = true,
+            Credentials = new NetworkCredential(_emailAddress, _appPassword)
+        };
+
+        return client.SendMailAsync(
+            new MailMessage(from: _emailAddress,
+                             to: email,
+                             subject,
+                             message)
+        );
+    }
 }
