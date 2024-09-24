@@ -1,6 +1,9 @@
+using Microsoft.Extensions.Configuration;
 using Microsoft.OpenApi.Models;
+using MRC_API.Constant;
 using MRC_API.Infrastructure;
 using MRC_API.Middlewares;
+using MRC_API.Payload.Request.Email;
 using MRC_API.Payload.Response.Pay;
 using Prepare;
 
@@ -13,6 +16,11 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddLazyResolution();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: CorsConstant.PolicyName,
+        policy => { policy.WithOrigins("*").AllowAnyHeader().AllowAnyMethod(); });
+});
 // Add other custom services and configurations
 builder.Services.AddAuthentication();
 builder.Services.AddInfrastructure();
@@ -21,6 +29,7 @@ builder.Services.AddUnitOfWork();
 builder.Services.AddCustomServices();
 builder.Services.AddJwtValidation();
 builder.Services.Configure<PayOSSettings>(builder.Configuration.GetSection("PayOS"));
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 
 builder.Services.AddHttpClientServices();
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
@@ -76,10 +85,20 @@ builder.Services.AddAutoMapper(typeof(Program).Assembly);
 var app = builder.Build();
 
 // Configure the HTTP request pipeline
+app.UseSwagger();
+// Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
+
     app.UseSwaggerUI();
+}
+else
+{
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
+        c.RoutePrefix = string.Empty;
+    });
 }
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
@@ -87,6 +106,7 @@ app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseAuthentication();
 app.UseHttpsRedirection();
 app.UseAuthorization();
+app.UseCors(CorsConstant.PolicyName);
 app.MapControllers();
 
 // Run the application

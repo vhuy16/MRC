@@ -55,7 +55,7 @@ namespace Prepare
            
             services.AddScoped<IGoogleAuthenticationService, GoogleAuthenticationService>();
             services.AddScoped<ICartService, CartService>();
-            services.AddScoped<IEmailSender, EmailSender>();
+            services.AddScoped<IEmailSendersService, EmailSender>();
             services.AddScoped<IPayService, PayService>();
             services.AddScoped<AzureDatabaseService>();
             return services;
