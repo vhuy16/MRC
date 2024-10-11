@@ -7,9 +7,9 @@ namespace MRC_API.Controllers
 {
     public class SendEmailController : BaseController<SendEmailController>
     {
-        private readonly IEmailSendersService _emailSender;
+        private readonly IEmailSender _emailSender;
 
-        public SendEmailController(ILogger<SendEmailController> logger, IEmailSendersService emailSender) : base(logger)
+        public SendEmailController(ILogger<SendEmailController> logger, IEmailSender emailSender) : base(logger)
         {
             _emailSender = emailSender;
         }
