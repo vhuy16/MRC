@@ -184,7 +184,7 @@ namespace MRC_API.Service.Implement
                         
                         Amount = totalPrice,
                         PaymentMethod = "PayOS",  // Adjust based on your actual method
-                        Status = StatusEnum.Pending.GetDescriptionFromEnum(),  // You can adjust this status accordingly
+                        Status = "Pending",  // You can adjust this status accordingly
                         UserId = userId.Value
                     };
 
@@ -298,7 +298,8 @@ namespace MRC_API.Service.Implement
                     {
                         var product = await _unitOfWork.GetRepository<Product>()
                             .SingleOrDefaultAsync(predicate: p => p.Id.Equals(cartItem.ProductId));
-                                                if (product != null)
+
+                        if (product != null)
                         {
                             // Update product quantity
                             product.Quantity -= cartItem.Quantity;
@@ -307,9 +308,6 @@ namespace MRC_API.Service.Implement
                             // Update cart item status to "Paid"
                             cartItem.Status = StatusEnum.Paid.GetDescriptionFromEnum();
                             _unitOfWork.GetRepository<CartItem>().UpdateAsync(cartItem);
-
-                            //Update Payment status to "Paid"
-                            
                         }
                     }
 
