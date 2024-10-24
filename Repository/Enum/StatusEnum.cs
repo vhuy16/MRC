@@ -13,5 +13,7 @@ namespace Repository.Enum
         Pending,
         Paid,
         Canceled,
+        Confirmed,
+        Cancelled
     }
 }

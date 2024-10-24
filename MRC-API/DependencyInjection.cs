@@ -52,7 +52,7 @@ namespace Prepare
             services.AddScoped<IProductService, ProductService>();
 
             services.AddScoped<IOrderService, OrderService>();
-           
+            services.AddScoped<IServiceService, ServiceService>();
             services.AddScoped<IGoogleAuthenticationService, GoogleAuthenticationService>();
             services.AddScoped<ICartService, CartService>();
             services.AddScoped<IEmailSender, EmailSender>();

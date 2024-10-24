@@ -91,5 +91,29 @@
             public const string CartItemIsEmpty = "Không có sản phẩm nào trong giỏ hàng";
             public const string NegativeQuantity = "Số lượng phải lớn hơn 0";
         }
+        public static class ServiceMessage
+        {
+            public const string ServiceExisted = "The service already exists.";
+            public const string ServiceNotExist = "The service does not exist.";
+            public const string ServiceCreatedSuccessfully = "The service has been created successfully.";
+            public const string ServiceDeletedSuccessfully = "The service has been deleted successfully.";
+            public const string ServiceUpdatedSuccessfully = "The service has been updated successfully.";
+            public const string CreateServiceFail = "Failed to create the service. Please try again.";
+            public const string UpdateServiceFail = "Failed to update the service. Please try again.";
+            public const string DeleteServiceFail = "Failed to delete the service. Please try again.";
+            public const string ServiceExists = "A service with this name already exists.";
+            public const string ServiceIsEmpty = "No services found.";
+        }
+        public static class BookingMessage
+        {
+            public const string CreateBookingFail = "Failed to create the booking. Please try again.";
+            public const string BookingNotExist = "The specified booking does not exist.";
+            public const string UpdateBookingFail = "Failed to update the booking. Please try again.";
+            public const string DeleteBookingFail = "Failed to delete the booking. Please try again.";
+            public const string BookingExists = "A booking with this ID already exists.";
+            public const string BookingIsEmpty = "No bookings found.";
+            public const string BookingDateInvalid = "The booking date is invalid. Please select a valid date.";
+            public const string BookingAlreadyConfirmed = "This booking has already been confirmed.";
+        }
     }
 }
