@@ -72,7 +72,7 @@ namespace MRC_API.Service.Implement
             }
             string subject = "Welcome to MRC!";
             string message = $"Dear {newUser.UserName},\n\nYour admin account has been successfully created.";
-            await _emailSender.SendEmailAsync(newUser.Email, subject, message);
+            //await _emailSender.SendEmailAsync(newUser.Email, subject, message);
             return createNewAccountResponse;
         }
 
@@ -487,7 +487,7 @@ namespace MRC_API.Service.Implement
                 message.Body = bodyBuilder.ToMessageBody();
 
                 // Send the email using the _emailSender service (assuming it's properly configured)
-                await _emailSender.SendEmailAsync(email, message.Subject, message.Body.ToString());
+                await _emailSender.SendVerificationEmailAsync(email, otp);
             }
             catch (Exception ex)
             {
