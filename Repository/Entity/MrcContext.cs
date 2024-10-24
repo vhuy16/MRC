@@ -15,6 +15,8 @@ public partial class MrcContext : DbContext
     {
     }
 
+    public virtual DbSet<Booking> Bookings { get; set; }
+
     public virtual DbSet<Cart> Carts { get; set; }
 
     public virtual DbSet<CartItem> CartItems { get; set; }
@@ -33,6 +35,8 @@ public partial class MrcContext : DbContext
 
     public virtual DbSet<Product> Products { get; set; }
 
+    public virtual DbSet<Service> Services { get; set; }
+
     public virtual DbSet<User> Users { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) { }
@@ -41,6 +45,41 @@ public partial class MrcContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<Booking>(entity =>
+        {
+            entity.ToTable("Booking");
+
+            entity.Property(e => e.Id)
+                .ValueGeneratedNever()
+                .HasColumnName("id");
+            entity.Property(e => e.BookingDate)
+                .HasColumnType("datetime")
+                .HasColumnName("bookingDate");
+            entity.Property(e => e.Content)
+                .IsUnicode(false)
+                .HasColumnName("content");
+            entity.Property(e => e.InsDate)
+                .HasColumnType("datetime")
+                .HasColumnName("insDate");
+            entity.Property(e => e.ServiceId).HasColumnName("serviceId");
+            entity.Property(e => e.Status)
+                .HasMaxLength(255)
+                .IsUnicode(false)
+                .HasColumnName("status");
+            entity.Property(e => e.UpDate)
+                .HasColumnType("datetime")
+                .HasColumnName("upDate");
+            entity.Property(e => e.UserId).HasColumnName("userId");
+
+            entity.HasOne(d => d.Service).WithMany(p => p.Bookings)
+                .HasForeignKey(d => d.ServiceId)
+                .HasConstraintName("FK_Booking_Service");
+
+            entity.HasOne(d => d.User).WithMany(p => p.Bookings)
+                .HasForeignKey(d => d.UserId)
+                .HasConstraintName("FK_Booking_User");
+        });
+
         modelBuilder.Entity<Cart>(entity =>
         {
             entity.ToTable("Cart");
@@ -298,6 +337,34 @@ public partial class MrcContext : DbContext
                 .HasForeignKey(d => d.CategoryId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__Product__categor__3E52440B");
+        });
+
+        modelBuilder.Entity<Service>(entity =>
+        {
+            entity.ToTable("Service");
+
+            entity.Property(e => e.Id)
+                .ValueGeneratedNever()
+                .HasColumnName("id");
+            entity.Property(e => e.Description).HasColumnName("description");
+            entity.Property(e => e.Duration).HasColumnName("duration");
+            entity.Property(e => e.InsDate)
+                .HasColumnType("datetime")
+                .HasColumnName("insDate");
+            entity.Property(e => e.Price)
+                .HasColumnType("decimal(10, 2)")
+                .HasColumnName("price");
+            entity.Property(e => e.ServiceName)
+                .HasMaxLength(255)
+                .IsUnicode(false)
+                .HasColumnName("serviceName");
+            entity.Property(e => e.Status)
+                .HasMaxLength(255)
+                .IsUnicode(false)
+                .HasColumnName("status");
+            entity.Property(e => e.UpDate)
+                .HasColumnType("datetime")
+                .HasColumnName("upDate");
         });
 
         modelBuilder.Entity<User>(entity =>

@@ -79,5 +79,24 @@
             public const string EmailPoint = ApiEndpoint + "/email";
             public const string SendEmail = EmailPoint;
         }
+        public static class Service
+        {
+            public const string ServiceEndPoint = ApiEndpoint + "/service";
+            public const string CreateNewService = ServiceEndPoint;
+            public const string GetAllService = ServiceEndPoint;
+            public const string GetService = ServiceEndPoint + "/{id}";
+            public const string UpdateService = ServiceEndPoint + "/{id}";
+            public const string DeleteService = ServiceEndPoint + "/{id}";
+        }
+        public static class Booking
+        {
+            public const string BookingEndPoint = ApiEndpoint + "/booking";
+            public const string CreateNewBooking = BookingEndPoint;
+            public const string GetAllBookings = BookingEndPoint;
+            public const string GetBooking = BookingEndPoint + "/{id}";
+            public const string UpdateBooking = BookingEndPoint + "/{id}";
+            public const string DeleteBooking = BookingEndPoint + "/{id}";
+        }
+        
     }
 }

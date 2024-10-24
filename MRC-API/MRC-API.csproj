@@ -12,9 +12,13 @@
 
   <ItemGroup>
     <Compile Remove="Payload\Request\Cart\**" />
+    <Compile Remove="Payload\Response\OrderDetail\**" />
     <Content Remove="Payload\Request\Cart\**" />
+    <Content Remove="Payload\Response\OrderDetail\**" />
     <EmbeddedResource Remove="Payload\Request\Cart\**" />
+    <EmbeddedResource Remove="Payload\Response\OrderDetail\**" />
     <None Remove="Payload\Request\Cart\**" />
+    <None Remove="Payload\Response\OrderDetail\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -36,10 +40,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Business\Business.csproj" />
     <ProjectReference Include="..\Repository\Repository.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Payload\Response\OrderDetail\" />
   </ItemGroup>
 
 </Project>
