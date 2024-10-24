@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using MRC_API.Payload.Request.Email;
 
 
-public class EmailSender : IEmailSendersService
+public class EmailSender : IEmailSender
 {
     private readonly EmailSettings _emailSettings;
 
@@ -24,7 +24,7 @@ public class EmailSender : IEmailSendersService
         message.From.Add(new MailboxAddress("MRC", _emailSettings.FromEmail));
         message.To.Add(new MailboxAddress(string.Empty, email)); // Use string.Empty for the name if you don't have one
         message.Subject = "OTP Verification";
-
+        
         // Set the body of the email
         var bodyBuilder = new BodyBuilder();
         bodyBuilder.HtmlBody = $@"
