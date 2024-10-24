@@ -1,6 +1,7 @@
 using Microsoft.OpenApi.Models;
 using MRC_API.Infrastructure;
 using MRC_API.Middlewares;
+using MRC_API.Payload.Request.Email;
 using MRC_API.Payload.Response.Pay;
 using Prepare;
 
@@ -21,6 +22,7 @@ builder.Services.AddUnitOfWork();
 builder.Services.AddCustomServices();
 builder.Services.AddJwtValidation();
 builder.Services.Configure<PayOSSettings>(builder.Configuration.GetSection("PayOS"));
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 
 builder.Services.AddHttpClientServices();
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
