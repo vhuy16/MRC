@@ -1,4 +1,5 @@
 using Microsoft.OpenApi.Models;
+using MRC_API.Constant;
 using MRC_API.Infrastructure;
 using MRC_API.Middlewares;
 using MRC_API.Payload.Request.Email;
@@ -27,15 +28,20 @@ builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("Emai
 builder.Services.AddHttpClientServices();
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
+//builder.Services.AddCors(options =>
+//{
+//    options.AddPolicy("AllowAll",
+//        policyBuilder =>
+//        {
+//            policyBuilder.AllowAnyOrigin()
+//                         .AllowAnyMethod()
+//                         .AllowAnyHeader();
+//        });
+//});
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll",
-        policyBuilder =>
-        {
-            policyBuilder.AllowAnyOrigin()
-                         .AllowAnyMethod()
-                         .AllowAnyHeader();
-        });
+    options.AddPolicy(name: CorsConstant.PolicyName,
+        policy => { policy.WithOrigins("http://localhost:5173", "https://mrc-web-mu.vercel.app", "https://mrc-project.vercel.app", "https://chatgpt.com").AllowAnyHeader().AllowAnyMethod().AllowCredentials(); });
 });
 
 // Configure Swagger/OpenAPI
@@ -80,12 +86,21 @@ var app = builder.Build();
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
+
     app.UseSwaggerUI();
+}
+else
+{
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
+        c.RoutePrefix = string.Empty;
+    });
 }
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
-
+app.UseSwagger();
+app.UseCors(CorsConstant.PolicyName);
 app.UseAuthentication();
 app.UseHttpsRedirection();
 app.UseAuthorization();
