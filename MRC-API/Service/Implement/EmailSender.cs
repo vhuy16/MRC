@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using MRC_API.Payload.Request.Email;
 
 
-public class EmailSender : IEmailSendersService
+public class EmailSender : IEmailSender
 {
     private readonly EmailSettings _emailSettings;
 
