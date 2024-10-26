@@ -21,32 +21,33 @@ namespace MRC_API.Controllers
             _googleAuthenticationService = googleAuthenticationService;
         }
 
-    
-    [HttpGet(ApiEndPointConstant.GoogleAuthentication.GoogleLogin)]
-    public IActionResult Login()
-    {
-        var props = new AuthenticationProperties { RedirectUri = $"api/v1/google-auth/signin-google/" };
-        return Challenge(props, GoogleDefaults.AuthenticationScheme);
-    }
 
-
-    [HttpGet(ApiEndPointConstant.GoogleAuthentication.GoogleSignIn)]
-    public async Task<IActionResult> SignInAndSignUpByGoogle()
-    {
-        var googleAuthResponse = await _googleAuthenticationService.AuthenticateGoogleUser(HttpContext);
-        var checkAccount = await _userService.GetAccountByEmail(googleAuthResponse.Email);
-        if (!checkAccount)
+        [HttpGet(ApiEndPointConstant.GoogleAuthentication.GoogleLogin)]
+        public IActionResult Login()
         {
-            var response = await _userService.CreateNewUserAccountByGoogle(googleAuthResponse);
-            if (response == null)
-            {
-                _logger.LogError($"Create new user account failed with account");
-                return Problem(MessageConstant.UserMessage.CreateUserAdminFail);
-            }
+            var props = new AuthenticationProperties { RedirectUri = $"http://localhost:5173/auth/callback" };
+            //var props = new AuthenticationProperties { RedirectUri = $"api/v1/google-auth/signin-google/" };
+            return Challenge(props, GoogleDefaults.AuthenticationScheme);
         }
-        var token = await _userService.CreateTokenByEmail(googleAuthResponse.Email);
-        googleAuthResponse.Token = token;
-        return Ok(googleAuthResponse);
-    }
-}
+
+
+        [HttpGet(ApiEndPointConstant.GoogleAuthentication.GoogleSignIn)]
+        public async Task<IActionResult> SignInAndSignUpByGoogle()
+        {
+            var googleAuthResponse = await _googleAuthenticationService.AuthenticateGoogleUser(HttpContext);
+            var checkAccount = await _userService.GetAccountByEmail(googleAuthResponse.Email);
+            if (!checkAccount)
+            {
+                var response = await _userService.CreateNewUserAccountByGoogle(googleAuthResponse);
+                if (response == null)
+                {
+                    _logger.LogError($"Create new user account failed with account");
+                    return Problem(MessageConstant.UserMessage.CreateUserAdminFail);
+                }
+            }
+            var token = await _userService.CreateTokenByEmail(googleAuthResponse.Email);
+            googleAuthResponse.Token = token;
+            return Ok(googleAuthResponse);
+        }
+    } 
 }
