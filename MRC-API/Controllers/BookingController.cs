@@ -58,6 +58,18 @@ namespace MRC_API.Controllers
             }
             return Ok(response);
         }
+        [HttpGet(ApiEndPointConstant.Booking.GetbookingByStatus)]
+        [ProducesResponseType(typeof(GetBookingResponse), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(ProblemDetails))]
+        public async Task<IActionResult> GetbookingByStatus( string status)
+        {
+            var response = await _bookingService.GetBookingByStatus(status);
+            if (response == null)
+            {
+                return Problem(MessageConstant.BookingMessage.BookingIsEmpty);
+            }
+            return Ok(response);
+        }
 
         [HttpPut(ApiEndPointConstant.Booking.UpdateBooking)]
         [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]

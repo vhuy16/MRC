@@ -136,7 +136,21 @@ namespace MRC_API.Service.Implement
                );
             return products;
         }
+        public async Task<GetProductResponse> GetProductById(Guid productId)
+        {
+            var product = await _unitOfWork.GetRepository<Product>().SingleOrDefaultAsync(
+                selector: s => new GetProductResponse
+            {
+                Id = s.Id,
+                CategoryName = s.Category.CategoryName,
+                Description = s.Description,
+                Images = s.Images.Select(i => i.LinkImage).ToList(),
+                ProductName = s.ProductName,
+                Quantity = s.Quantity,
+            }, predicate: p => p.Id.Equals(productId));
+            return product;
 
+        }
         //public async Task<bool> UpdateProduct(Guid ProID, UpdateProductRequest updateProductRequest)
         //{
         //    var productUpdate = await _unitOfWork.GetRepository<Product>().SingleOrDefaultAsync(

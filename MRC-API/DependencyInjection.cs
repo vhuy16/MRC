@@ -50,7 +50,8 @@ namespace Prepare
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<ICategoryService, CategoryService>();
             services.AddScoped<IProductService, ProductService>();
-
+            services.AddScoped<IBookingService, BookingService>();
+            
             services.AddScoped<IOrderService, OrderService>();
             services.AddScoped<IServiceService, ServiceService>();
             services.AddScoped<IGoogleAuthenticationService, GoogleAuthenticationService>();

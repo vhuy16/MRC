@@ -12,5 +12,6 @@ namespace MRC_API.Service.Interface
         Task<GetBookingResponse> GetBooking(Guid id); 
         Task<bool> UpdateBooking(Guid id, UpdateBookingRequest request); 
         Task<bool> DeleteBooking(Guid id);
+        Task<List<GetBookingResponse>> GetBookingByStatus(string status);
     }
 }

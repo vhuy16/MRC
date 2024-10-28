@@ -44,6 +44,7 @@
             public const string ProductEndpoint = ApiEndpoint + "/Product";
             public const string CreateNewProduct = ProductEndpoint;
             public const string GetListProducts = ProductEndpoint;
+            public const string GetProductById = ProductEndpoint + "/{id}";
             public const string GetListProductsByCategoryId = ProductEndpoint +"/{id}" + "/Category";
             public const string UpdateProduct = ProductEndpoint + "/{id}";
             public const string DeleteProduct = ProductEndpoint + "/{id}";
@@ -96,6 +97,8 @@
             public const string GetBooking = BookingEndPoint + "/{id}";
             public const string UpdateBooking = BookingEndPoint + "/{id}";
             public const string DeleteBooking = BookingEndPoint + "/{id}";
+            public const string GetbookingByStatus = BookingEndPoint + "/status";
+
         }
         
     }
