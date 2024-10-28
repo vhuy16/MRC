@@ -92,13 +92,30 @@ namespace MRC_API.Service.Implement
                     BookingDate = b.BookingDate,
                     Status = b.Status,
                 },
-                predicate: b => b.Status.Equals(StatusEnum.Confirmed.GetDescriptionFromEnum()),
+               
                 size: size,
                 page: page);
 
             return bookings;
         }
-
+        public async Task<List<GetBookingResponse>> GetBookingByStatus(string status)
+        {
+            var listBooking = await _unitOfWork.GetRepository<Booking>().GetListAsync(
+                selector: b => new GetBookingResponse()
+                {
+                    Id = b.Id,
+                    UserId = b.UserId,
+                    ServiceId = b.ServiceId,
+                    BookingDate = b.BookingDate,
+                    Status = b.Status,
+                },
+                predicate: p => p.Status.Equals(status));
+            if (listBooking == null)
+            {
+                throw new BadHttpRequestException(MessageConstant.BookingMessage.BookingNotExist);
+            }
+            return (List<GetBookingResponse>)listBooking;
+        }
         public async Task<GetBookingResponse> GetBooking(Guid id)
         {
             var booking = await _unitOfWork.GetRepository<Booking>().SingleOrDefaultAsync(
@@ -128,8 +145,7 @@ namespace MRC_API.Service.Implement
             {
                 throw new BadHttpRequestException(MessageConstant.BookingMessage.BookingNotExist);
             }
-
-            booking.ServiceId = updateBookingRequest.ServiceId ?? booking.ServiceId;
+            booking.Status = updateBookingRequest.Status ?? booking.Status;          
             booking.BookingDate = updateBookingRequest.BookingDate ?? booking.BookingDate;
             booking.Content = updateBookingRequest.Content ?? booking.Content;
             booking.UpDate = TimeUtils.GetCurrentSEATime();
@@ -137,5 +153,6 @@ namespace MRC_API.Service.Implement
             bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
             return isSuccessful;
         }
+
     }
 }

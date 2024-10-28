@@ -12,5 +12,6 @@ namespace MRC_API.Service.Interface
         //Task<bool> UpdateProduct(Guid ProID, UpdateProductRequest updateProductRequest);
         Task<UpdateProductResponse> UpdateProduct(Guid productId, UpdateProductRequest updateProductRequest);
         Task<bool> DeleteProduct(Guid ProductId);
+        Task<GetProductResponse> GetProductById(Guid productId);
     }
 }

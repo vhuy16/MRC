@@ -60,6 +60,19 @@ namespace MRC_API.Controllers
             }
             return Ok(response);
         }
+        [HttpGet(ApiEndPointConstant.Product.GetProductById)]
+        [ProducesResponseType(typeof(IPaginate<GetProductResponse>), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(ProblemDetails))]
+        public async Task<IActionResult> GetProductById([FromRoute] Guid id)
+        {
+            
+            var response = await _productService.GetProductById(id);
+            if (response == null)
+            {
+                return Problem(MessageConstant.ProductMessage.ProductIsEmpty);
+            }
+            return Ok(response);
+        }
         [HttpPut(ApiEndPointConstant.Product.UpdateProduct)]
         [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
