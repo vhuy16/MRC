@@ -59,6 +59,7 @@ namespace Prepare
             services.AddScoped<IEmailSender, EmailSender>();
             services.AddScoped<IPayService, PayService>();
             services.AddScoped<AzureDatabaseService>();
+            services.AddScoped<IBookingService, BookingService>();
             return services;
         }
         public static IServiceCollection AddHttpClientServices(this IServiceCollection services)
@@ -75,7 +76,8 @@ namespace Prepare
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                 options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                //options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
                 options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
             }).AddJwtBearer(options =>
             {
@@ -90,14 +92,25 @@ namespace Prepare
                             Encoding.UTF8.GetBytes("0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"))
                 };
             })
-            .AddCookie()
+            .AddCookie(
+                options =>
+                {
+                    options.Cookie.HttpOnly = true;
+                    options.Cookie.SecurePolicy = CookieSecurePolicy.Always; // Chỉ gửi cookie qua HTTPS
+                    options.Cookie.SameSite = SameSiteMode.None; // Cho phép gửi cookie cross-origin
+                })
             .AddGoogle(options =>
             {
             options.ClientId = CreateClientId(configuration);
             options.ClientSecret = CreateClientSecret(configuration);
             options.SaveTokens = true;
 
-            }); 
+            });
+            services.Configure<CookiePolicyOptions>(options =>
+            {
+                options.MinimumSameSitePolicy = SameSiteMode.None; // Cho phép cross-origin
+                options.Secure = CookieSecurePolicy.Always; // Chỉ gửi cookie qua HTTPS
+            });
             return services;
         }
      
