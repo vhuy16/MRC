@@ -2,7 +2,7 @@
 {
     public class CartSummayResponse
     {
-        public int TotalItems { get; set; }
+        public decimal TotalItems { get; set; }
         public decimal TotalPrice { get; set; }
     }
 }

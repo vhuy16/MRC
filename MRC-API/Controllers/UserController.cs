@@ -103,12 +103,21 @@ namespace MRC_API.Controllers
             return Ok(response);
         }
 
+        [HttpGet(ApiEndPointConstant.User.GetUserById)]
+        [ProducesResponseType(typeof(GetUserResponse), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(ProblemDetails))]
+        public async Task<IActionResult> GetUserById([FromRoute] Guid id)
+        {
+            var response = await _userService.GetUser(id);
+            return Ok(response);
+        }
+
         [HttpGet(ApiEndPointConstant.User.GetUser)]
         [ProducesResponseType(typeof(GetUserResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
-        public async Task<IActionResult> GetUser([FromRoute] Guid id)
+        public async Task<IActionResult> GetUser()
         {
-            var response = await _userService.GetUser(id);
+            var response = await _userService.GetUser();
             return Ok(response);
         }
 

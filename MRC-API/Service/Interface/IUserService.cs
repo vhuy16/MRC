@@ -14,6 +14,7 @@ namespace MRC_API.Service.Interface
        Task<bool> DeleteUser(Guid id);
        Task<IPaginate<GetUserResponse>> GetAllUser(int page, int size);
        Task<GetUserResponse> GetUser(Guid id);
+       Task<GetUserResponse> GetUser();
        Task<bool> UpdateUser(Guid id, UpdateUserRequest updateUserRequest);
        Task<string> CreateTokenByEmail(string email);
 
