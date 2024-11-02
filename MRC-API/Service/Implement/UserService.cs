@@ -560,5 +560,23 @@ namespace MRC_API.Service.Implement
             return true;
 
         }
+
+        public async Task<GetUserResponse> GetUser()
+        {
+            Guid? userId = UserUtil.GetAccountId(_httpContextAccessor.HttpContext);
+            var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
+                selector: u => new GetUserResponse()
+                {
+                    UserId = u.Id,
+                    Email = u.Email,
+                    FullName = u.FullName,
+                    PhoneNumber = u.PhoneNumber,
+                    Gender = u.Gender,
+                    Role = u.Role,
+                },
+                predicate: u => u.Id.Equals(userId) && u.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
+            return user;
+
+        }
     }
 }

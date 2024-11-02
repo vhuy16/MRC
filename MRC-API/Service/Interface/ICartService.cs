@@ -11,6 +11,6 @@ namespace MRC_API.Service.Interface
         Task<List<GetAllCartItemResponse>> GetAllCartItem();
         Task<bool> ClearCart();
         Task<CartSummayResponse> GetCartSummary();
-        Task<bool> UpdateCartItem(Guid id, UpdateCartItemRequest updateCartItemRequest);
+        Task<UpdateCartItemResponse> UpdateCartItem(Guid id, UpdateCartItemRequest updateCartItemRequest);
     }
 }

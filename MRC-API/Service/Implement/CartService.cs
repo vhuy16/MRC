@@ -181,7 +181,9 @@ namespace MRC_API.Service.Implement
                 CartItemId = cartItem.Id,
                 ProductId = cartItem.ProductId,
                 ProductName = cartItem.Product.ProductName,
-                Price = cartItem.Product.Price
+                Quantity = cartItem.Quantity,
+                UnitPrice = cartItem.Product.Price,
+                Price = cartItem.Product.Price * cartItem.Quantity,
             }).ToList();
             return response;
         }
@@ -189,16 +191,30 @@ namespace MRC_API.Service.Implement
         public async Task<CartSummayResponse> GetCartSummary()
         {
             Guid? userId = UserUtil.GetAccountId(_httpContextAccessor.HttpContext);
+            if (userId == null)
+            {
+                throw new BadHttpRequestException("User not logged in.");
+            }
+
             var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
                 predicate: u => u.Id.Equals(userId) && u.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
 
             if (user == null)
             {
-                throw new BadHttpRequestException("You need log in.");
+                throw new BadHttpRequestException("User not available.");
             }
 
             var cart = await _unitOfWork.GetRepository<Cart>().SingleOrDefaultAsync(
                 predicate: c => c.UserId.Equals(userId));
+
+            if (cart == null)
+            {
+                return new CartSummayResponse
+                {
+                    TotalItems = 0,
+                    TotalPrice = 0
+                };
+            }
 
             var cartItems = await _unitOfWork.GetRepository<CartItem>().GetListAsync(
                 predicate: c => c.CartId.Equals(cart.Id) && c.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()),
@@ -209,17 +225,17 @@ namespace MRC_API.Service.Implement
                 return new CartSummayResponse
                 {
                     TotalItems = 0,
-                    TotalPrice = 0,
+                    TotalPrice = 0
                 };
             }
 
             decimal totalPrice = 0;
-            int totalItems = 0;
+            decimal totalItems = 0;
 
             foreach (var cartItem in cartItems)
             {
                 totalItems += cartItem.Quantity;
-                totalPrice += cartItem.Product.Price.Value * cartItem.Quantity;
+                totalPrice += (cartItem.Product?.Price ?? 0) * cartItem.Quantity;
             }
 
             var response = new CartSummayResponse()
@@ -231,7 +247,8 @@ namespace MRC_API.Service.Implement
             return response;
         }
 
-        public async Task<bool> UpdateCartItem(Guid id, UpdateCartItemRequest updateCartItemRequest)
+
+        public async Task<UpdateCartItemResponse> UpdateCartItem(Guid id, UpdateCartItemRequest updateCartItemRequest)
         {
             Guid? userId = UserUtil.GetAccountId(_httpContextAccessor.HttpContext);
             var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
@@ -272,7 +289,20 @@ namespace MRC_API.Service.Implement
             existingCartItem.UpDate = TimeUtils.GetCurrentSEATime();
             _unitOfWork.GetRepository<CartItem>().UpdateAsync(existingCartItem);
             bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
-            return isSuccessful;
+            UpdateCartItemResponse updateCartItemResponse = new();
+            if (isSuccessful)
+            {
+                updateCartItemResponse = new UpdateCartItemResponse()
+                {
+                    CartItemId = id,
+                    ProductId = product.Id,
+                    Quantity = updateCartItemRequest.Quantity,
+                    ProductName = product.ProductName,
+                    UnitPrice = product.Price,
+                    Price = product.Price * updateCartItemRequest.Quantity,
+                };
+            }
+            return updateCartItemResponse;
         }
     }
 }
