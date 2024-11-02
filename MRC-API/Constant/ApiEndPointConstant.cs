@@ -14,12 +14,13 @@
         {
             public const string UserEndPoint = ApiEndpoint + "/user";
             public const string RegisterAdmin = UserEndPoint + "/admin";
-            public const string RegisterManager = UserEndPoint + "/Manager";
-            public const string RegisterCustomer = UserEndPoint + "/Customer";
+            public const string RegisterManager = UserEndPoint + "/manager";
+            public const string RegisterCustomer = UserEndPoint + "/customer";
             public const string Login = UserEndPoint + "/login";
             public const string DeleteUser = UserEndPoint + "/{id}";
             public const string GetAllUser = UserEndPoint;
-            public const string GetUser = UserEndPoint + "/{id}";
+            public const string GetUserById = UserEndPoint + "/{id}";
+            public const string GetUser = UserEndPoint + "token";
             public const string UpdateUser = UserEndPoint + "/{id}";
             public const string VerifyOtp = UserEndPoint + "/verify-otp";
             public const string ForgotPassword = UserEndPoint + "/forgot-password";
@@ -41,18 +42,18 @@
         }
         public static class Product
         {
-            public const string ProductEndpoint = ApiEndpoint + "/Product";
+            public const string ProductEndpoint = ApiEndpoint + "/product";
             public const string CreateNewProduct = ProductEndpoint;
             public const string GetListProducts = ProductEndpoint;
             public const string GetProductById = ProductEndpoint + "/{id}";
-            public const string GetListProductsByCategoryId = ProductEndpoint +"/{id}" + "/Category";
+            public const string GetListProductsByCategoryId = ProductEndpoint +"/{id}" + "/category";
             public const string UpdateProduct = ProductEndpoint + "/{id}";
             public const string DeleteProduct = ProductEndpoint + "/{id}";
         }
 
         public static class Order
         {
-            public const string OrderEndpoint = ApiEndpoint + "/Order";
+            public const string OrderEndpoint = ApiEndpoint + "/order";
             public const string CreateNewOrder = OrderEndpoint;
             public const string GetListOrder = OrderEndpoint;
         }
@@ -67,13 +68,13 @@
 
         public static class Cart
         {
-            public const string CartEndPoint = ApiEndpoint + "/Cart";
-            public const string AddCartItem = CartEndPoint + "/Item";
-            public const string DeleteCartItem = CartEndPoint + "Item" + "/{ItemId}";
+            public const string CartEndPoint = ApiEndpoint + "/cart";
+            public const string AddCartItem = CartEndPoint + "/item";
+            public const string DeleteCartItem = CartEndPoint + "item" + "/{itemId}";
             public const string GetAllCart = CartEndPoint;
-            public const string ClearCart = CartEndPoint + "/Clear-All";
-            public const string GetCartSummary = CartEndPoint + "/Get-Summary";
-            public const string UpdateCartItem = CartEndPoint + "Item" + "/{ItemId}";
+            public const string ClearCart = CartEndPoint + "/clear-all";
+            public const string GetCartSummary = CartEndPoint + "/get-summary";
+            public const string UpdateCartItem = CartEndPoint + "item" + "/{itemId}";
         }
         public static class Email
         {

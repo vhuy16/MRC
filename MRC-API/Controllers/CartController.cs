@@ -33,9 +33,9 @@ namespace MRC_API.Controllers
         [HttpDelete(ApiEndPointConstant.Cart.DeleteCartItem)]
         [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
-        public async Task<IActionResult> DeleteCartItem([FromRoute] Guid ItemId)
+        public async Task<IActionResult> DeleteCartItem([FromRoute] Guid itemId)
         {
-            var response = await _cartService.DeleteCartItem(ItemId);
+            var response = await _cartService.DeleteCartItem(itemId);
             return Ok(response);
         }
 
@@ -71,11 +71,11 @@ namespace MRC_API.Controllers
         }
 
         [HttpPut(ApiEndPointConstant.Cart.UpdateCartItem)]
-        [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(UpdateCartItemResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
-        public async Task<IActionResult> UpdateCartItem([FromRoute] Guid ItemId, [FromBody] UpdateCartItemRequest updateCartItemRequest)
+        public async Task<IActionResult> UpdateCartItem([FromRoute] Guid itemId, [FromBody] UpdateCartItemRequest updateCartItemRequest)
         {
-            var response = await _cartService.UpdateCartItem(ItemId, updateCartItemRequest);
+            var response = await _cartService.UpdateCartItem(itemId, updateCartItemRequest);
             return Ok(response);
         }
     }
