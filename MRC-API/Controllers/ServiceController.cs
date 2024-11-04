@@ -1,77 +1,76 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MRC_API.Constant;
 using MRC_API.Payload.Request.Service;
-using MRC_API.Payload.Response.Service;
+using MRC_API.Payload.Response;
 using MRC_API.Service.Interface;
-using Repository.Paginate;
+using Microsoft.Extensions.Logging;
+using System;
+using System.Threading.Tasks;
 
 namespace MRC_API.Controllers
 {
-    public class ServiceController : BaseController<ServiceController>
+    [ApiController]
+    [Route(ApiEndPointConstant.Service.ServiceEndPoint)]
+    public class ServiceController : ControllerBase
     {
         private readonly IServiceService _serviceService;
-        public ServiceController(ILogger<ServiceController> logger, IServiceService serviceService) : base(logger)
+        private readonly ILogger<ServiceController> _logger;
+
+        public ServiceController(ILogger<ServiceController> logger, IServiceService serviceService)
         {
+            _logger = logger;
             _serviceService = serviceService;
         }
 
         [HttpPost(ApiEndPointConstant.Service.CreateNewService)]
-        [ProducesResponseType(typeof(CreateNewServiceResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
         public async Task<IActionResult> CreateNewService([FromBody] CreateNewServiceRequest createNewServiceRequest)
         {
-            var createNewServiceResponse = await _serviceService.CreateNewService(createNewServiceRequest);
-            if (createNewServiceResponse == null)
-            {
-                return Problem(MessageConstant.ServiceMessage.CreateServiceFail);
-            }
-            return CreatedAtAction(nameof(CreateNewService), createNewServiceResponse);
+            var response = await _serviceService.CreateNewService(createNewServiceRequest);
+            return StatusCode(int.Parse(response.status), response);
         }
 
         [HttpGet(ApiEndPointConstant.Service.GetAllService)]
-        [ProducesResponseType(typeof(IPaginate<GetServiceResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
-        public async Task<IActionResult> GetAllService([FromQuery] int? page, [FromQuery] int? size)
+        public async Task<IActionResult> GetAllServices([FromQuery] int? page, [FromQuery] int? size)
         {
-            int pageNumber = page ?? 1;
-            int pageSize = size ?? 10;
-            var response = await _serviceService.GetAllServices(pageNumber, pageSize);
-            if (response == null)
-            {
-                return Problem(MessageConstant.ServiceMessage.ServiceIsEmpty);
-            }
-            return Ok(response);
+            var response = await _serviceService.GetAllServices(page ?? 1, size ?? 10);
+            return StatusCode(int.Parse(response.status), response);
         }
 
         [HttpGet(ApiEndPointConstant.Service.GetService)]
-        [ProducesResponseType(typeof(GetServiceResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
         public async Task<IActionResult> GetService([FromRoute] Guid id)
         {
             var response = await _serviceService.GetService(id);
-            if (response == null)
-            {
-                return Problem(MessageConstant.ServiceMessage.ServiceNotExist);
-            }
-            return Ok(response);
+            return StatusCode(int.Parse(response.status), response);
         }
 
         [HttpPut(ApiEndPointConstant.Service.UpdateService)]
-        [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
         public async Task<IActionResult> UpdateService([FromRoute] Guid id, [FromBody] UpdateServiceRequest updateServiceRequest)
         {
             var response = await _serviceService.UpdateService(id, updateServiceRequest);
-            return Ok(response);
+            return StatusCode(int.Parse(response.status), response);
         }
 
         [HttpDelete(ApiEndPointConstant.Service.DeleteService)]
-        [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
         public async Task<IActionResult> DeleteService([FromRoute] Guid id)
         {
             var response = await _serviceService.DeleteService(id);
-            return Ok(response);
+            return StatusCode(int.Parse(response.status), response);
         }
     }
 }
