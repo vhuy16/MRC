@@ -6,11 +6,14 @@ using MRC_API.Payload.Request.Service;
 using MRC_API.Payload.Response.Service;
 using MRC_API.Service.Interface;
 using MRC_API.Utils;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using Repository.Entity;
 using Repository.Enum;
 using Repository.Paginate;
 using System;
 using System.Threading.Tasks;
+using MRC_API.Payload.Response;
 
 namespace MRC_API.Service.Implement
 {
@@ -21,17 +24,22 @@ namespace MRC_API.Service.Implement
         {
         }
 
-        public async Task<CreateNewServiceResponse> CreateNewService(CreateNewServiceRequest createNewServiceRequest)
+        public async Task<ApiResponse> CreateNewService(CreateNewServiceRequest createNewServiceRequest)
         {
             var serviceExist = await _unitOfWork.GetRepository<Repository.Entity.Service>().SingleOrDefaultAsync(
                 predicate: s => s.ServiceName.Equals(createNewServiceRequest.ServiceName) && s.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
 
             if (serviceExist != null)
             {
-                throw new BadHttpRequestException(MessageConstant.ServiceMessage.ServiceExisted);
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status400BadRequest.ToString(),
+                    message = MessageConstant.ServiceMessage.ServiceExisted,
+                    data = null
+                };
             }
 
-            Repository.Entity.Service service = new Repository.Entity.Service()
+            var service = new Repository.Entity.Service()
             {
                 Id = Guid.NewGuid(),
                 ServiceName = createNewServiceRequest.ServiceName,
@@ -41,38 +49,69 @@ namespace MRC_API.Service.Implement
             };
 
             await _unitOfWork.GetRepository<Repository.Entity.Service>().InsertAsync(service);
-            bool isSuccessfully = await _unitOfWork.CommitAsync() > 0;
-            CreateNewServiceResponse createNewServiceResponse = null;
+            bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
 
-            if (isSuccessfully)
+            if (!isSuccessful)
             {
-                createNewServiceResponse = new CreateNewServiceResponse()
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status500InternalServerError.ToString(),
+                    message = "Failed to create service.",
+                    data = null
+                };
+            }
+
+            return new ApiResponse
+            {
+                status = StatusCodes.Status201Created.ToString(),
+                message = "Service created successfully.",
+                data = new CreateNewServiceResponse()
                 {
                     ServiceId = service.Id,
                     ServiceName = service.ServiceName,
-                };
-            }
-            return createNewServiceResponse;
+                }
+            };
         }
 
-        public async Task<bool> DeleteService(Guid id)
+        public async Task<ApiResponse> DeleteService(Guid id)
         {
             var service = await _unitOfWork.GetRepository<Repository.Entity.Service>().SingleOrDefaultAsync(
                 predicate: s => s.Id.Equals(id) && s.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
 
             if (service == null)
             {
-                throw new BadHttpRequestException(MessageConstant.ServiceMessage.ServiceNotExist);
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status404NotFound.ToString(),
+                    message = MessageConstant.ServiceMessage.ServiceNotExist,
+                    data = null
+                };
             }
 
             service.Status = StatusEnum.Unavailable.GetDescriptionFromEnum();
             service.UpDate = TimeUtils.GetCurrentSEATime();
             _unitOfWork.GetRepository<Repository.Entity.Service>().UpdateAsync(service);
             bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
-            return isSuccessful;
+
+            if (!isSuccessful)
+            {
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status500InternalServerError.ToString(),
+                    message = "Failed to delete service.",
+                    data = null
+                };
+            }
+
+            return new ApiResponse
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "Service deleted successfully.",
+                data = true
+            };
         }
 
-        public async Task<IPaginate<GetServiceResponse>> GetAllServices(int page, int size)
+        public async Task<ApiResponse> GetAllServices(int page, int size)
         {
             var services = await _unitOfWork.GetRepository<Repository.Entity.Service>().GetPagingListAsync(
                 selector: s => new GetServiceResponse()
@@ -83,10 +122,26 @@ namespace MRC_API.Service.Implement
                 predicate: s => s.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()),
                 size: size,
                 page: page);
-            return services;
+
+            if (services == null || services.Items.Count == 0)
+            {
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status404NotFound.ToString(),
+                    message = "No services found.",
+                    data = null
+                };
+            }
+
+            return new ApiResponse
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "Services retrieved successfully.",
+                data = services
+            };
         }
 
-        public async Task<GetServiceResponse> GetService(Guid id)
+        public async Task<ApiResponse> GetService(Guid id)
         {
             var service = await _unitOfWork.GetRepository<Repository.Entity.Service>().SingleOrDefaultAsync(
                 selector: s => new GetServiceResponse()
@@ -98,26 +153,58 @@ namespace MRC_API.Service.Implement
 
             if (service == null)
             {
-                throw new BadHttpRequestException(MessageConstant.ServiceMessage.ServiceNotExist);
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status404NotFound.ToString(),
+                    message = MessageConstant.ServiceMessage.ServiceNotExist,
+                    data = null
+                };
             }
-            return service;
+
+            return new ApiResponse
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "Service retrieved successfully.",
+                data = service
+            };
         }
 
-        public async Task<bool> UpdateService(Guid id, UpdateServiceRequest updateServiceRequest)
+        public async Task<ApiResponse> UpdateService(Guid id, UpdateServiceRequest updateServiceRequest)
         {
             var service = await _unitOfWork.GetRepository<Repository.Entity.Service>().SingleOrDefaultAsync(
                 predicate: s => s.Id.Equals(id) && s.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
 
             if (service == null)
             {
-                throw new BadHttpRequestException(MessageConstant.ServiceMessage.ServiceNotExist);
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status404NotFound.ToString(),
+                    message = MessageConstant.ServiceMessage.ServiceNotExist,
+                    data = null
+                };
             }
 
             service.ServiceName = string.IsNullOrEmpty(updateServiceRequest.ServiceName) ? service.ServiceName : updateServiceRequest.ServiceName;
             service.UpDate = TimeUtils.GetCurrentSEATime();
             _unitOfWork.GetRepository<Repository.Entity.Service>().UpdateAsync(service);
             bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
-            return isSuccessful;
+
+            if (!isSuccessful)
+            {
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status500InternalServerError.ToString(),
+                    message = "Failed to update service.",
+                    data = null
+                };
+            }
+
+            return new ApiResponse
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "Service updated successfully.",
+                data = true
+            };
         }
     }
 }
