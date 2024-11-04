@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using MRC_API.Constant;
 using MRC_API.Payload.Request.CartItem;
+using MRC_API.Payload.Response;
 using MRC_API.Payload.Response.Cart;
 using MRC_API.Payload.Response.CartItem;
 using MRC_API.Service.Implement;
@@ -18,47 +19,51 @@ namespace MRC_API.Controllers
         }
 
         [HttpPost(ApiEndPointConstant.Cart.AddCartItem)]
-        [ProducesResponseType(typeof(AddCartItemResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
         public async Task<IActionResult> AddCartItem([FromBody] AddCartItemRequest addCartItemRequest)
         {
-            AddCartItemResponse addCartItemResponse = await _cartService.AddCartItem(addCartItemRequest);
-            if (addCartItemResponse == null)
+            var addCartItemResponse = await _cartService.AddCartItem(addCartItemRequest);
+            if (addCartItemResponse.status == StatusCodes.Status404NotFound.ToString())
             {
-                return Problem(MessageConstant.CartMessage.AddCartItemFail);
+                return NotFound(addCartItemResponse);
+            }
+
+            if (addCartItemResponse.status == StatusCodes.Status400BadRequest.ToString())
+            {
+                return BadRequest(addCartItemResponse);
             }
             return CreatedAtAction(nameof(AddCartItem), addCartItemResponse);
         }
 
         [HttpDelete(ApiEndPointConstant.Cart.DeleteCartItem)]
         [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
         public async Task<IActionResult> DeleteCartItem([FromRoute] Guid itemId)
         {
             var response = await _cartService.DeleteCartItem(itemId);
-            return Ok(response);
+            return StatusCode(int.Parse(response.status), response);
         }
 
         [HttpGet(ApiEndPointConstant.Cart.GetAllCart)]
-        [ProducesResponseType(typeof(List<GetAllCartItemResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
         public async Task<IActionResult> GetAllCart()
         {
             var response = await _cartService.GetAllCartItem();
-            if (response == null)
-            {
-                return Problem(MessageConstant.CartMessage.CartItemIsEmpty);
-            }
-            return Ok(response);
+            return StatusCode(int.Parse(response.status), response);
         }
 
         [HttpDelete(ApiEndPointConstant.Cart.ClearCart)]
-        [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
         public async Task<IActionResult> ClearAllCart()
         {
             var response = await _cartService.ClearCart();
-            return Ok(response);
+            return StatusCode(int.Parse(response.status), response);
         }
 
         [HttpGet(ApiEndPointConstant.Cart.GetCartSummary)]
@@ -71,12 +76,14 @@ namespace MRC_API.Controllers
         }
 
         [HttpPut(ApiEndPointConstant.Cart.UpdateCartItem)]
-        [ProducesResponseType(typeof(UpdateCartItemResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
         public async Task<IActionResult> UpdateCartItem([FromRoute] Guid itemId, [FromBody] UpdateCartItemRequest updateCartItemRequest)
         {
             var response = await _cartService.UpdateCartItem(itemId, updateCartItemRequest);
-            return Ok(response);
+            return StatusCode(int.Parse(response.status), response);
         }
     }
 }

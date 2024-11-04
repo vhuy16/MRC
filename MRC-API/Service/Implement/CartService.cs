@@ -4,6 +4,7 @@ using Business.Interface;
 using Microsoft.EntityFrameworkCore;
 using MRC_API.Constant;
 using MRC_API.Payload.Request.CartItem;
+using MRC_API.Payload.Response;
 using MRC_API.Payload.Response.Cart;
 using MRC_API.Payload.Response.CartItem;
 using MRC_API.Service.Interface;
@@ -19,7 +20,7 @@ namespace MRC_API.Service.Implement
         {
         }
 
-        public async Task<AddCartItemResponse> AddCartItem(AddCartItemRequest addCartItemRequest)
+        public async Task<ApiResponse> AddCartItem(AddCartItemRequest addCartItemRequest)
         {
             Guid? userId = UserUtil.GetAccountId(_httpContextAccessor.HttpContext);
             var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
@@ -38,12 +39,33 @@ namespace MRC_API.Service.Implement
 
             if(product == null) 
             {
-                throw new BadHttpRequestException(MessageConstant.ProductMessage.ProductNotExist);
+                return new ApiResponse()
+                {
+                    status = StatusCodes.Status404NotFound.ToString(),
+                    message = MessageConstant.ProductMessage.ProductNotExist,
+                    data = null
+                };
+                //throw new BadHttpRequestException(MessageConstant.ProductMessage.ProductNotExist);
             }
 
             if (product.Quantity < addCartItemRequest.Quantity)
             {
-                throw new BadHttpRequestException(MessageConstant.ProductMessage.ProductNotEnough);
+                return new ApiResponse()
+                {
+                    status = StatusCodes.Status400BadRequest.ToString(),
+                    message = MessageConstant.ProductMessage.ProductNotEnough,
+                    data = null
+                };
+            }
+
+            if (addCartItemRequest.Quantity <= 0)
+            {
+                return new ApiResponse()
+                {
+                    status = StatusCodes.Status400BadRequest.ToString(),
+                    message = MessageConstant.CartMessage.NegativeQuantity,
+                    data = null
+                };
             }
 
             var existingCartItem = await _unitOfWork.GetRepository<CartItem>().SingleOrDefaultAsync(
@@ -79,7 +101,7 @@ namespace MRC_API.Service.Implement
             }
             
             bool isSuccesfully = await _unitOfWork.CommitAsync() > 0;
-            AddCartItemResponse addCartItemResponse = null;
+            AddCartItemResponse? addCartItemResponse = null;
             if (isSuccesfully)
             {
                 addCartItemResponse = new AddCartItemResponse() 
@@ -90,10 +112,15 @@ namespace MRC_API.Service.Implement
                     Price = product.Price * addCartItemRequest.Quantity,
                 };
             }
-            return addCartItemResponse;
+            return new ApiResponse()
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "Add cart item successful",
+                data = addCartItemResponse
+            };
         }
 
-        public async Task<bool> ClearCart()
+        public async Task<ApiResponse> ClearCart()
         {
             Guid? userId = UserUtil.GetAccountId(_httpContextAccessor.HttpContext);
             var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
@@ -122,10 +149,15 @@ namespace MRC_API.Service.Implement
             }
 
             bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
-            return isSuccessful;
+            return new ApiResponse()
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "Clear cart successful",
+                data = true
+            };
         }
 
-        public async Task<bool> DeleteCartItem(Guid ItemId)
+        public async Task<ApiResponse> DeleteCartItem(Guid ItemId)
         {
             Guid? userId = UserUtil.GetAccountId(_httpContextAccessor.HttpContext);
             var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
@@ -140,21 +172,31 @@ namespace MRC_API.Service.Implement
                 predicate: c => c.UserId.Equals(userId));
 
             var cartItem = await _unitOfWork.GetRepository<CartItem>().SingleOrDefaultAsync(
-                predicate: c => c.CartId.Equals(cart.Id) && c.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
+                predicate: c => c.CartId.Equals(cart.Id) && c.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum())&& c.Id.Equals(ItemId));
 
             if(cartItem == null)
             {
-                throw new BadHttpRequestException(MessageConstant.CartMessage.CartItemNotExist);
+                return new ApiResponse()
+                {
+                    status = StatusCodes.Status404NotFound.ToString(),
+                    message = MessageConstant.CartMessage.CartItemNotExist,
+                    data = false
+                };
             }
 
             cartItem.Status = StatusEnum.Unavailable.GetDescriptionFromEnum();
             cartItem.UpDate = TimeUtils.GetCurrentSEATime();
             _unitOfWork.GetRepository<CartItem>().UpdateAsync(cartItem);
             bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
-            return isSuccessful;
+            return new ApiResponse()
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "Delete successful",
+                data = true
+            };
         }
 
-        public async Task<List<GetAllCartItemResponse>> GetAllCartItem()
+        public async Task<ApiResponse> GetAllCartItem()
         {
             Guid? userId = UserUtil.GetAccountId(_httpContextAccessor.HttpContext);
             var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
@@ -173,7 +215,12 @@ namespace MRC_API.Service.Implement
                 include: c => c.Include(c => c.Product));
             if (cartItems == null || !cartItems.Any())
             {
-                return new List<GetAllCartItemResponse>();
+                return new ApiResponse()
+                {
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "CartItem list",
+                    data = null
+                };
             }
 
             var response = cartItems.Select(cartItem => new GetAllCartItemResponse
@@ -185,10 +232,15 @@ namespace MRC_API.Service.Implement
                 UnitPrice = cartItem.Product.Price,
                 Price = cartItem.Product.Price * cartItem.Quantity,
             }).ToList();
-            return response;
+            return new ApiResponse()
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "CartItem list",
+                data = response
+            };
         }
 
-        public async Task<CartSummayResponse> GetCartSummary()
+        public async Task<ApiResponse> GetCartSummary()
         {
             Guid? userId = UserUtil.GetAccountId(_httpContextAccessor.HttpContext);
             if (userId == null)
@@ -207,14 +259,6 @@ namespace MRC_API.Service.Implement
             var cart = await _unitOfWork.GetRepository<Cart>().SingleOrDefaultAsync(
                 predicate: c => c.UserId.Equals(userId));
 
-            if (cart == null)
-            {
-                return new CartSummayResponse
-                {
-                    TotalItems = 0,
-                    TotalPrice = 0
-                };
-            }
 
             var cartItems = await _unitOfWork.GetRepository<CartItem>().GetListAsync(
                 predicate: c => c.CartId.Equals(cart.Id) && c.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()),
@@ -222,12 +266,18 @@ namespace MRC_API.Service.Implement
 
             if (cartItems == null || !cartItems.Any())
             {
-                return new CartSummayResponse
+                return new ApiResponse()
                 {
-                    TotalItems = 0,
-                    TotalPrice = 0
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "Summary",
+                    data = new CartSummayResponse()
+                    {
+                        TotalItems = 0,
+                        TotalPrice = 0
+                    }
                 };
             }
+                   
 
             decimal totalPrice = 0;
             decimal totalItems = 0;
@@ -244,11 +294,16 @@ namespace MRC_API.Service.Implement
                 TotalPrice = totalPrice
             };
 
-            return response;
+            return new ApiResponse()
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "Summary",
+                data = response
+            };
         }
 
 
-        public async Task<UpdateCartItemResponse> UpdateCartItem(Guid id, UpdateCartItemRequest updateCartItemRequest)
+        public async Task<ApiResponse> UpdateCartItem(Guid id, UpdateCartItemRequest updateCartItemRequest)
         {
             Guid? userId = UserUtil.GetAccountId(_httpContextAccessor.HttpContext);
             var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
@@ -268,7 +323,12 @@ namespace MRC_API.Service.Implement
 
             if(existingCartItem == null)
             {
-                throw new BadHttpRequestException(MessageConstant.CartMessage.CartItemNotExist);
+                return new ApiResponse()
+                {
+                    status = StatusCodes.Status404NotFound.ToString(),
+                    message = MessageConstant.CartMessage.CartItemNotExist.ToString(),
+                    data = null
+                };
             }
 
             var product = await _unitOfWork.GetRepository<Product>().SingleOrDefaultAsync(
@@ -276,12 +336,22 @@ namespace MRC_API.Service.Implement
 
             if (updateCartItemRequest.Quantity <= 0)
             {
-                throw new BadHttpRequestException(MessageConstant.CartMessage.NegativeQuantity);
+                return new ApiResponse()
+                {
+                    status = StatusCodes.Status400BadRequest.ToString(),
+                    message = MessageConstant.CartMessage.NegativeQuantity.ToString(),
+                    data = null
+                };
             }
 
             if(product.Quantity < updateCartItemRequest.Quantity)
             {
-                throw new BadHttpRequestException(MessageConstant.ProductMessage.ProductNotEnough);
+                return new ApiResponse()
+                {
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "Only have " + product.Quantity + " items",
+                    data = null
+                };
             }
 
             existingCartItem.Quantity = updateCartItemRequest.Quantity.HasValue ? updateCartItemRequest.Quantity.Value 
@@ -302,7 +372,12 @@ namespace MRC_API.Service.Implement
                     Price = product.Price * updateCartItemRequest.Quantity,
                 };
             }
-            return updateCartItemResponse;
+            return new ApiResponse()
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "update successful",
+                data = updateCartItemResponse
+            };
         }
     }
 }
