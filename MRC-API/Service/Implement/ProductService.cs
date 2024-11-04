@@ -4,6 +4,7 @@ using Business.Interface;
 using Microsoft.EntityFrameworkCore;
 using MRC_API.Constant;
 using MRC_API.Payload.Request.Product;
+using MRC_API.Payload.Response;
 using MRC_API.Payload.Response.Product;
 using MRC_API.Service.Interface;
 using MRC_API.Utils;
@@ -25,28 +26,29 @@ namespace MRC_API.Service.Implement
         public ProductService(IUnitOfWork<MrcContext> unitOfWork, ILogger<Product> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
         }
-        public async Task<CreateProductResponse> CreateProduct(CreateProductRequest createProductRequest)
+        public async Task<ApiResponse> CreateProduct(CreateProductRequest createProductRequest)
         {
-            // kiểm tra categoryID
-            // kiểm tra tên product
-            // quantity không đc là số âm
-            var cateCheck = await _unitOfWork.GetRepository<Category>().SingleOrDefaultAsync(
-                predicate: c => c.Id.Equals(createProductRequest.CategoryId));
+            // Check category ID
+            var cateCheck = await _unitOfWork.GetRepository<Category>().SingleOrDefaultAsync(predicate: c => c.Id.Equals(createProductRequest.CategoryId));
             if (cateCheck == null)
             {
-                throw new BadHttpRequestException(MessageConstant.CategoryMessage.CategoryNotExist);
+                return new ApiResponse { status = "error", message = MessageConstant.CategoryMessage.CategoryNotExist, data = null };
             }
-            var prodCheck = await _unitOfWork.GetRepository<Product>().SingleOrDefaultAsync(
-                predicate: p => p.ProductName.Equals(createProductRequest.ProductName));
+
+            // Check product name
+            var prodCheck = await _unitOfWork.GetRepository<Product>().SingleOrDefaultAsync(predicate: p => p.ProductName.Equals(createProductRequest.ProductName));
             if (prodCheck != null)
             {
-                throw new BadHttpRequestException(MessageConstant.ProductMessage.ProductNameExisted);
+                return new ApiResponse { status = "error", message = MessageConstant.ProductMessage.ProductNameExisted, data = null };
             }
-            if(createProductRequest.Quantity < 0)
+
+            // Validate quantity
+            if (createProductRequest.Quantity < 0)
             {
-                throw new BadHttpRequestException(MessageConstant.ProductMessage.NegativeQuantity);
+                return new ApiResponse { status = "error", message = MessageConstant.ProductMessage.NegativeQuantity, data = null };
             }
-            Product product = new Product()
+
+            Product product = new Product
             {
                 Id = Guid.NewGuid(),
                 ProductName = createProductRequest.ProductName,
@@ -57,7 +59,7 @@ namespace MRC_API.Service.Implement
                 Price = createProductRequest.Price,
                 Quantity = createProductRequest.Quantity,
                 Status = StatusEnum.Available.GetDescriptionFromEnum(),
-                Images = new List<Image>()               
+                Images = new List<Image>()
             };
 
             if (createProductRequest.ImageLink != null && createProductRequest.ImageLink.Any())
@@ -65,7 +67,7 @@ namespace MRC_API.Service.Implement
                 var imageUrls = await UploadFilesToFirebase(createProductRequest.ImageLink);
                 foreach (var imageUrl in imageUrls)
                 {
-                    product.Images.Add(new Image 
+                    product.Images.Add(new Image
                     {
                         Id = Guid.NewGuid(),
                         ProductId = product.Id,
@@ -74,28 +76,35 @@ namespace MRC_API.Service.Implement
                         LinkImage = imageUrl
                     });
                 }
-            } 
+            }
+
             await _unitOfWork.GetRepository<Product>().InsertAsync(product);
             bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
-            CreateProductResponse createProductResponse = null;
-            var category = await _unitOfWork.GetRepository<Category>().SingleOrDefaultAsync(predicate: c => c.Id.Equals(createProductRequest.CategoryId));
+
             if (isSuccessful)
             {
-                createProductResponse = new CreateProductResponse()
+                var category = await _unitOfWork.GetRepository<Category>().SingleOrDefaultAsync(predicate: c => c.Id.Equals(createProductRequest.CategoryId));
+                return new ApiResponse
                 {
-                    Id = product.Id,
-                    Description = product.Description,
-                    Images = product.Images.Select(i => i.LinkImage).ToList(),
-                    ProductName = product.ProductName,
-                    Quantity = product.Quantity,
-                    CategoryName = category.CategoryName,
+                    status = StatusCodes.Status201Created.ToString(),
+                    message = "Product created successfully.",
+                    data = new CreateProductResponse
+                    {
+                        Id = product.Id,
+                        Description = product.Description,
+                        Images = product.Images.Select(i => i.LinkImage).ToList(),
+                        ProductName = product.ProductName,
+                        Quantity = product.Quantity,
+                        CategoryName = category.CategoryName,
+                    }
                 };
-
             }
-            return createProductResponse;
+
+            return new ApiResponse { status = "error", message = "Failed to create product.", data = null };
         }
-        public async Task<IPaginate<GetProductResponse>> GetListProduct(int page, int size)
-        { 
+
+        public async Task<ApiResponse> GetListProduct(int page, int size)
+        {
             var products = await _unitOfWork.GetRepository<Product>().GetPagingListAsync(
                 selector: s => new GetProductResponse
                 {
@@ -107,50 +116,105 @@ namespace MRC_API.Service.Implement
                     Quantity = s.Quantity,
                 },
                 predicate: p => p.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()),
-                page : page,
-                size : size
-                );
-            return products;
+                page: page,
+                size: size
+            );
+
+            if (products == null || products.Items.Count == 0)
+            {
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status404NotFound.ToString(),
+                    message = "No products found.",
+                    data = null
+                };
+            }
+
+            return new ApiResponse
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "Products retrieved successfully.",
+                data = products
+            };
         }
-        public async Task<IPaginate<GetProductResponse>> GetListProductByCategoryId (Guid CateID, int page, int size)
+
+        public async Task<ApiResponse> GetListProductByCategoryId(Guid CateID, int page, int size)
         {
+            // Check if the category exists
             var cateCheck = await _unitOfWork.GetRepository<Category>().SingleOrDefaultAsync(
-                 predicate: c => c.Id.Equals(CateID));
+                predicate: c => c.Id.Equals(CateID)
+            );
+
             if (cateCheck == null)
             {
-                throw new BadHttpRequestException(MessageConstant.CategoryMessage.CategoryNotExist);
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status404NotFound.ToString(),
+                    message = MessageConstant.CategoryMessage.CategoryNotExist,
+                    data = null
+                };
             }
+
+            // Retrieve a paginated list of products by category ID
             var products = await _unitOfWork.GetRepository<Product>().GetPagingListAsync(
-               selector: s => new GetProductResponse
-               {
-                   Id = s.Id,
-                   CategoryName = s.Category.CategoryName,
-                   Description = s.Description,
-                   Images = s.Images.Select(i => i.LinkImage).ToList(),
-                   ProductName = s.ProductName,
-                   Quantity = s.Quantity,
-               },
-               predicate: p => p.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()) && p.CategoryId.Equals(CateID),
-               page: page,
-               size: size
-               );
-            return products;
+                selector: s => new GetProductResponse
+                {
+                    Id = s.Id,
+                    CategoryName = s.Category.CategoryName,
+                    Description = s.Description,
+                    Images = s.Images.Select(i => i.LinkImage).ToList(),
+                    ProductName = s.ProductName,
+                    Quantity = s.Quantity,
+                },
+                predicate: p => p.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()) && p.CategoryId.Equals(CateID),
+                page: page,
+                size: size
+            );
+
+            if (products == null || products.Items.Count == 0)
+            {
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status404NotFound.ToString(),
+                    message = "No products found in this category.",
+                    data = null
+                };
+            }
+
+            return new ApiResponse
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "Products retrieved successfully.",
+                data = products
+            };
         }
-        public async Task<GetProductResponse> GetProductById(Guid productId)
+        public async Task<ApiResponse> GetProductById(Guid productId)
         {
             var product = await _unitOfWork.GetRepository<Product>().SingleOrDefaultAsync(
                 selector: s => new GetProductResponse
-            {
-                Id = s.Id,
-                CategoryName = s.Category.CategoryName,
-                Description = s.Description,
-                Images = s.Images.Select(i => i.LinkImage).ToList(),
-                ProductName = s.ProductName,
-                Quantity = s.Quantity,
-            }, predicate: p => p.Id.Equals(productId));
-            return product;
+                {
+                    Id = s.Id,
+                    CategoryName = s.Category.CategoryName,
+                    Description = s.Description,
+                    Images = s.Images.Select(i => i.LinkImage).ToList(),
+                    ProductName = s.ProductName,
+                    Quantity = s.Quantity,
+                },
+                predicate: p => p.Id.Equals(productId));
 
+            if (product == null)
+            {
+                return new ApiResponse { status = StatusCodes.Status404NotFound.ToString(), message = MessageConstant.ProductMessage.ProductNotExist, data = null };
+            }
+
+            return new ApiResponse
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "Product retrieved successfully.",
+                data = product
+            };
         }
+
         //public async Task<bool> UpdateProduct(Guid ProID, UpdateProductRequest updateProductRequest)
         //{
         //    var productUpdate = await _unitOfWork.GetRepository<Product>().SingleOrDefaultAsync(
@@ -195,70 +259,62 @@ namespace MRC_API.Service.Implement
         //    bool IsSuccessful = await _unitOfWork.CommitAsync() > 0;
         //    return IsSuccessful;
         //}
-        public async Task<UpdateProductResponse> UpdateProduct(Guid productId, UpdateProductRequest updateProductRequest)
+        public async Task<ApiResponse> UpdateProduct(Guid productId, UpdateProductRequest updateProductRequest)
         {
-            // Kiểm tra sự tồn tại của sản phẩm
-            var existingProduct = await _unitOfWork.GetRepository<Product>().SingleOrDefaultAsync(
-                predicate: p => p.Id.Equals(productId));
+            // Check if the product exists
+            var existingProduct = await _unitOfWork.GetRepository<Product>().SingleOrDefaultAsync(predicate: p => p.Id.Equals(productId));
             if (existingProduct == null)
             {
-                throw new BadHttpRequestException(MessageConstant.ProductMessage.ProductNotExist);
+                return new ApiResponse { status = StatusCodes.Status404NotFound.ToString(), message = MessageConstant.ProductMessage.ProductNotExist, data = null };
             }
 
-            // Kiểm tra CategoryId nếu nó được cung cấp
+            // Check CategoryId if provided
             if (updateProductRequest.CategoryId.HasValue)
             {
-                var cateCheck = await _unitOfWork.GetRepository<Category>().SingleOrDefaultAsync(
-                    predicate: c => c.Id.Equals(updateProductRequest.CategoryId.Value));
+                var cateCheck = await _unitOfWork.GetRepository<Category>().SingleOrDefaultAsync(predicate: c => c.Id.Equals(updateProductRequest.CategoryId.Value));
                 if (cateCheck == null)
                 {
-                    throw new BadHttpRequestException(MessageConstant.CategoryMessage.CategoryNotExist);
+                    return new ApiResponse { status = StatusCodes.Status400BadRequest.ToString(), message = MessageConstant.CategoryMessage.CategoryNotExist, data = null };
                 }
                 existingProduct.CategoryId = updateProductRequest.CategoryId.Value;
             }
 
-            // Kiểm tra tên sản phẩm nếu nó được cung cấp
+            // Check product name if provided
             if (!string.IsNullOrEmpty(updateProductRequest.ProductName) && !existingProduct.ProductName.Equals(updateProductRequest.ProductName))
             {
-                var prodCheck = await _unitOfWork.GetRepository<Product>().SingleOrDefaultAsync(
-                    predicate: p => p.ProductName.Equals(updateProductRequest.ProductName));
+                var prodCheck = await _unitOfWork.GetRepository<Product>().SingleOrDefaultAsync(predicate: p => p.ProductName.Equals(updateProductRequest.ProductName));
                 if (prodCheck != null)
                 {
-                    throw new BadHttpRequestException(MessageConstant.ProductMessage.ProductNameExisted);
+                    return new ApiResponse { status = StatusCodes.Status400BadRequest.ToString(), message = MessageConstant.ProductMessage.ProductNameExisted, data = null };
                 }
                 existingProduct.ProductName = updateProductRequest.ProductName;
             }
 
-            // Kiểm tra số lượng nếu nó được cung cấp và không được là số âm
+            // Check quantity if provided
             if (updateProductRequest.Quantity.HasValue)
             {
                 if (updateProductRequest.Quantity < 0)
                 {
-                    throw new BadHttpRequestException(MessageConstant.ProductMessage.NegativeQuantity);
+                    return new ApiResponse { status = StatusCodes.Status400BadRequest.ToString(), message = MessageConstant.ProductMessage.NegativeQuantity, data = null };
                 }
                 existingProduct.Quantity = updateProductRequest.Quantity.Value;
             }
 
-            // Cập nhật mô tả nếu nó được cung cấp
+            // Update description if provided
             if (!string.IsNullOrEmpty(updateProductRequest.Description))
             {
                 existingProduct.Description = updateProductRequest.Description;
             }
 
-            // Cập nhật ngày sửa đổi
-            existingProduct.UpDate = TimeUtils.GetCurrentSEATime();
-
-            // Cập nhật hình ảnh nếu nó được cung cấp
+            // Update images if provided
             if (updateProductRequest.ImageLink != null && updateProductRequest.ImageLink.Any())
             {
-                // Clear existing images from the database
                 var existingImages = await _unitOfWork.GetRepository<Image>().GetListAsync(predicate: i => i.ProductId.Equals(existingProduct.Id));
                 foreach (var img in existingImages)
                 {
                     _unitOfWork.GetRepository<Image>().DeleteAsync(img);
                 }
 
-                // Upload new images
                 var imageUrls = await UploadFilesToFirebase(updateProductRequest.ImageLink);
                 foreach (var imageUrl in imageUrls)
                 {
@@ -275,103 +331,56 @@ namespace MRC_API.Service.Implement
                 }
             }
 
-            // Step 4: Commit the changes to the database
+            // Commit changes
             _unitOfWork.GetRepository<Product>().UpdateAsync(existingProduct);
-            bool isSuccessful = false;
+            bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
 
-            try
+            if (isSuccessful)
             {
-                isSuccessful = await _unitOfWork.CommitAsync() > 0;
-                if (!isSuccessful)
+                var category = await _unitOfWork.GetRepository<Category>().SingleOrDefaultAsync(predicate: c => c.Id.Equals(existingProduct.CategoryId));
+                return new ApiResponse
                 {
-                    throw new Exception("Failed to save product and images to the database.");
-                }
-            }
-            catch (DbUpdateConcurrencyException ex)
-            {
-                foreach (var entry in ex.Entries)
-                {
-                    if (entry.Entity is Product)
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "Product updated successfully.",
+                    data = new UpdateProductResponse
                     {
-                        var clientValues = (Product)entry.Entity;
-                        var databaseEntry = entry.GetDatabaseValues();
-
-                        if (databaseEntry == null)
-                        {
-                            throw new Exception("Product was deleted by another user.");
-                        }
-                        else
-                        {
-                            var databaseValues = (Product)databaseEntry.ToObject();
-                            throw new Exception("The product you attempted to update was modified by another user.");
-                        }
+                        Id = existingProduct.Id,
+                        Description = existingProduct.Description,
+                        Images = existingProduct.Images.Select(i => i.LinkImage).ToList(),
+                        ProductName = existingProduct.ProductName,
+                        Quantity = existingProduct.Quantity,
+                        CategoryName = category.CategoryName,
                     }
-                }
+                };
             }
 
-            // Step 5: Manually load images after commit
-            var imagesAfterCommit = await _unitOfWork.GetRepository<Image>().GetListAsync(predicate: i => i.ProductId.Equals(existingProduct.Id));
-            existingProduct.Images = imagesAfterCommit.ToList();
-
-            if (existingProduct.Images == null || !existingProduct.Images.Any())
-            {
-                throw new Exception("No images found in the database after commit.");
-            }
-
-            // Step 6: Prepare and return the response
-            var category = await _unitOfWork.GetRepository<Category>().SingleOrDefaultAsync(
-                predicate: c => c.Id.Equals(existingProduct.CategoryId));
-
-            return new UpdateProductResponse()
-            {
-                Id = existingProduct.Id,
-                Description = existingProduct.Description,
-                Images = existingProduct.Images.Select(i => i.LinkImage).ToList(),
-                ProductName = existingProduct.ProductName,
-                Quantity = existingProduct.Quantity,
-                CategoryName = category.CategoryName,
-            };
+            return new ApiResponse { status = StatusCodes.Status500InternalServerError.ToString(), message = "Failed to update product.", data = null };
         }
-        public async Task<bool> DeleteProduct(Guid ProductId)
+        public async Task<ApiResponse> DeleteProduct(Guid productId)
         {
-            if(ProductId == null)
+            if (productId == Guid.Empty)
             {
                 throw new BadHttpRequestException(MessageConstant.ProductMessage.ProductIdEmpty);
-
             }
-            var product = await _unitOfWork.GetRepository<Product>().SingleOrDefaultAsync(
-                predicate: p => p.Id.Equals(ProductId) 
-                && p.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
-            if(product == null)
+
+            // Find product
+            var existingProduct = await _unitOfWork.GetRepository<Product>().SingleOrDefaultAsync(predicate: p => p.Id.Equals(productId));
+            if (existingProduct == null)
             {
-                throw new BadHttpRequestException(MessageConstant.ProductMessage.ProductIsEmpty);
+                return new ApiResponse { status = StatusCodes.Status404NotFound.ToString(), message = MessageConstant.ProductMessage.ProductNotExist, data = null };
             }
-            product.Status = StatusEnum.Unavailable.GetDescriptionFromEnum();
 
-            var imageDelete = await _unitOfWork.GetRepository<Image>().GetListAsync(predicate: p => p.ProductId.Equals(product.Id));
-            if(imageDelete != null)
+            // Mark as deleted
+            existingProduct.Status = StatusEnum.Unavailable.GetDescriptionFromEnum();
+            _unitOfWork.GetRepository<Product>().UpdateAsync(existingProduct);
+            bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
+
+            if (isSuccessful)
             {
-                foreach(var img in imageDelete)
-                {
-                    _unitOfWork.GetRepository<Image>().DeleteAsync(img);
-                }
+                return new ApiResponse { status = StatusCodes.Status204NoContent.ToString(), message = "Product deleted successfully.", data = null };
             }
 
-            var cartItems = await _unitOfWork.GetRepository<CartItem>().GetListAsync(
-                predicate: ci => ci.ProductId.Equals(ProductId));
-            if(cartItems != null) 
-            {
-                foreach (var cartItem in cartItems)
-                {
-                    _unitOfWork.GetRepository<CartItem>().DeleteAsync(cartItem);
-                }
-            }
-            _unitOfWork.GetRepository<Product>().UpdateAsync(product);
-            bool isSuccessful = await _unitOfWork.CommitAsync() >0;
-            return isSuccessful;
-               
-
-
+            return new ApiResponse { status = StatusCodes.Status500InternalServerError.ToString(), message = "Failed to delete product.", data = null };
         }
         private async Task<List<string>> UploadFilesToFirebase(List<IFormFile> formFiles)
         {

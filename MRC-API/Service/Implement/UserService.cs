@@ -7,6 +7,7 @@ using MimeKit;
 using MRC_API.Constant;
 using MRC_API.Payload.Request.Category;
 using MRC_API.Payload.Request.User;
+using MRC_API.Payload.Response;
 using MRC_API.Payload.Response.GoogleAuth;
 using MRC_API.Payload.Response.User;
 using MRC_API.Service.Interface;
@@ -33,20 +34,33 @@ namespace MRC_API.Service.Implement
             _emailSender = emailSender;
         }
 
-        public async Task<CreateNewAccountResponse> CreateNewAdminAccount(CreateNewAccountRequest createNewAccountRequest)
+        public async Task<ApiResponse> CreateNewAdminAccount(CreateNewAccountRequest createNewAccountRequest)
         {
-            _logger.LogInformation($"create new user with {createNewAccountRequest.UserName}");
+            _logger.LogInformation($"Creating new admin account for {createNewAccountRequest.UserName}");
+
             string emailPattern = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
             if (!Regex.IsMatch(createNewAccountRequest.Email, emailPattern))
             {
-                throw new BadHttpRequestException(MessageConstant.PatternMessage.EmailIncorrect);
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status400BadRequest.ToString(),
+                    message = MessageConstant.PatternMessage.EmailIncorrect,
+                    data = null
+                };
             }
+
             string phonePattern = @"^0\d{9}$";
             if (!Regex.IsMatch(createNewAccountRequest.PhoneNumber, phonePattern))
             {
-                throw new BadHttpRequestException(MessageConstant.PatternMessage.PhoneIncorrect);
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status400BadRequest.ToString(),
+                    message = MessageConstant.PatternMessage.PhoneIncorrect,
+                    data = null
+                };
             }
-            User newUser = new User()
+
+            User newUser = new User
             {
                 Id = Guid.NewGuid(),
                 UserName = createNewAccountRequest.UserName,
@@ -57,62 +71,74 @@ namespace MRC_API.Service.Implement
                 Gender = createNewAccountRequest.Gender.GetDescriptionFromEnum().ToString(),
                 PhoneNumber = createNewAccountRequest.PhoneNumber,
                 Role = RoleEnum.Admin.GetDescriptionFromEnum()
-
             };
+
             await _unitOfWork.GetRepository<User>().InsertAsync(newUser);
-            bool isSuccesfully = await _unitOfWork.CommitAsync() > 0;
-            CreateNewAccountResponse createNewAccountResponse = null;
-            if(isSuccesfully)
+            bool isSuccessfully = await _unitOfWork.CommitAsync() > 0;
+
+            if (isSuccessfully)
             {
-                createNewAccountResponse = new CreateNewAccountResponse()
+                var createNewAccountResponse = new CreateNewAccountResponse
                 {
-                    Username = newUser.UserName,
-                    Password = newUser.Password,
+                    Username = newUser.UserName
+                };
+
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "Admin account created successfully",
+                    data = createNewAccountResponse
                 };
             }
-            string subject = "Welcome to MRC!";
-            string message = $"Dear {newUser.UserName},\n\nYour admin account has been successfully created.";
-            //await _emailSender.SendEmailAsync(newUser.Email, subject, message);
-            return createNewAccountResponse;
+
+            return new ApiResponse
+            {
+                status = StatusCodes.Status500InternalServerError.ToString(),
+                message = "Failed to create admin account",
+                data = null
+            };
         }
 
-        public async Task<CreateNewAccountResponse> CreateNewManagerAccount(CreateNewAccountRequest createNewAccountRequest)
+        public async Task<ApiResponse> CreateNewManagerAccount(CreateNewAccountRequest createNewAccountRequest)
         {
-            _logger.LogInformation($"create new user with {createNewAccountRequest.UserName}");
+            _logger.LogInformation($"Creating new manager account for {createNewAccountRequest.UserName}");
 
             string emailPattern = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
             if (!Regex.IsMatch(createNewAccountRequest.Email, emailPattern))
             {
-                throw new BadHttpRequestException(MessageConstant.PatternMessage.EmailIncorrect);
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status400BadRequest.ToString(),
+                    message = MessageConstant.PatternMessage.EmailIncorrect,
+                    data = null
+                };
             }
+
             string phonePattern = @"^0\d{9}$";
             if (!Regex.IsMatch(createNewAccountRequest.PhoneNumber, phonePattern))
             {
-                throw new BadHttpRequestException(MessageConstant.PatternMessage.PhoneIncorrect);
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status400BadRequest.ToString(),
+                    message = MessageConstant.PatternMessage.PhoneIncorrect,
+                    data = null
+                };
             }
+
             var manager = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
                 predicate: m => m.UserName.Equals(createNewAccountRequest.UserName));
 
             if (manager != null)
             {
-                throw new BadHttpRequestException(MessageConstant.UserMessage.AccountExisted);
-            }
-            var managerPhone = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
-                predicate: m => m.PhoneNumber.Equals(createNewAccountRequest.PhoneNumber));
-
-            if (managerPhone != null)
-            {
-                throw new BadHttpRequestException(MessageConstant.UserMessage.PhoneExisted);
-            }
-            var managerEmail = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
-                predicate: m => m.Email.Equals(createNewAccountRequest.Email));
-
-            if (managerEmail != null)
-            {
-                throw new BadHttpRequestException(MessageConstant.UserMessage.EmailExisted);
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status400BadRequest.ToString(),
+                    message = MessageConstant.UserMessage.AccountExisted,
+                    data = null
+                };
             }
 
-            User newUser = new User()
+            User newUser = new User
             {
                 Id = Guid.NewGuid(),
                 UserName = createNewAccountRequest.UserName,
@@ -122,34 +148,41 @@ namespace MRC_API.Service.Implement
                 Status = StatusEnum.Available.GetDescriptionFromEnum(),
                 InsDate = TimeUtils.GetCurrentSEATime(),
                 UpDate = TimeUtils.GetCurrentSEATime(),
-                //Status = true,
                 PhoneNumber = createNewAccountRequest.PhoneNumber,
                 Gender = createNewAccountRequest.Gender.GetDescriptionFromEnum().ToString(),
                 Role = RoleEnum.Manager.GetDescriptionFromEnum()
-
             };
 
             await _unitOfWork.GetRepository<User>().InsertAsync(newUser);
-            bool isSuccesfully = await _unitOfWork.CommitAsync() > 0;
-            GenderEnum gender = EnumUtil.ParseEnum<GenderEnum>(newUser.Gender);
-            CreateNewAccountResponse createNewAccountResponse = null;
-            if (isSuccesfully)
+            bool isSuccessfully = await _unitOfWork.CommitAsync() > 0;
+
+            if (isSuccessfully)
             {
-                createNewAccountResponse = new CreateNewAccountResponse()
+                var createNewAccountResponse = new CreateNewAccountResponse
                 {
                     Username = newUser.UserName,
-                    Password = newUser.Password,
                     Email = newUser.Email,
                     FullName = newUser.FullName,
                     Gender = EnumUtil.ParseEnum<GenderEnum>(newUser.Gender),
                     PhoneNumber = newUser.PhoneNumber
                 };
 
-              
-               
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "Manager account created successfully",
+                    data = createNewAccountResponse
+                };
             }
-            return createNewAccountResponse;
+
+            return new ApiResponse
+            {
+                status = StatusCodes.Status500InternalServerError.ToString(),
+                message = "Failed to create manager account",
+                data = null
+            };
         }
+
         public async Task<bool> VerifyOtp (Guid UserId, string otpCheck)
         {
             var otp = await _unitOfWork.GetRepository<Otp>().SingleOrDefaultAsync(predicate: p => p.OtpCode.Equals(otpCheck) && p.UserId.Equals(UserId));
@@ -170,42 +203,47 @@ namespace MRC_API.Service.Implement
             }
             return false;
         }
-        public async Task<CreateNewAccountResponse> CreateNewCustomerAccount(CreateNewAccountRequest createNewAccountRequest)
+
+        public async Task<ApiResponse> CreateNewCustomerAccount(CreateNewAccountRequest createNewAccountRequest)
         {
-            _logger.LogInformation($"create new user with {createNewAccountRequest.UserName}");
+            _logger.LogInformation($"Creating new customer account for {createNewAccountRequest.UserName}");
 
             string emailPattern = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
             if (!Regex.IsMatch(createNewAccountRequest.Email, emailPattern))
             {
-                throw new BadHttpRequestException(MessageConstant.PatternMessage.EmailIncorrect);
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status400BadRequest.ToString(),
+                    message = MessageConstant.PatternMessage.EmailIncorrect,
+                    data = null
+                };
             }
+
             string phonePattern = @"^0\d{9}$";
             if (!Regex.IsMatch(createNewAccountRequest.PhoneNumber, phonePattern))
             {
-                throw new BadHttpRequestException(MessageConstant.PatternMessage.PhoneIncorrect);
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status400BadRequest.ToString(),
+                    message = MessageConstant.PatternMessage.PhoneIncorrect,
+                    data = null
+                };
             }
+
             var customer = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
                 predicate: m => m.UserName.Equals(createNewAccountRequest.UserName));
 
             if (customer != null)
             {
-                throw new BadHttpRequestException(MessageConstant.UserMessage.AccountExisted);
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status400BadRequest.ToString(),
+                    message = MessageConstant.UserMessage.AccountExisted,
+                    data = null
+                };
             }
-            var customerPhone = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
-                predicate: m => m.PhoneNumber.Equals(createNewAccountRequest.PhoneNumber));
 
-            if (customerPhone != null)
-            {
-                throw new BadHttpRequestException(MessageConstant.UserMessage.PhoneExisted);
-            }
-            var customerEmail = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
-                predicate: m => m.Email.Equals(createNewAccountRequest.Email));
-
-            if (customerEmail != null)
-            {
-                throw new BadHttpRequestException(MessageConstant.UserMessage.EmailExisted);
-            }
-            User newUser = new User()
+            User newUser = new User
             {
                 Id = Guid.NewGuid(),
                 UserName = createNewAccountRequest.UserName,
@@ -219,9 +257,10 @@ namespace MRC_API.Service.Implement
                 PhoneNumber = createNewAccountRequest.PhoneNumber,
                 Gender = createNewAccountRequest.Gender.GetDescriptionFromEnum().ToString()
             };
+
             await _unitOfWork.GetRepository<User>().InsertAsync(newUser);
 
-            Cart newCart = new Cart()
+            Cart newCart = new Cart
             {
                 Id = Guid.NewGuid(),
                 UserId = newUser.Id,
@@ -231,21 +270,18 @@ namespace MRC_API.Service.Implement
             };
             await _unitOfWork.GetRepository<Cart>().InsertAsync(newCart);
 
-            bool isSuccesfully = await _unitOfWork.CommitAsync() > 0;
-            GenderEnum gender = EnumUtil.ParseEnum<GenderEnum>(newUser.Gender);
-            CreateNewAccountResponse createNewAccountResponse = null;
-            if (isSuccesfully)
+            bool isSuccessfully = await _unitOfWork.CommitAsync() > 0;
+
+            if (isSuccessfully)
             {
-                createNewAccountResponse = new CreateNewAccountResponse()
+                var createNewAccountResponse = new CreateNewAccountResponse
                 {
                     Username = newUser.UserName,
-                    Password = newUser.Password,
                     Email = newUser.Email,
                     FullName = newUser.FullName,
-                    Gender = gender,
+                    Gender = EnumUtil.ParseEnum<GenderEnum>(newUser.Gender),
                     PhoneNumber = newUser.PhoneNumber
                 };
-                // Generate and store OTP
                 string otp = OtpUltil.GenerateOtp();
                 var otpRecord = new Otp
                 {
@@ -264,70 +300,126 @@ namespace MRC_API.Service.Implement
 
                 // Optionally, handle OTP expiration as discussed
                 ScheduleOtpCancellation(otpRecord.Id, TimeSpan.FromMinutes(10));
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "Customer account created successfully",
+                    data = createNewAccountResponse
+                };
             }
-            return createNewAccountResponse;
+
+            return new ApiResponse
+            {
+                status = StatusCodes.Status500InternalServerError.ToString(),
+                message = "Failed to create customer account",
+                data = null
+            };
         }
-        public async Task<LoginResponse> Login(Payload.Request.User.LoginRequest loginRequest)
+        public async Task<ApiResponse> Login(Payload.Request.User.LoginRequest loginRequest)
         {
+            // Define the search filter for the user
             Expression<Func<User, bool>> searchFilter = p =>
                   p.UserName.Equals(loginRequest.Username) &&
                   p.Password.Equals(PasswordUtil.HashPassword(loginRequest.Password)) &&
                   (p.Role == RoleEnum.Manager.GetDescriptionFromEnum() ||
                    p.Role == RoleEnum.Admin.GetDescriptionFromEnum() ||
                    p.Role == RoleEnum.Customer.GetDescriptionFromEnum()) &&
-                   p.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum());
-            
+                  p.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum());
+
+            // Retrieve the user based on the search filter
             User user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: searchFilter);
 
+            // Check if the user exists, if not, return a 400 Bad Request response
             if (user == null)
             {
-                throw new BadHttpRequestException(MessageConstant.UserMessage.AccountNotExist);
-            };
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status400BadRequest.ToString(),
+                    message = MessageConstant.UserMessage.AccountNotExist,
+                    data = null
+                };
+            }
 
+            // Create the login response
             RoleEnum role = EnumUtil.ParseEnum<RoleEnum>(user.Role);
-            Tuple<String, Guid> guildClaim = new Tuple<string, Guid>("userID", user.Id);
-            LoginResponse loginResponse = new LoginResponse()
+            Tuple<string, Guid> guildClaim = new Tuple<string, Guid>("userID", user.Id);
+            var token = JwtUtil.GenerateJwtToken(user, guildClaim);
+
+            // Create the login response object
+            var loginResponse = new LoginResponse()
             {
                 RoleEnum = role.ToString(),
                 UserId = user.Id,
                 UserName = user.UserName,
+                token = token // Assign the generated token
             };
-            var token = JwtUtil.GenerateJwtToken(user, guildClaim);
-            loginResponse.token = token;
-            return loginResponse;
-        }
 
-        public async Task<bool> DeleteUser(Guid id)
+            // Return a success response
+            return new ApiResponse
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "Login successful.",
+                data = loginResponse
+            };
+        }
+        public async Task<ApiResponse> DeleteUser(Guid id)
         {
             var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
                 predicate: u => u.Id.Equals(id) && u.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
+
             if (user == null)
             {
-                throw new BadHttpRequestException(MessageConstant.UserMessage.UserNotExist);
+                return new Payload.Response.ApiResponse
+                {
+                    status = StatusCodes.Status404NotFound.ToString(),
+                    message = MessageConstant.UserMessage.UserNotExist,
+                    data = null
+                };
             }
 
             var cart = await _unitOfWork.GetRepository<Cart>().SingleOrDefaultAsync(
                 predicate: c => c.UserId.Equals(user.Id));
 
-            var cartItems = await _unitOfWork.GetRepository<CartItem>().GetListAsync(predicate: ci => ci.CartId.Equals(cart.Id));
-            foreach(var cartItem in cartItems)
+            if (cart != null)
             {
-            _unitOfWork.GetRepository<CartItem>().DeleteAsync(cartItem);
-            }
+                var cartItems = await _unitOfWork.GetRepository<CartItem>().GetListAsync(predicate: ci => ci.CartId.Equals(cart.Id));
+                foreach (var cartItem in cartItems)
+                {
+                     _unitOfWork.GetRepository<CartItem>().DeleteAsync(cartItem);
+                }
 
-            cart.Status = StatusEnum.Unavailable.GetDescriptionFromEnum();
-            cart.UpDate = TimeUtils.GetCurrentSEATime();
-            _unitOfWork.GetRepository<Cart>().UpdateAsync(cart);
+                cart.Status = StatusEnum.Unavailable.GetDescriptionFromEnum();
+                cart.UpDate = TimeUtils.GetCurrentSEATime();
+                _unitOfWork.GetRepository<Cart>().UpdateAsync(cart);
+            }
 
             user.Status = StatusEnum.Unavailable.GetDescriptionFromEnum();
             user.UpDate = TimeUtils.GetCurrentSEATime();
             _unitOfWork.GetRepository<User>().UpdateAsync(user);
 
             bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
-            return isSuccessful;
+
+            if (isSuccessful)
+            {
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "User deleted successfully.",
+                    data = null
+                };
+            }
+            else
+            {
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status500InternalServerError.ToString(),
+                    message = "Failed to delete user.",
+                    data = null
+                };
+            }
         }
 
-        public async Task<IPaginate<GetUserResponse>> GetAllUser(int page, int size)
+        public async Task<ApiResponse> GetAllUser(int page, int size)
         {
             var users = await _unitOfWork.GetRepository<User>().GetPagingListAsync(
                 selector: u => new GetUserResponse()
@@ -341,45 +433,92 @@ namespace MRC_API.Service.Implement
                 predicate: u => u.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()),
                 page: page,
                 size: size);
-            return users;
+
+            return new ApiResponse
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "Users retrieved successfully.",
+                data = users
+            };
         }
 
-        public async Task<GetUserResponse> GetUser(Guid id)
+
+        public async Task<ApiResponse> GetUser(Guid id)
         {
             var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
                 selector: u => new GetUserResponse()
                 {
                     UserId = u.Id,
                     Email = u.Email,
-                    FullName= u.FullName,
+                    FullName = u.FullName,
                     PhoneNumber = u.PhoneNumber,
                     Gender = u.Gender
                 },
                 predicate: u => u.Id.Equals(id) && u.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
+
             if (user == null)
             {
-                throw new BadHttpRequestException(MessageConstant.UserMessage.UserNotExist);
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status404NotFound.ToString(),
+                    message = MessageConstant.UserMessage.UserNotExist,
+                    data = null
+                };
             }
-            return user;
+
+            return new ApiResponse
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "User retrieved successfully.",
+                data = user
+            };
         }
 
-        public async Task<bool> UpdateUser(Guid id, UpdateUserRequest updateUserRequest)
+        public async Task<ApiResponse> UpdateUser(Guid id, UpdateUserRequest updateUserRequest)
         {
             var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
                 predicate: u => u.Id.Equals(id) && u.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
+
             if (user == null)
             {
-                throw new BadHttpRequestException(MessageConstant.UserMessage.UserNotExist);
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status404NotFound.ToString(),
+                    message = MessageConstant.UserMessage.UserNotExist,
+                    data = null
+                };
             }
+
             user.FullName = string.IsNullOrEmpty(updateUserRequest.FullName) ? user.FullName : updateUserRequest.FullName;
             user.Email = string.IsNullOrEmpty(updateUserRequest.Email) ? user.Email : updateUserRequest.Email;
             user.PhoneNumber = string.IsNullOrEmpty(updateUserRequest.PhoneNumber) ? user.PhoneNumber : updateUserRequest.PhoneNumber;
             user.Gender = updateUserRequest.Gender.HasValue ? updateUserRequest.Gender.GetDescriptionFromEnum() : user.Gender.GetDescriptionFromEnum();
             user.UpDate = TimeUtils.GetCurrentSEATime();
+
             _unitOfWork.GetRepository<User>().UpdateAsync(user);
+
             bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
-            return isSuccessful;
+
+            if (isSuccessful)
+            {
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "User updated successfully.",
+                    data = user
+                };
+            }
+            else
+            {
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status500InternalServerError.ToString(),
+                    message = "Failed to update the user.",
+                    data = null
+                };
+            }
         }
+
 
         public async Task<string> CreateTokenByEmail(string email)
         {
@@ -406,9 +545,26 @@ namespace MRC_API.Service.Implement
             );
             return account != null;
         }
-
-        public async Task<CreateNewAccountResponse> CreateNewUserAccountByGoogle(GoogleAuthResponse request)
+        public async Task<ApiResponse> CreateNewUserAccountByGoogle(GoogleAuthResponse request)
         {
+            // Check if the user already exists
+            var existingUser = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
+                predicate: u => u.Email.Equals(request.Email) &&
+                                u.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
+
+            if (existingUser != null)
+            {
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status400BadRequest.ToString(),
+                    message = "User account already exists.",
+                    data = new CreateNewAccountResponse
+                    {
+                        Email = existingUser.Email,
+                        FullName = existingUser.FullName
+                    }
+                };
+            }
 
             var newUser = new User()
             {
@@ -422,6 +578,7 @@ namespace MRC_API.Service.Implement
                 InsDate = TimeUtils.GetCurrentSEATime(),
                 UpDate = TimeUtils.GetCurrentSEATime()
             };
+
             await _unitOfWork.GetRepository<User>().InsertAsync(newUser);
 
             Cart newCart = new Cart()
@@ -432,21 +589,34 @@ namespace MRC_API.Service.Implement
                 InsDate = TimeUtils.GetCurrentSEATime(),
                 UpDate = TimeUtils.GetCurrentSEATime()
             };
+
             await _unitOfWork.GetRepository<Cart>().InsertAsync(newCart);
 
-            CreateNewAccountResponse response = null;
             bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
             if (isSuccessful)
             {
-
-                response = new CreateNewAccountResponse()
+                return new ApiResponse
                 {
-                    Email = newUser.Email, 
-                    FullName = newUser.FullName
+                    status = StatusCodes.Status201Created.ToString(),
+                    message = "User account created successfully.",
+                    data = new CreateNewAccountResponse
+                    {
+                        Email = newUser.Email,
+                        FullName = newUser.FullName
+                    }
                 };
             }
-            return response;
+            else
+            {
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status500InternalServerError.ToString(),
+                    message = "Failed to create user account.",
+                    data = null
+                };
+            }
         }
+
         private async Task ScheduleOtpCancellation(Guid otpId, TimeSpan delay)
         {
             await Task.Delay(delay);
@@ -561,9 +731,20 @@ namespace MRC_API.Service.Implement
 
         }
 
-        public async Task<GetUserResponse> GetUser()
+        public async Task<ApiResponse> GetUser()
         {
             Guid? userId = UserUtil.GetAccountId(_httpContextAccessor.HttpContext);
+
+            if (userId == null)
+            {
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status400BadRequest.ToString(),
+                    message = "User ID not found.",
+                    data = null
+                };
+            }
+
             var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
                 selector: u => new GetUserResponse()
                 {
@@ -574,9 +755,25 @@ namespace MRC_API.Service.Implement
                     Gender = u.Gender,
                     Role = u.Role,
                 },
-                predicate: u => u.Id.Equals(userId) && u.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
-            return user;
+                predicate: u => u.Id.Equals(userId.Value) && u.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
 
+            if (user == null)
+            {
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status404NotFound.ToString(),
+                    message = "User not found.",
+                    data = null
+                };
+            }
+
+            return new ApiResponse
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "User retrieved successfully.",
+                data = user
+            };
         }
+
     }
 }
