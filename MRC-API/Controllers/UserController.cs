@@ -19,11 +19,11 @@ namespace MRC_API.Controllers
             _userService = userService;
         }
         [HttpPost(ApiEndPointConstant.User.RegisterAdmin)]
-        [ProducesResponseType(typeof(CreateNewAccountResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
         public async Task<IActionResult> CreateNewAccount([FromBody] CreateNewAccountRequest createNewAccountRequest)
         {
-            CreateNewAccountResponse createNewAccountResponse = await _userService.CreateNewAdminAccount(createNewAccountRequest);
+            ApiResponse createNewAccountResponse = await _userService.CreateNewAdminAccount(createNewAccountRequest);
             if (createNewAccountResponse == null)
             {
                 return Problem(MessageConstant.UserMessage.CreateUserAdminFail);
@@ -32,11 +32,11 @@ namespace MRC_API.Controllers
         }
 
         [HttpPost(ApiEndPointConstant.User.RegisterManager)]
-        [ProducesResponseType(typeof(CreateNewAccountResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(BadRequestObjectResult))]
         public async Task<IActionResult> CreateNewMangerAccount([FromBody] CreateNewAccountRequest createNewAccountRequest)
         {
-            CreateNewAccountResponse createNewAccountResponse = await _userService.CreateNewManagerAccount(createNewAccountRequest);
+            ApiResponse createNewAccountResponse = await _userService.CreateNewManagerAccount(createNewAccountRequest);
             if (createNewAccountResponse == null)
             {
                 return BadRequest(new ErrorResponse()
@@ -49,11 +49,11 @@ namespace MRC_API.Controllers
             return Ok(createNewAccountResponse);
         }
         [HttpPost(ApiEndPointConstant.User.RegisterCustomer)]
-        [ProducesResponseType(typeof(CreateNewAccountResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
         public async Task<IActionResult> CreateNewCustomerAccount([FromBody] CreateNewAccountRequest createNewAccountRequest)
         {
-            CreateNewAccountResponse createNewAccountResponse = await _userService.CreateNewCustomerAccount(createNewAccountRequest);
+            ApiResponse createNewAccountResponse = await _userService.CreateNewCustomerAccount(createNewAccountRequest);
             if (createNewAccountResponse == null)
             {
                 return Problem(MessageConstant.UserMessage.CreateUserAdminFail);

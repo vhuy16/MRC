@@ -36,7 +36,7 @@ namespace MRC_API.Controllers
         {
             var googleAuthResponse = await _googleAuthenticationService.AuthenticateGoogleUser(HttpContext);
             var checkAccount = await _userService.GetAccountByEmail(googleAuthResponse.Email);
-            if (!checkAccount)
+            if (checkAccount)
             {
                 var response = await _userService.CreateNewUserAccountByGoogle(googleAuthResponse);
                 if (response == null)
