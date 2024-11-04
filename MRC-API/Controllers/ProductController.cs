@@ -22,12 +22,8 @@ namespace MRC_API.Controllers
         [ProducesErrorResponseType(typeof(ProblemDetails))]
         public async Task<IActionResult> CreateProduct([FromForm] CreateProductRequest createProductRequest)
         {
-           CreateProductResponse createProductResponse = await _productService.CreateProduct(createProductRequest);
-            if(createProductResponse == null)
-            {
-                return Problem(MessageConstant.ProductMessage.CreateProductFail);
-            }
-            return CreatedAtAction(nameof(CreateProduct), createProductResponse);
+          var response = await _productService.CreateProduct(createProductRequest);
+            return StatusCode(int.Parse(response.status), response);
         }
 
         [HttpGet(ApiEndPointConstant.Product.GetListProducts)]
