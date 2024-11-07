@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Azure;
+using Microsoft.AspNetCore.Mvc;
 using MRC_API.Constant;
-
+using MRC_API.Payload.Response;
+using MRC_API.Payload.Response.CartItem;
 using MRC_API.Payload.Response.Pay;
 using MRC_API.Service.Interface;
 using Net.payOS.Types;
@@ -18,24 +20,13 @@ namespace MRC_API.Controllers
 
         // Endpoint to create a payment URL
         [HttpPost(ApiEndPointConstant.Payment.CreatePaymentUrl)]
-        [ProducesResponseType(typeof(CreatePaymentResult), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
         public async Task<IActionResult> CreatePaymentUrl([FromBody] List<Guid> cartItemsId)
         {
-            try
-            {
-                var result = await _payService.CreatePaymentUrlRegisterCreator(cartItemsId);
-                if (result == null)
-                {
-                    return Problem(MessageConstant.PaymentMessage.CreatePaymentFail);
-                }
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error creating payment URL.");
-                return Problem(MessageConstant.PaymentMessage.CreatePaymentFail);
-            }
+            var result = await _payService.CreatePaymentUrlRegisterCreator(cartItemsId);
+            return StatusCode(int.Parse(result.status), result);
         }
 
         // Endpoint to get payment details

@@ -344,15 +344,24 @@ namespace MRC_API.Service.Implement
                 };
             }
 
-            if(product.Quantity < updateCartItemRequest.Quantity)
+            if (product.Quantity < updateCartItemRequest.Quantity)
             {
                 return new ApiResponse()
                 {
                     status = StatusCodes.Status200OK.ToString(),
                     message = "Only have " + product.Quantity + " items",
-                    data = null
+                    data = new UpdateCartItemResponse()
+                    {
+                        CartItemId = id,
+                        ProductId = product.Id,
+                        Quantity = existingCartItem.Quantity,
+                        ProductName = product.ProductName,
+                        UnitPrice = product.Price,
+                        Price = product.Price * existingCartItem.Quantity,
+                    }
                 };
             }
+            
 
             existingCartItem.Quantity = updateCartItemRequest.Quantity.HasValue ? updateCartItemRequest.Quantity.Value 
                 : existingCartItem.Quantity;

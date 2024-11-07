@@ -276,6 +276,7 @@ namespace MRC_API.Service.Implement
             {
                 var createNewAccountResponse = new CreateNewAccountResponse
                 {
+                    Id = newUser.Id,
                     Username = newUser.UserName,
                     Email = newUser.Email,
                     FullName = newUser.FullName,

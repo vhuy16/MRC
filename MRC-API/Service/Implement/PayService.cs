@@ -15,6 +15,9 @@ using System.Security.Cryptography;
 using System.Text;
 using MRC_API.Payload.Request.OrderDetail;
 using MRC_API.Payload.Request.Payment;
+using Microsoft.AspNetCore.Mvc.ApiExplorer;
+using MRC_API.Payload.Response;
+using MRC_API.Constant;
 
 namespace MRC_API.Service.Implement
 {
@@ -43,7 +46,7 @@ namespace MRC_API.Service.Implement
                 return BitConverter.ToString(hash).Replace("-", "").ToLower();
             }
         }   
-        public async Task<CreatePaymentResult> CreatePaymentUrlRegisterCreator(List<Guid> cartItemsId)
+        public async Task<ApiResponse> CreatePaymentUrlRegisterCreator(List<Guid> cartItemsId)
         {
             try
             {
@@ -90,7 +93,12 @@ namespace MRC_API.Service.Implement
 
                 if (cart == null)
                 {
-                    throw new BadHttpRequestException("Cart is empty.");
+                    return new ApiResponse()
+                    {
+                       status = StatusCodes.Status400BadRequest.ToString(),
+                       message = "Cart is empty",
+                       data = null
+                    };
                 }
 
                 List<CartItem> cartItems = new List<CartItem>();
@@ -114,7 +122,12 @@ namespace MRC_API.Service.Implement
 
                         if (product == null)
                         {
-                            throw new BadHttpRequestException($"Product with ID {cartItem.ProductId} does not exist.");
+                            return new ApiResponse()
+                            {
+                                status = StatusCodes.Status400BadRequest.ToString(),
+                                message = MessageConstant.ProductMessage.ProductNotExist,
+                                data = null
+                            };
                         }
 
                         // Tạo đối tượng ItemData và thêm vào danh sách
@@ -195,7 +208,12 @@ namespace MRC_API.Service.Implement
                     }
                 }
 
-                return paymentResult;
+                return new ApiResponse()
+                {
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "Successful",
+                    data = paymentResult
+                };
             }
 
             catch (Exception ex)
