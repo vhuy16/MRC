@@ -19,6 +19,10 @@ public partial class Order
 
     public DateTime? UpDate { get; set; }
 
+    public int? ShipCost { get; set; }
+
+    public int? ShipStatus { get; set; }
+
     public virtual ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
 
     public virtual Payment Payment { get; set; } = null!;
