@@ -39,9 +39,9 @@ public partial class MrcContext : DbContext
 
     public virtual DbSet<User> Users { get; set; }
 
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) { }
-//#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-//        => optionsBuilder.UseSqlServer("Server=QUANGHUY\\QHUY;Database=MRC;User Id=sa;Password=12345;TrustServerCertificate=True;");
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
+        => optionsBuilder.UseSqlServer("Server=mrcadmindb.database.windows.net;database=MRC;user=mrcadmin;password=JPassword123;TrustServerCertificate=True");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -196,6 +196,8 @@ public partial class MrcContext : DbContext
                 .HasColumnType("datetime")
                 .HasColumnName("insDate");
             entity.Property(e => e.PaymentId).HasColumnName("paymentId");
+            entity.Property(e => e.ShipCost).HasColumnName("shipCost");
+            entity.Property(e => e.ShipStatus).HasColumnName("shipStatus");
             entity.Property(e => e.Status)
                 .HasMaxLength(50)
                 .IsUnicode(false)
@@ -274,7 +276,7 @@ public partial class MrcContext : DbContext
 
         modelBuilder.Entity<Payment>(entity =>
         {
-            entity.HasKey(e => e.PaymentId).HasName("PK__Payment__9B556A58085FE6F7");
+            entity.HasKey(e => e.PaymentId).HasName("PK__Payment__9B556A582E32AFF4");
 
             entity.ToTable("Payment");
 

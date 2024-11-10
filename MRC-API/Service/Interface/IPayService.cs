@@ -1,4 +1,5 @@
-﻿using MRC_API.Payload.Response.Pay;
+﻿using MRC_API.Payload.Response;
+using MRC_API.Payload.Response.Pay;
 using Net.payOS.Types;
 
 namespace MRC_API.Service.Interface
@@ -6,6 +7,6 @@ namespace MRC_API.Service.Interface
     public interface IPayService
     {
         Task<ExtendedPaymentInfo> GetPaymentInfo(string paymentLinkId);
-        Task<CreatePaymentResult> CreatePaymentUrlRegisterCreator(List<Guid> cartItemsId);
+        Task<ApiResponse> CreatePaymentUrlRegisterCreator(List<Guid> cartItemsId);
     }
 }
