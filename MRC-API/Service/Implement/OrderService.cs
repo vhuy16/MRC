@@ -181,6 +181,7 @@ namespace MRC_API.Service.Implement
                     InsDate = TimeUtils.GetCurrentSEATime(),
                     UserId = userId,
                     Status = payment.Status,
+                    ShipStatus = (int)ShipEnum.NewOrder,
                     OrderDetails = new List<OrderDetail>()
                 };
                 foreach (var cartItem in cartItems)

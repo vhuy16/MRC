@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Azure;
 using Bean_Mind.API.Utils;
 using Business.Interface;
 using Microsoft.EntityFrameworkCore;
@@ -346,11 +347,10 @@ namespace MRC_API.Service.Implement
 
             if (product.Quantity < updateCartItemRequest.Quantity)
             {
-                return new ApiResponse()
+                var response = new ApiResponse()
                 {
                     status = StatusCodes.Status200OK.ToString(),
-                    message = "Only have " + product.Quantity + " items",
-                    data = new UpdateCartItemResponse()
+                    data = new UpdateCartItemResponse
                     {
                         CartItemId = id,
                         ProductId = product.Id,
@@ -360,8 +360,13 @@ namespace MRC_API.Service.Implement
                         Price = product.Price * existingCartItem.Quantity,
                     }
                 };
+
+                response.SetWarningMessage("Only have " + product.Quantity + " items");
+
+                return response;
             }
-            
+
+
 
             existingCartItem.Quantity = updateCartItemRequest.Quantity.HasValue ? updateCartItemRequest.Quantity.Value 
                 : existingCartItem.Quantity;

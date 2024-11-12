@@ -9,7 +9,10 @@ using Prepare;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
+}); ;
 
 // Add Swagger/OpenAPI services
 builder.Services.AddEndpointsApiExplorer();

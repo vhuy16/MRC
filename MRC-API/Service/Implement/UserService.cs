@@ -370,7 +370,7 @@ namespace MRC_API.Service.Implement
 
             if (user == null)
             {
-                return new Payload.Response.ApiResponse
+                return new ApiResponse
                 {
                     status = StatusCodes.Status404NotFound.ToString(),
                     message = MessageConstant.UserMessage.UserNotExist,

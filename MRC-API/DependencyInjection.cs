@@ -104,6 +104,7 @@ namespace Prepare
             options.ClientId = CreateClientId(configuration);
             options.ClientSecret = CreateClientSecret(configuration);
             options.SaveTokens = true;
+            options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
 
             });
             services.Configure<CookiePolicyOptions>(options =>

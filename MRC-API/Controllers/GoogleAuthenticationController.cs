@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using MRC_API.Constant;
 using MRC_API.Service.Implement;
 using MRC_API.Service.Interface;
+using MRC_API.Payload.Response;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 namespace MRC_API.Controllers
 
@@ -32,6 +34,7 @@ namespace MRC_API.Controllers
 
 
         [HttpGet(ApiEndPointConstant.GoogleAuthentication.GoogleSignIn)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> SignInAndSignUpByGoogle()
         {
             var googleAuthResponse = await _googleAuthenticationService.AuthenticateGoogleUser(HttpContext);
@@ -47,7 +50,26 @@ namespace MRC_API.Controllers
             }
             var token = await _userService.CreateTokenByEmail(googleAuthResponse.Email);
             googleAuthResponse.Token = token;
-            return Ok(googleAuthResponse);
+            return Ok(new ApiResponse()
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "Login successful",
+                data = googleAuthResponse
+            });
+        }
+
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout()
+        {
+         
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+
+            return Ok(new ApiResponse()
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "Logout successful",
+                data = null
+            });
         }
     } 
 }
