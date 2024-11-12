@@ -6,6 +6,7 @@ using MRC_API.Payload.Request.User;
 using MRC_API.Payload.Response;
 using MRC_API.Payload.Response.User;
 using MRC_API.Service.Interface;
+using Repository.Entity;
 using Repository.Paginate;
 
 namespace MRC_API.Controllers
@@ -50,6 +51,7 @@ namespace MRC_API.Controllers
         }
         [HttpPost(ApiEndPointConstant.User.RegisterCustomer)]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
         public async Task<IActionResult> CreateNewCustomerAccount([FromBody] CreateNewAccountRequest createNewAccountRequest)
         {
@@ -62,18 +64,18 @@ namespace MRC_API.Controllers
         }
 
         [HttpPost(ApiEndPointConstant.User.Login)]
-        [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(UnauthorizedObjectResult))]
         public async Task<IActionResult> Login([FromBody] LoginRequest loginRequest)
         {
             var loginResponse = await _userService.Login(loginRequest);
-            if (loginResponse == null) {
+            if (loginResponse.data == null) {
 
-                return Unauthorized(new ErrorResponse()
+                return Unauthorized(new ApiResponse()
                 {
-                    StatusCode = StatusCodes.Status401Unauthorized,
-                    Error = MessageConstant.LoginMessage.InvalidUsernameOrPassword,
-                    TimeStamp = DateTime.Now
+                    status = StatusCodes.Status401Unauthorized.ToString(),
+                    message = MessageConstant.LoginMessage.InvalidUsernameOrPassword,
+                    data = DateTime.Now
                 });
             }
             return Ok(loginResponse);
@@ -81,53 +83,58 @@ namespace MRC_API.Controllers
 
         [HttpDelete(ApiEndPointConstant.User.DeleteUser)]
         [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
         public async Task<IActionResult> DeleteUser([FromRoute] Guid id)
         {
             var response = await _userService.DeleteUser(id);
-            return Ok(response);
+            return StatusCode(int.Parse(response.status), response);
         }
 
         [HttpGet(ApiEndPointConstant.User.GetAllUser)]
         [ProducesResponseType(typeof(IPaginate<GetUserResponse>), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
-        public async Task<IActionResult> GetAllCategory([FromQuery] int? page, [FromQuery] int? size)
+        public async Task<IActionResult> GetAllUser([FromQuery] int? page, [FromQuery] int? size)
         {
             int pageNumber = page ?? 1;
             int pageSize = size ?? 10;
             var response = await _userService.GetAllUser(pageNumber, pageSize);
-            if (response == null)
+            if(response.data == null)
             {
-                return Problem(MessageConstant.UserMessage.UserIsEmpty);
+                response.data = new List<User>();
             }
-            return Ok(response);
+            return StatusCode(int.Parse(response.status), response);
         }
 
         [HttpGet(ApiEndPointConstant.User.GetUserById)]
         [ProducesResponseType(typeof(GetUserResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
         public async Task<IActionResult> GetUserById([FromRoute] Guid id)
         {
             var response = await _userService.GetUser(id);
-            return Ok(response);
+            return StatusCode(int.Parse(response.status), response);
         }
 
         [HttpGet(ApiEndPointConstant.User.GetUser)]
         [ProducesResponseType(typeof(GetUserResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
         public async Task<IActionResult> GetUser()
         {
             var response = await _userService.GetUser();
-            return Ok(response);
+            return StatusCode(int.Parse(response.status), response);
         }
 
         [HttpPut(ApiEndPointConstant.User.UpdateUser)]
         [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
         public async Task<IActionResult> UpdateCategory([FromRoute] Guid id, [FromBody] UpdateUserRequest updateUserRequest)
         {
             var response = await _userService.UpdateUser(id, updateUserRequest);
-            return Ok(response);
+            return StatusCode(int.Parse(response.status), response);
         }
         [HttpPost(ApiEndPointConstant.User.VerifyOtp)]
         [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
