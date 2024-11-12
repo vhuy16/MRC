@@ -7,6 +7,7 @@ using MRC_API.Payload.Response.Cart;
 using MRC_API.Payload.Response.CartItem;
 using MRC_API.Service.Implement;
 using MRC_API.Service.Interface;
+using Repository.Entity;
 
 namespace MRC_API.Controllers
 {
@@ -54,6 +55,10 @@ namespace MRC_API.Controllers
         public async Task<IActionResult> GetAllCart()
         {
             var response = await _cartService.GetAllCartItem();
+            if(response.data == null)
+            {
+                response.data = new List<CartItem>();
+            }
             return StatusCode(int.Parse(response.status), response);
         }
 
