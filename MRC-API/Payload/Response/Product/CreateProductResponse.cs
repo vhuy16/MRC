@@ -13,6 +13,8 @@ namespace MRC_API.Payload.Response.Product
 
         public string CategoryName { get; set; }
 
+        public decimal? price { get; set; }
+
         public List<string> Images { get; set; } = new List<string>();
     }
 }

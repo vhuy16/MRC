@@ -15,6 +15,7 @@ using Microsoft.IdentityModel.Tokens;
 using MRC_API.Service;
 using MRC_API.Service.Implement;
 using MRC_API.Service.Interface;
+using MRC_API.Utils;
 using Repository.Entity;
 using System.Text;
 
@@ -51,7 +52,7 @@ namespace Prepare
             services.AddScoped<ICategoryService, CategoryService>();
             services.AddScoped<IProductService, ProductService>();
             services.AddScoped<IBookingService, BookingService>();
-            
+            services.AddScoped<IVNPayService, VNPayService>();
             services.AddScoped<IOrderService, OrderService>();
             services.AddScoped<IServiceService, ServiceService>();
             services.AddScoped<IGoogleAuthenticationService, GoogleAuthenticationService>();
@@ -59,6 +60,8 @@ namespace Prepare
             services.AddScoped<IEmailSender, EmailSender>();
             services.AddScoped<IPayService, PayService>();
             services.AddScoped<AzureDatabaseService>();
+            services.AddScoped<PaymentUltils.Utils>();
+            services.AddScoped<INewsService, NewsService>();
             services.AddScoped<IBookingService, BookingService>();
             return services;
         }

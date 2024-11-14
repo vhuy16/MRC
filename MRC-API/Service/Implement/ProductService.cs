@@ -96,6 +96,7 @@ namespace MRC_API.Service.Implement
                         ProductName = product.ProductName,
                         Quantity = product.Quantity,
                         CategoryName = category.CategoryName,
+                        price = product.Price,
                     }
                 };
             }
@@ -103,7 +104,7 @@ namespace MRC_API.Service.Implement
             return new ApiResponse { status = "error", message = "Failed to create product.", data = null };
         }
 
-        public async Task<ApiResponse> GetListProduct(int page, int size)
+        public async Task<ApiResponse> GetListProduct(int page, int size, string searchName = null, bool? isAscending = null)
         {
             var products = await _unitOfWork.GetRepository<Product>().GetPagingListAsync(
                 selector: s => new GetProductResponse
@@ -114,8 +115,13 @@ namespace MRC_API.Service.Implement
                     Images = s.Images.Select(i => i.LinkImage).ToList(),
                     ProductName = s.ProductName,
                     Quantity = s.Quantity,
+                    Price = s.Price,
                 },
-                predicate: p => p.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()),
+                predicate: p => p.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()) &&
+                                (string.IsNullOrEmpty(searchName) || p.ProductName.Contains(searchName)),
+                orderBy: q => isAscending.HasValue
+                    ? (isAscending.Value ? q.OrderBy(p => p.Price) : q.OrderByDescending(p => p.Price))
+                    : q.OrderByDescending(p => p.InsDate),
                 page: page,
                 size: size
             );
@@ -165,6 +171,7 @@ namespace MRC_API.Service.Implement
                     Images = s.Images.Select(i => i.LinkImage).ToList(),
                     ProductName = s.ProductName,
                     Quantity = s.Quantity,
+                    Price = s.Price,
                 },
                 predicate: p => p.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()) && p.CategoryId.Equals(CateID),
                 page: page,
@@ -199,6 +206,7 @@ namespace MRC_API.Service.Implement
                     Images = s.Images.Select(i => i.LinkImage).ToList(),
                     ProductName = s.ProductName,
                     Quantity = s.Quantity,
+                    Price = s.Price,    
                 },
                 predicate: p => p.Id.Equals(productId));
 
@@ -350,7 +358,7 @@ namespace MRC_API.Service.Implement
                         ProductName = existingProduct.ProductName,
                         Quantity = existingProduct.Quantity,
                         CategoryName = category.CategoryName,
-                    }
+                        Price = existingProduct.Price                    }
                 };
             }
 

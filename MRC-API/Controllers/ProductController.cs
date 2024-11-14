@@ -29,15 +29,22 @@ namespace MRC_API.Controllers
         [HttpGet(ApiEndPointConstant.Product.GetListProducts)]
         [ProducesResponseType(typeof(IPaginate<GetProductResponse>), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
-        public async Task<IActionResult> GetListProduct([FromQuery] int? page, [FromQuery] int? size)
+        public async Task<IActionResult> GetListProduct(
+                                                 [FromQuery] int? page,
+                                                 [FromQuery] int? size,
+                                                 [FromQuery] string searchName = null,
+                                                 [FromQuery] bool? isAscending = null)
         {
             int pageNumber = page ?? 1;
             int pageSize = size ?? 10;
-            var response = await _productService.GetListProduct(pageNumber, pageSize);
-            if (response == null)
+
+            var response = await _productService.GetListProduct(pageNumber, pageSize, searchName, isAscending);
+
+            if (response == null || response.data == null)
             {
-                return Problem(MessageConstant.ProductMessage.ProductIsEmpty);
+                return Problem(detail: MessageConstant.ProductMessage.ProductIsEmpty, statusCode: StatusCodes.Status404NotFound);
             }
+
             return Ok(response);
         }
 
