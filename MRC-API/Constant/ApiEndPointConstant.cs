@@ -9,7 +9,13 @@
         public const string RootEndPoint = "/api";
         public const string ApiVersion = "/v1";
         public const string ApiEndpoint = RootEndPoint + ApiVersion;
-
+        public static class News
+        {
+            public const string CreateFromExternal = "api/news/external/create";
+            public const string GetAllNews = "api/news";
+            public const string GetNewsById = "api/news/{newsId}";
+            public const string DeleteNewsById = "api/news/{newsId}";
+        }
         public static class User
         {
             public const string UserEndPoint = ApiEndpoint + "/user";
@@ -30,6 +36,11 @@
         {
             public const string CreatePaymentUrl = "api/payment/create-url";
             public const string GetPaymentInfo = "api/payment/{paymentLinkId}";
+        }
+        public static class VNPay
+        {
+            public const string CreatePaymentUrl = "api/vnpay/create-payment-url";
+            public const string ValidatePaymentResponse = "api/vnpay/validate-payment-response";
         }
         public static class Category
         {

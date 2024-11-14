@@ -1,4 +1,5 @@
 using Microsoft.OpenApi.Models;
+using MRC_API.Configurations;
 using MRC_API.Constant;
 using MRC_API.Infrastructure;
 using MRC_API.Middlewares;
@@ -27,6 +28,7 @@ builder.Services.AddCustomServices();
 builder.Services.AddJwtValidation();
 builder.Services.Configure<PayOSSettings>(builder.Configuration.GetSection("PayOS"));
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+builder.Services.Configure<VNPaySettings>(builder.Configuration.GetSection("VNPaySettings"));
 
 builder.Services.AddHttpClientServices();
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();

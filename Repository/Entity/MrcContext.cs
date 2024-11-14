@@ -25,6 +25,8 @@ public partial class MrcContext : DbContext
 
     public virtual DbSet<Image> Images { get; set; }
 
+    public virtual DbSet<News> News { get; set; }
+
     public virtual DbSet<Order> Orders { get; set; }
 
     public virtual DbSet<OrderDetail> OrderDetails { get; set; }
@@ -41,7 +43,7 @@ public partial class MrcContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("Server=mrc-admin.database.windows.net;database=MRC;user=mrcadmin;password=JPassword123;TrustServerCertificate=True");
+        => optionsBuilder.UseSqlServer("Server=mrc-admin.database.windows.net;Database=MRC;User Id=mrcadmin;Password=JPassword123;TrustServerCertificate=True;");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -183,6 +185,31 @@ public partial class MrcContext : DbContext
                 .HasConstraintName("FK__Image__productId__412EB0B6");
         });
 
+        modelBuilder.Entity<News>(entity =>
+        {
+            entity.Property(e => e.Id)
+                .ValueGeneratedNever()
+                .HasColumnName("id");
+            entity.Property(e => e.Content)
+                .HasColumnType("text")
+                .HasColumnName("content");
+            entity.Property(e => e.DatePublished)
+                .HasColumnType("datetime")
+                .HasColumnName("datePublished");
+            entity.Property(e => e.SourceName).HasMaxLength(255);
+            entity.Property(e => e.SourceUrl)
+                .HasMaxLength(255)
+                .IsUnicode(false)
+                .HasColumnName("sourceUrl");
+            entity.Property(e => e.Status)
+                .HasMaxLength(10)
+                .IsFixedLength()
+                .HasColumnName("status");
+            entity.Property(e => e.Title)
+                .HasMaxLength(255)
+                .HasColumnName("title");
+        });
+
         modelBuilder.Entity<Order>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__Order__3213E83F1F39A9ED");
@@ -276,7 +303,7 @@ public partial class MrcContext : DbContext
 
         modelBuilder.Entity<Payment>(entity =>
         {
-            entity.HasKey(e => e.PaymentId).HasName("PK__Payment__9B556A582E32AFF4");
+            entity.HasKey(e => e.PaymentId).HasName("PK__Payment__9B556A58863E7DCB");
 
             entity.ToTable("Payment");
 
