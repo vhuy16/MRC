@@ -54,6 +54,7 @@
         {
             public const string CreateOrderFail = "Tạo hoá đơn thất bại";
             public const string OrderIsEmpty = "Không có hoá đơn nào";
+            public const string CreateOrderSuccess = "Tạo hóa đơn thành công";
         }
         public static class EmailMessage
         {

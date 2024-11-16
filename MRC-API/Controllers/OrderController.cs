@@ -1,12 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MRC_API.Constant;
 using MRC_API.Payload.Request.Order;
-using MRC_API.Payload.Request.OrderDetail;
-using MRC_API.Payload.Request.User;
+using MRC_API.Payload.Response;
+using MRC_API.Payload.Response.CartItem;
 using MRC_API.Payload.Response.Order;
-using MRC_API.Payload.Response.Product;
-using MRC_API.Payload.Response.User;
-using MRC_API.Service.Implement;
 using MRC_API.Service.Interface;
 using Repository.Paginate;
 
@@ -20,15 +17,21 @@ namespace MRC_API.Controllers
             _orderService = orderService;
         }
         [HttpPost(ApiEndPointConstant.Order.CreateNewOrder)]
-        [ProducesResponseType(typeof(CreateOrderResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
-        public async Task<IActionResult> CreateOrder()
+        public async Task<IActionResult> CreateOrder([FromForm] CreateOrderRequest createOrderRequest)
         {
            
-           CreateOrderResponse createOrderResponse  = await _orderService.CreateOrder();
-            if (createOrderResponse == null)
+            var createOrderResponse  = await _orderService.CreateOrder(createOrderRequest);
+            if(createOrderResponse.status == StatusCodes.Status400BadRequest.ToString())
             {
-                return Problem(MessageConstant.UserMessage.CreateUserAdminFail);
+                return BadRequest(createOrderResponse);
+            }
+            if (createOrderResponse.status == StatusCodes.Status404NotFound.ToString())
+            {
+                return NotFound(createOrderResponse);
             }
             return CreatedAtAction(nameof(CreateOrder), createOrderResponse);
         }

@@ -222,7 +222,6 @@ public partial class MrcContext : DbContext
             entity.Property(e => e.InsDate)
                 .HasColumnType("datetime")
                 .HasColumnName("insDate");
-            entity.Property(e => e.PaymentId).HasColumnName("paymentId");
             entity.Property(e => e.ShipCost).HasColumnName("shipCost");
             entity.Property(e => e.ShipStatus).HasColumnName("shipStatus");
             entity.Property(e => e.Status)
@@ -236,11 +235,6 @@ public partial class MrcContext : DbContext
                 .HasColumnType("datetime")
                 .HasColumnName("upDate");
             entity.Property(e => e.UserId).HasColumnName("userId");
-
-            entity.HasOne(d => d.Payment).WithMany(p => p.Orders)
-                .HasForeignKey(d => d.PaymentId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Order_Payment");
 
             entity.HasOne(d => d.User).WithMany(p => p.Orders)
                 .HasForeignKey(d => d.UserId)

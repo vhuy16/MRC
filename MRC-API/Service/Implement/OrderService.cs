@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using MRC_API.Constant;
 using MRC_API.Payload.Request.Order;
 using MRC_API.Payload.Request.OrderDetail;
+using MRC_API.Payload.Response;
 using MRC_API.Payload.Response.Order;
 using MRC_API.Service.Interface;
 using MRC_API.Utils;
@@ -157,7 +158,7 @@ namespace MRC_API.Service.Implement
         //        throw new BadHttpRequestException("An unexpected error occurred while creating the order.", ex);
         //    }
         //}
-        public async Task<CreateOrderResponse> CreateOrder()
+        public async Task<ApiResponse> CreateOrder(CreateOrderRequest createOrderRequest)
         {
             Guid? userId = UserUtil.GetAccountId(_httpContextAccessor.HttpContext);
             if (userId == null)
@@ -167,21 +168,38 @@ namespace MRC_API.Service.Implement
 
             try
             {
-                var payment = await _unitOfWork.GetRepository<Payment>().SingleOrDefaultAsync(predicate: p => p.UserId.Equals(userId));
                 var cart = await _unitOfWork.GetRepository<Cart>().SingleOrDefaultAsync(predicate: p => p.UserId.Equals(userId));
-                var cartItems = await _unitOfWork.GetRepository<CartItem>().GetListAsync(predicate: p => p.CartId.Equals(cart.Id)
-                                                                                                && p.Status.Equals(StatusEnum.Paid.GetDescriptionFromEnum()));
-                decimal totalprice = 0;
+                var cartItems = new List<CartItem>();
+                foreach (var cartItemId in createOrderRequest.CartItem)
+                {
+                    var cartItem = await _unitOfWork.GetRepository<CartItem>().SingleOrDefaultAsync(predicate: p => p.CartId.Equals(cart.Id) 
+                                                                                                && p.Id.Equals(cartItemId)
+                                                                                                && p.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
+                    if(cartItem != null)
+                    {
+                        cartItems.Add(cartItem);
+                    }       
+                }                
                 
+                decimal totalprice = 0;
+                if(cartItems.Count == 0)
+                {
+                    return new ApiResponse()
+                    {
+                        status = StatusCodes.Status404NotFound.ToString(),
+                        message = MessageConstant.CartMessage.CartItemIsEmpty,
+                        data = null
+                    };
+                }
                 Order order = new Order
                 {
                     Id = Guid.NewGuid(),
-                    PaymentId = payment.PaymentId,
                     TotalPrice = 0,
                     InsDate = TimeUtils.GetCurrentSEATime(),
                     UserId = userId,
-                    Status = payment.Status,
                     ShipStatus = (int)ShipEnum.NewOrder,
+                    Status = StatusEnum.Available.GetDescriptionFromEnum(),
+                    ShipCost = createOrderRequest.ShipCost,
                     OrderDetails = new List<OrderDetail>()
                 };
                 foreach (var cartItem in cartItems)
@@ -197,17 +215,23 @@ namespace MRC_API.Service.Implement
                         InsDate = TimeUtils.GetCurrentSEATime(),
                         UpDate = TimeUtils.GetCurrentSEATime(),
                         Quantity = cartItem.Quantity,
-                        Price = (decimal) product.Price
+                        Price = product.Price.Value,
                     };
-                    order.TotalPrice = totalprice;
                     order.OrderDetails.Add(newOrderDetail);
                     await _unitOfWork.GetRepository<OrderDetail>().InsertAsync(newOrderDetail);
                 }
+                order.TotalPrice = totalprice + createOrderRequest.ShipCost;
+
                 await _unitOfWork.GetRepository<Order>().InsertAsync(order);
                 bool isSuccessOrder = await _unitOfWork.CommitAsync() > 0;
                 if (!isSuccessOrder)
                 {
-                    throw new BadHttpRequestException(MessageConstant.OrderMessage.CreateOrderFail);
+                    return new ApiResponse()
+                    {
+                        status = StatusCodes.Status400BadRequest.ToString(),
+                        message = MessageConstant.OrderMessage.CreateOrderFail,
+                        data = null
+                    };
                 }
 
                 // Delete CartItems with status "buyed"
@@ -235,13 +259,20 @@ namespace MRC_API.Service.Implement
                     }
                 }
 
-                return new CreateOrderResponse
+                CreateOrderResponse createOrderResponse = new CreateOrderResponse
                 {
+                    id = order.Id,
+                    OrderDetails = orderDetailsResponse,
+                    shipCost = order.ShipCost.Value,
                     totalPrice = order.TotalPrice,
-                    OrderDetails = orderDetailsResponse
                 };
-            
-              
+
+                return new ApiResponse()
+                {
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = MessageConstant.OrderMessage.CreateOrderSuccess,
+                    data = createOrderResponse
+                };
 
             }
             catch (DbUpdateConcurrencyException ex)

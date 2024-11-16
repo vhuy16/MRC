@@ -9,8 +9,6 @@ public partial class Order
 
     public Guid? UserId { get; set; }
 
-    public Guid PaymentId { get; set; }
-
     public decimal? TotalPrice { get; set; }
 
     public int? ShipCost { get; set; }
@@ -24,8 +22,6 @@ public partial class Order
     public DateTime? UpDate { get; set; }
 
     public virtual ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
-
-    public virtual Payment Payment { get; set; } = null!;
 
     public virtual User? User { get; set; }
 }
