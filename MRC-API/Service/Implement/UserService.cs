@@ -325,11 +325,45 @@ namespace MRC_API.Service.Implement
                   (p.Role == RoleEnum.Manager.GetDescriptionFromEnum() ||
                    p.Role == RoleEnum.Admin.GetDescriptionFromEnum() ||
                    p.Role == RoleEnum.Customer.GetDescriptionFromEnum()) &&
-                  p.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum());
+                  (!p.DelDate.HasValue);
 
             // Retrieve the user based on the search filter
             User user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: searchFilter);
 
+            if (user.Status.Equals(StatusEnum.Unavailable.GetDescriptionFromEnum()))
+            {
+                string otp = OtpUltil.GenerateOtp();
+                var otpRecord = new Otp
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = user.Id,
+                    OtpCode = otp,
+                    CreateDate = TimeUtils.GetCurrentSEATime(),
+                    ExpiresAt = TimeUtils.GetCurrentSEATime().AddMinutes(10),
+                    IsValid = true
+                };
+                await _unitOfWork.GetRepository<Otp>().InsertAsync(otpRecord);
+                await _unitOfWork.CommitAsync();
+
+                // Send OTP email
+                await SendOtpEmail(user.Email, otp);
+
+                // Optionally, handle OTP expiration as discussed
+                ScheduleOtpCancellation(otpRecord.Id, TimeSpan.FromMinutes(10));
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status400BadRequest.ToString(),
+                    WarnMessage = "You need to verify your email, we have sent you an OTP",
+                    data = new GetUserResponse() 
+                    { 
+                        UserId = user.Id,
+                        Email = user.Email,
+                        FullName = user.FullName,
+                        Gender = user.Gender,
+                        PhoneNumber = user.PhoneNumber
+                    }
+                };
+            }
             // Check if the user exists, if not, return a 400 Bad Request response
             if (user == null)
             {

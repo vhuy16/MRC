@@ -8,6 +8,7 @@ using MRC_API.Payload.Response.User;
 using MRC_API.Service.Interface;
 using Repository.Entity;
 using Repository.Paginate;
+using static Google.Apis.Requests.BatchRequest;
 
 namespace MRC_API.Controllers
 {
@@ -66,6 +67,7 @@ namespace MRC_API.Controllers
         [HttpPost(ApiEndPointConstant.User.Login)]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(UnauthorizedObjectResult))]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Login([FromBody] LoginRequest loginRequest)
         {
             var loginResponse = await _userService.Login(loginRequest);
@@ -78,7 +80,7 @@ namespace MRC_API.Controllers
                     data = DateTime.Now
                 });
             }
-            return Ok(loginResponse);
+            return StatusCode(int.Parse(loginResponse.status), loginResponse);
         }
 
         [HttpDelete(ApiEndPointConstant.User.DeleteUser)]
