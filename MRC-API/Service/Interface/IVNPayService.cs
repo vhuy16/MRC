@@ -2,6 +2,6 @@
 {
     public interface IVNPayService
     {
-        Task<string> CreatePaymentUrl(Guid orderId);
+        Task<string> CreatePaymentUrl(Guid orderId, decimal shippingFee);
     }
 }

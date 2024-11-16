@@ -45,7 +45,7 @@ namespace MRC_API.Service.Implement
             _vnpUrl = _vnpSettings.vnp_Url;
             this.utils = utils;
         }
-        public async Task<string> CreatePaymentUrl(Guid orderId)
+        public async Task<string> CreatePaymentUrl(Guid orderId, decimal shippingFee)
         {
             try
             {
@@ -58,7 +58,7 @@ namespace MRC_API.Service.Implement
                 pay.AddRequestData("vnp_Version", PayLib.VERSION);
                 pay.AddRequestData("vnp_Command", "pay");
                 pay.AddRequestData("vnp_TmnCode", _vnpTmnCode);
-                pay.AddRequestData("vnp_Amount", ((int)order.TotalPrice * 100000).ToString());
+                pay.AddRequestData("vnp_Amount", ((int)(order.TotalPrice + shippingFee) * 100000).ToString());
                 pay.AddRequestData("vnp_BankCode", "");
                 pay.AddRequestData("vnp_CreateDate", DateTime.Now.ToString("yyyyMMddHHmmss"));
                 pay.AddRequestData("vnp_CurrCode", "VND");
