@@ -56,6 +56,7 @@
             public const string ProductEndpoint = ApiEndpoint + "/product";
             public const string CreateNewProduct = ProductEndpoint;
             public const string GetListProducts = ProductEndpoint;
+            public const string GetAllProducts = ProductEndpoint + "/getAllProduct";
             public const string GetProductById = ProductEndpoint + "/{id}";
             public const string GetListProductsByCategoryId = ProductEndpoint +"/{id}" + "/category";
             public const string UpdateProduct = ProductEndpoint + "/{id}";

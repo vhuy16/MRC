@@ -14,6 +14,7 @@ using Repository.Paginate;
 using System.Drawing;
 using System.Net.Http.Headers;
 using System.Text.Json;
+
 using Image = Repository.Entity.Image;
 
 
@@ -103,7 +104,36 @@ namespace MRC_API.Service.Implement
 
             return new ApiResponse { status = "error", message = "Failed to create product.", data = null };
         }
+        public async Task<ApiResponse> GetAllProduct()
+        {
+            var products = await _unitOfWork.GetRepository<Product>().GetListAsync(selector: s => new GetProductResponse
+            {
+                Id = s.Id,
+                CategoryName = s.Category.CategoryName,
+                Description = s.Description,
+                Images = s.Images.Select(i => i.LinkImage).ToList(),
+                ProductName = s.ProductName,
+                Quantity = s.Quantity,
+                Price = s.Price,
+                Status = s.Status
+            });
+            if (products == null)
+            {
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status404NotFound.ToString(),
+                    message = "No products found.",
+                    data = null
+                };
+            }
 
+            return new ApiResponse
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "Products retrieved successfully.",
+                data = products
+            };
+        }
         public async Task<ApiResponse> GetListProduct(int page, int size, string searchName = null, bool? isAscending = null)
         {
             var products = await _unitOfWork.GetRepository<Product>().GetPagingListAsync(
@@ -116,6 +146,7 @@ namespace MRC_API.Service.Implement
                     ProductName = s.ProductName,
                     Quantity = s.Quantity,
                     Price = s.Price,
+                    Status = s.Status
                 },
                 predicate: p => p.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()) &&
                                 (string.IsNullOrEmpty(searchName) || p.ProductName.Contains(searchName)),
@@ -172,6 +203,7 @@ namespace MRC_API.Service.Implement
                     ProductName = s.ProductName,
                     Quantity = s.Quantity,
                     Price = s.Price,
+                    Status = s.Status
                 },
                 predicate: p => p.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()) && p.CategoryId.Equals(CateID),
                 page: page,
@@ -298,6 +330,10 @@ namespace MRC_API.Service.Implement
                 existingProduct.ProductName = updateProductRequest.ProductName;
             }
 
+            if (!string.IsNullOrEmpty(updateProductRequest.Status) && !existingProduct.Status.Equals(updateProductRequest.Status))
+            {
+                existingProduct.Status = updateProductRequest.Status;
+            }
             // Check quantity if provided
             if (updateProductRequest.Quantity.HasValue)
             {
@@ -358,7 +394,8 @@ namespace MRC_API.Service.Implement
                         ProductName = existingProduct.ProductName,
                         Quantity = existingProduct.Quantity,
                         CategoryName = category.CategoryName,
-                        Price = existingProduct.Price                    }
+                        Price = existingProduct.Price                    
+                    }
                 };
             }
 
