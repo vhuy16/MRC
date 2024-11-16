@@ -27,6 +27,8 @@ public partial class User
 
     public string? PhoneNumber { get; set; }
 
+    public DateTime? DelDate { get; set; }
+
     public virtual ICollection<Booking> Bookings { get; set; } = new List<Booking>();
 
     public virtual ICollection<Cart> Carts { get; set; } = new List<Cart>();

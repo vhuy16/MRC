@@ -43,7 +43,7 @@ public partial class MrcContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("Server=mrc-admin.database.windows.net;Database=MRC;User Id=mrcadmin;Password=JPassword123;TrustServerCertificate=True;");
+        => optionsBuilder.UseSqlServer("Server=mrc-admin.database.windows.net;database=MRC;user=mrcadmin;password=JPassword123;TrustServerCertificate=True;");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -341,9 +341,7 @@ public partial class MrcContext : DbContext
                 .ValueGeneratedNever()
                 .HasColumnName("id");
             entity.Property(e => e.CategoryId).HasColumnName("categoryId");
-            entity.Property(e => e.Description)
-                .HasMaxLength(255)
-                .HasColumnName("description");
+            entity.Property(e => e.Description).HasColumnName("description");
             entity.Property(e => e.InsDate)
                 .HasColumnType("datetime")
                 .HasColumnName("insDate");
@@ -407,6 +405,9 @@ public partial class MrcContext : DbContext
             entity.Property(e => e.Id)
                 .ValueGeneratedNever()
                 .HasColumnName("id");
+            entity.Property(e => e.DelDate)
+                .HasColumnType("datetime")
+                .HasColumnName("delDate");
             entity.Property(e => e.Email)
                 .HasMaxLength(255)
                 .IsUnicode(false)

@@ -23,9 +23,9 @@ namespace MRC_API.Controllers
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
-        public async Task<IActionResult> CreatePaymentUrl([FromBody] List<Guid> cartItemsId)
+        public async Task<IActionResult> CreatePaymentUrl([FromBody] Guid orderID)
         {
-            var result = await _payService.CreatePaymentUrlRegisterCreator(cartItemsId);
+            var result = await _payService.CreatePaymentUrlRegisterCreator(orderID);
             return StatusCode(int.Parse(result.status), result);
         }
 

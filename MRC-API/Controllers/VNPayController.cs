@@ -18,11 +18,11 @@ namespace MRC_API.Controllers
         [HttpPost(ApiEndPointConstant.VNPay.CreatePaymentUrl)]
         [ProducesResponseType(typeof(CreatePaymentResult), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
-        public async Task<IActionResult> CreatePaymentUrl([FromBody] Guid orderId)
+        public async Task<IActionResult> CreatePaymentUrl([FromQuery] Guid orderId, [FromQuery] decimal shippingFee)
         {
             try
             {
-                var result = await _vnPayService.CreatePaymentUrl(orderId);
+                var result = await _vnPayService.CreatePaymentUrl(orderId, shippingFee);
                 if (string.IsNullOrEmpty(result))
                 {
                     return Problem(MessageConstant.PaymentMessage.CreatePaymentFail);

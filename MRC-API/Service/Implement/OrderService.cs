@@ -197,7 +197,7 @@ namespace MRC_API.Service.Implement
                         InsDate = TimeUtils.GetCurrentSEATime(),
                         UpDate = TimeUtils.GetCurrentSEATime(),
                         Quantity = cartItem.Quantity,
-                        Price = product.Price
+                        Price = (decimal) product.Price
                     };
                     order.TotalPrice = totalprice;
                     order.OrderDetails.Add(newOrderDetail);

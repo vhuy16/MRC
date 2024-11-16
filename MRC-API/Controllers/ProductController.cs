@@ -7,6 +7,7 @@ using MRC_API.Payload.Response.Product;
 using MRC_API.Service.Implement;
 using MRC_API.Service.Interface;
 using Repository.Paginate;
+using System.Drawing.Printing;
 
 namespace MRC_API.Controllers
 {
@@ -47,7 +48,20 @@ namespace MRC_API.Controllers
 
             return Ok(response);
         }
+        [HttpGet(ApiEndPointConstant.Product.GetAllProducts)]
+        [ProducesResponseType(typeof(GetProductResponse), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(ProblemDetails))]
+        public async Task<IActionResult> GetAllProduct()
+        {
+            var response = await _productService.GetAllProduct();
 
+            if (response == null || response.data == null)
+            {
+                return Problem(detail: MessageConstant.ProductMessage.ProductIsEmpty, statusCode: StatusCodes.Status404NotFound);
+            }
+
+            return Ok(response);
+        }
 
         [HttpGet(ApiEndPointConstant.Product.GetListProductsByCategoryId)]
         [ProducesResponseType(typeof(IPaginate<GetProductResponse>), StatusCodes.Status200OK)]

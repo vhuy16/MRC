@@ -7,6 +7,6 @@ namespace MRC_API.Service.Interface
     public interface IPayService
     {
         Task<ExtendedPaymentInfo> GetPaymentInfo(string paymentLinkId);
-        Task<ApiResponse> CreatePaymentUrlRegisterCreator(List<Guid> cartItemsId);
+        Task<ApiResponse> CreatePaymentUrlRegisterCreator(Guid orderId);
     }
 }
