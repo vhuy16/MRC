@@ -2,7 +2,7 @@
 {
     public class CreateOrderRequest
     {
-        public string PaymentUrl { get; set; }
-        public Guid PaymentId { get; set; }
+        public List<Guid> CartItem { get; set; }
+        public int ShipCost { get; set; }
     }
 }
