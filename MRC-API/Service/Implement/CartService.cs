@@ -361,7 +361,7 @@ namespace MRC_API.Service.Implement
                     }
                 };
 
-                response.SetWarningMessage("Only have " + product.Quantity + " items");
+                response.WarnMessage = "Only have " + product.Quantity + " items";
 
                 return response;
             }

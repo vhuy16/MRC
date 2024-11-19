@@ -1,4 +1,4 @@
-using Microsoft.OpenApi.Models;
+﻿using Microsoft.OpenApi.Models;
 using MRC_API.Configurations;
 using MRC_API.Constant;
 using MRC_API.Infrastructure;
@@ -10,10 +10,16 @@ using Prepare;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllers().AddJsonOptions(options =>
-{
-    options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
-}); ;
+builder.Services.AddControllers()
+    .AddNewtonsoftJson(options =>
+    {
+        options.SerializerSettings.NullValueHandling = Newtonsoft.Json.NullValueHandling.Include;
+        options.SerializerSettings.ContractResolver = new Newtonsoft.Json.Serialization.DefaultContractResolver
+        {
+            NamingStrategy = new Newtonsoft.Json.Serialization.CamelCaseNamingStrategy(),
+            IgnoreSerializableAttribute = true
+        };
+    });
 
 // Add Swagger/OpenAPI services
 builder.Services.AddEndpointsApiExplorer();
