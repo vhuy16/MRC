@@ -329,6 +329,15 @@ namespace MRC_API.Service.Implement
 
             // Retrieve the user based on the search filter
             User user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: searchFilter);
+            if(user == null)
+            {
+                return new ApiResponse()
+                {
+                    status = StatusCodes.Status401Unauthorized.ToString(),
+                    message = MessageConstant.LoginMessage.InvalidUsernameOrPassword,
+                    data = null
+                };
+            }
 
             if (user.Status.Equals(StatusEnum.Unavailable.GetDescriptionFromEnum()))
             {
@@ -362,16 +371,6 @@ namespace MRC_API.Service.Implement
                         Gender = user.Gender,
                         PhoneNumber = user.PhoneNumber
                     }
-                };
-            }
-            // Check if the user exists, if not, return a 400 Bad Request response
-            if (user == null)
-            {
-                return new ApiResponse
-                {
-                    status = StatusCodes.Status400BadRequest.ToString(),
-                    message = MessageConstant.UserMessage.AccountNotExist,
-                    data = null
                 };
             }
 
