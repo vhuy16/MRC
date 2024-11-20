@@ -278,7 +278,7 @@ namespace MRC_API.Service.Implement
                     var productName = orderDetail.Product.ProductName; // Assuming `ProductName` is a property in `Product`
                     var quantity = orderDetail.Quantity; // Assuming `Quantity` is a property in `OrderDetail`
 
-                    var itemData = new ItemData(productName, quantity, (int)price);
+                    var itemData = new ItemData(productName, (int)quantity, (int)price);
                     items.Add(itemData);
                 }
             }

@@ -23,8 +23,21 @@ namespace MRC_API.Controllers
         [ProducesErrorResponseType(typeof(ProblemDetails))]
         public async Task<IActionResult> CreateProduct([FromForm] CreateProductRequest createProductRequest)
         {
-          var response = await _productService.CreateProduct(createProductRequest);
-            return StatusCode(int.Parse(response.status), response);
+            if (createProductRequest == null)
+            {
+                return BadRequest("Product request cannot be null.");
+            }
+
+            var response = await _productService.CreateProduct(createProductRequest);
+
+            if (response.status == StatusCodes.Status201Created.ToString())
+            {
+                return CreatedAtAction(nameof(CreateProduct), new { id = response.data }, response.data);
+            }
+            else
+            {
+                return StatusCode(int.Parse(response.status), response);
+            }
         }
 
         [HttpGet(ApiEndPointConstant.Product.GetListProducts)]
@@ -95,8 +108,19 @@ namespace MRC_API.Controllers
         [ProducesErrorResponseType(typeof(ProblemDetails))]
         public async Task<IActionResult> UpdateProduct([FromRoute] Guid id, [FromForm] UpdateProductRequest updateProductRequest)
         {
+            if (updateProductRequest == null)
+            {
+                return BadRequest("Product request cannot be null.");
+            }
+
             var response = await _productService.UpdateProduct(id, updateProductRequest);
-            return Ok(response);
+
+            if (response.status == StatusCodes.Status200OK.ToString())
+            {
+                return Ok(response);
+            }
+
+            return StatusCode(int.Parse(response.status), response);
         }
         [HttpDelete(ApiEndPointConstant.Product.UpdateProduct)]
         [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]

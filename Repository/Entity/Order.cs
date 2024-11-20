@@ -11,15 +11,15 @@ public partial class Order
 
     public decimal? TotalPrice { get; set; }
 
-    public int? ShipCost { get; set; }
-
-    public int? ShipStatus { get; set; }
-
     public string? Status { get; set; }
 
     public DateTime? InsDate { get; set; }
 
     public DateTime? UpDate { get; set; }
+
+    public int? ShipStatus { get; set; }
+
+    public int? ShipCost { get; set; }
 
     public virtual ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
 

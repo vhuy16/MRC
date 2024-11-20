@@ -4,6 +4,7 @@
 
 using Business.Implement;
 using Business.Interface;
+using Ganss.Xss;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -61,6 +62,7 @@ namespace Prepare
             services.AddScoped<IPayService, PayService>();
             services.AddScoped<AzureDatabaseService>();
             services.AddScoped<PaymentUltils.Utils>();
+            services.AddScoped<HtmlSanitizerUtils>();
             services.AddScoped<INewsService, NewsService>();
             services.AddScoped<IBookingService, BookingService>();
             return services;

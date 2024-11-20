@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Bean_Mind.API.Utils;
 using Business.Interface;
+using Ganss.Xss;
 using Microsoft.EntityFrameworkCore;
 using MRC_API.Constant;
 using MRC_API.Payload.Request.Product;
@@ -24,8 +25,17 @@ namespace MRC_API.Service.Implement
     public class ProductService : BaseService<Product>, IProductService
     {
         private const string FirebaseStorageBaseUrl = "https://firebasestorage.googleapis.com/v0/b/mrc-firebase-d6e85.appspot.com/o";
-        public ProductService(IUnitOfWork<MrcContext> unitOfWork, ILogger<Product> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        private readonly HtmlSanitizerUtils _sanitizer;
+
+        public ProductService(
+            IUnitOfWork<MrcContext> unitOfWork,
+            ILogger<Product> logger,
+            IMapper mapper,
+            IHttpContextAccessor httpContextAccessor,
+            HtmlSanitizerUtils htmlSanitizer
+        ) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
+            _sanitizer = htmlSanitizer;
         }
         public async Task<ApiResponse> CreateProduct(CreateProductRequest createProductRequest)
         {
@@ -33,22 +43,22 @@ namespace MRC_API.Service.Implement
             var cateCheck = await _unitOfWork.GetRepository<Category>().SingleOrDefaultAsync(predicate: c => c.Id.Equals(createProductRequest.CategoryId));
             if (cateCheck == null)
             {
-                return new ApiResponse { status = "error", message = MessageConstant.CategoryMessage.CategoryNotExist, data = null };
+                return new ApiResponse { status = StatusCodes.Status400BadRequest.ToString(), message = MessageConstant.CategoryMessage.CategoryNotExist, data = null };
             }
 
             // Check product name
             var prodCheck = await _unitOfWork.GetRepository<Product>().SingleOrDefaultAsync(predicate: p => p.ProductName.Equals(createProductRequest.ProductName));
             if (prodCheck != null)
             {
-                return new ApiResponse { status = "error", message = MessageConstant.ProductMessage.ProductNameExisted, data = null };
+                return new ApiResponse { status = StatusCodes.Status400BadRequest.ToString(), message = MessageConstant.ProductMessage.ProductNameExisted, data = null };
             }
 
             // Validate quantity
             if (createProductRequest.Quantity < 0)
             {
-                return new ApiResponse { status = "error", message = MessageConstant.ProductMessage.NegativeQuantity, data = null };
+                return new ApiResponse { status = StatusCodes.Status400BadRequest.ToString(), message = MessageConstant.ProductMessage.NegativeQuantity, data = null };
             }
-
+            createProductRequest.Description = _sanitizer.Sanitize(createProductRequest.Description);
             Product product = new Product
             {
                 Id = Guid.NewGuid(),
@@ -79,30 +89,47 @@ namespace MRC_API.Service.Implement
                 }
             }
 
-            await _unitOfWork.GetRepository<Product>().InsertAsync(product);
-            bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
-
-            if (isSuccessful)
+            try
             {
-                var category = await _unitOfWork.GetRepository<Category>().SingleOrDefaultAsync(predicate: c => c.Id.Equals(createProductRequest.CategoryId));
+                await _unitOfWork.GetRepository<Product>().InsertAsync(product);
+                bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
+
+                if (isSuccessful)
+                {
+                    var category = await _unitOfWork.GetRepository<Category>().SingleOrDefaultAsync(predicate: c => c.Id.Equals(createProductRequest.CategoryId));
+                    return new ApiResponse
+                    {
+                        status = StatusCodes.Status201Created.ToString(),
+                        message = "Product created successfully.",
+                        data = new CreateProductResponse
+                        {
+                            Id = product.Id,
+                            Description = product.Description,
+                            Images = product.Images.Select(i => i.LinkImage).ToList(),
+                            ProductName = product.ProductName,
+                            Quantity = product.Quantity,
+                            CategoryName = category.CategoryName,
+                            price = product.Price,
+                        }
+                    };
+                }
+                else
+                {
+                    return new ApiResponse { status = "error", message = "Failed to create product.", data = null };
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log the exception if a logging framework is in place
+                // Example: _logger.LogError(ex, "An error occurred while creating the product.");
+
                 return new ApiResponse
                 {
-                    status = StatusCodes.Status201Created.ToString(),
-                    message = "Product created successfully.",
-                    data = new CreateProductResponse
-                    {
-                        Id = product.Id,
-                        Description = product.Description,
-                        Images = product.Images.Select(i => i.LinkImage).ToList(),
-                        ProductName = product.ProductName,
-                        Quantity = product.Quantity,
-                        CategoryName = category.CategoryName,
-                        price = product.Price,
-                    }
+                    status = "error",
+                    message = $"An error occurred: {ex.Message}",
+                    data = null
                 };
             }
-
-            return new ApiResponse { status = "error", message = "Failed to create product.", data = null };
         }
         public async Task<ApiResponse> GetAllProduct()
         {
@@ -302,7 +329,7 @@ namespace MRC_API.Service.Implement
         public async Task<ApiResponse> UpdateProduct(Guid productId, UpdateProductRequest updateProductRequest)
         {
             // Check if the product exists
-            var existingProduct = await _unitOfWork.GetRepository<Product>().SingleOrDefaultAsync(predicate: p => p.Id.Equals(productId));
+            var existingProduct = await _unitOfWork.GetRepository<Product>().SingleOrDefaultAsync(predicate: p => p.Id.Equals(productId) && p.Status.Equals(StatusEnum.Available.ToString()));
             if (existingProduct == null)
             {
                 return new ApiResponse { status = StatusCodes.Status404NotFound.ToString(), message = MessageConstant.ProductMessage.ProductNotExist, data = null };
@@ -347,7 +374,7 @@ namespace MRC_API.Service.Implement
             // Update description if provided
             if (!string.IsNullOrEmpty(updateProductRequest.Description))
             {
-                existingProduct.Description = updateProductRequest.Description;
+                existingProduct.Description = _sanitizer.Sanitize(updateProductRequest.Description); ;
             }
 
             // Update images if provided
