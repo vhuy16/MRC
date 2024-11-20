@@ -66,20 +66,11 @@ namespace MRC_API.Controllers
 
         [HttpPost(ApiEndPointConstant.User.Login)]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
-        [ProducesErrorResponseType(typeof(UnauthorizedObjectResult))]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Login([FromBody] LoginRequest loginRequest)
         {
             var loginResponse = await _userService.Login(loginRequest);
-            if (loginResponse.data == null) {
-
-                return Unauthorized(new ApiResponse()
-                {
-                    status = StatusCodes.Status401Unauthorized.ToString(),
-                    message = MessageConstant.LoginMessage.InvalidUsernameOrPassword,
-                    data = DateTime.Now
-                });
-            }
             return StatusCode(int.Parse(loginResponse.status), loginResponse);
         }
 

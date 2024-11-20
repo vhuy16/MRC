@@ -9,10 +9,6 @@ namespace MRC_API.Payload.Response
         public string? message { get; set; }
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string? WarnMessage { get; set; }
-        public object data { get; set; }
-        public void SetWarningMessage(string warnMessage)
-        {
-            WarnMessage = warnMessage;
-        }
+        public object? data { get; set; }
     }
 }
