@@ -8,6 +8,8 @@
         public string Description { get; set; } = null!;
 
         public int Quantity { get; set; }
+        
+        public Guid CategoryID { get; set; }
 
         public string CategoryName { get; set; }
 

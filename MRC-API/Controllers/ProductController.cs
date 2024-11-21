@@ -64,9 +64,15 @@ namespace MRC_API.Controllers
         [HttpGet(ApiEndPointConstant.Product.GetAllProducts)]
         [ProducesResponseType(typeof(GetProductResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
-        public async Task<IActionResult> GetAllProduct()
+        public async Task<IActionResult> GetAllProduct([FromQuery] int? page,
+                                                 [FromQuery] int? size,
+                                                 [FromQuery] string? status)
         {
-            var response = await _productService.GetAllProduct();
+
+            int pageNumber = page ?? 1;
+            int pageSize = size ?? 10;
+            
+            var response = await _productService.GetAllProduct(pageNumber, pageSize, status );
 
             if (response == null || response.data == null)
             {
@@ -133,6 +139,23 @@ namespace MRC_API.Controllers
                 return NotFound(response);
             }
             return Ok(response);
+        }
+
+        [HttpPut(ApiEndPointConstant.Product.EnableProduct)]
+        [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(ProblemDetails))]
+        public async Task<IActionResult> EnableProduct([FromRoute] Guid id)
+        {
+           
+
+            var response = await _productService.EnableProduct(id);
+
+            if (response.status == StatusCodes.Status200OK.ToString())
+            {
+                return Ok(response);
+            }
+
+            return StatusCode(int.Parse(response.status), response);
         }
     }
 }
