@@ -15,5 +15,6 @@ namespace MRC_API.Service.Interface
         Task<ApiResponse> UpdateProduct(Guid productId, UpdateProductRequest updateProductRequest);
         Task<bool> DeleteProduct(Guid productId);
         Task<ApiResponse> GetProductById(Guid productId);
+        Task<ApiResponse> UpImageForDescription(IFormFile formFile);
     }
 }
