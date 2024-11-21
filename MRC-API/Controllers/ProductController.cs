@@ -128,7 +128,7 @@ namespace MRC_API.Controllers
         public async Task<IActionResult> DeleteProduct([FromRoute] Guid id)
         {
             var response = await _productService.DeleteProduct(id);
-            if (response.data == null)
+            if (response == false)
             {
                 return NotFound(response);
             }
