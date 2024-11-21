@@ -62,6 +62,7 @@
             public const string UpdateProduct = ProductEndpoint + "/{id}";
             public const string EnableProduct = ProductEndpoint + "/enableProduct" + "/{id}"  ;
             public const string DeleteProduct = ProductEndpoint + "/{id}";
+            public const string UploadImg = "upload-img";
         }
 
         public static class Order

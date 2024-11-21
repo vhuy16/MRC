@@ -277,6 +277,8 @@ namespace MRC_API.Service.Implement
                     Quantity = s.Quantity,
                     Status = s.Status,
                     Price = s.Price,    
+
+
                 },
                 predicate: p => p.Id.Equals(productId));
 
@@ -432,7 +434,7 @@ namespace MRC_API.Service.Implement
                         ProductName = existingProduct.ProductName,
                         Quantity = existingProduct.Quantity,
                         CategoryName = category.CategoryName,
-                        Price = existingProduct.Price                    
+                        Price = existingProduct.Price
                     }
                 };
             }
@@ -562,6 +564,83 @@ namespace MRC_API.Service.Implement
             var nameElement = json.RootElement.GetProperty("name");
             var downloadUrl = $"{FirebaseStorageBaseUrl}/{Uri.EscapeDataString(nameElement.GetString())}?alt=media";
             return downloadUrl;
+        }
+
+        async Task<ApiResponse> IProductService.UpImageForDescription(IFormFile formFile)
+        {
+            if (formFile == null || formFile.Length == 0)
+            {
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status400BadRequest.ToString(),
+                    message = "File is null or empty",
+                    data = null
+                };
+            }
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png" };
+            var allowedContentTypes = new[] { "image/jpeg", "image/png" };
+            if (!allowedContentTypes.Contains(formFile.ContentType, StringComparer.OrdinalIgnoreCase) ||
+    !allowedExtensions.Contains(Path.GetExtension(formFile.FileName), StringComparer.OrdinalIgnoreCase))
+            {
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status400BadRequest.ToString(),
+                    message = "Only .jpg, .jpeg, and .png files are allowed",
+                    data = null
+                };
+            }
+
+            long maxFileSize = 300 * 1024;
+            if (formFile.Length > maxFileSize)
+            {
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status400BadRequest.ToString(),
+                    message = "File size must not exceed 300 KB",
+                    data = null
+                };
+            }
+
+            try
+            {
+                using (var client = new HttpClient())
+                {
+                    string fileName = Path.GetFileName(formFile.FileName);
+                    string firebaseStorageUrl = $"{FirebaseStorageBaseUrl}?uploadType=media&name=images/{Guid.NewGuid()}_{fileName}";
+
+                    using (var stream = new MemoryStream())
+                    {
+                        await formFile.CopyToAsync(stream);
+                        stream.Position = 0;
+
+                        var content = new ByteArrayContent(stream.ToArray());
+                        content.Headers.ContentType = new MediaTypeHeaderValue(formFile.ContentType);
+
+                        var response = await client.PostAsync(firebaseStorageUrl, content);
+
+                        if (response.IsSuccessStatusCode)
+                        {
+                            var responseBody = await response.Content.ReadAsStringAsync();
+                            var dowloadUrl = ParseDownloadUrl(responseBody, fileName);
+                            return new ApiResponse()
+                            {
+                                status = StatusCodes.Status200OK.ToString(),
+                                message = "Upload image successful",
+                                data = dowloadUrl
+                            };
+                        }
+                        else
+                        {
+                            var errorMessage = $"Error uploading file {fileName} to Firebase Storage. Status Code: {response.StatusCode}\nContent: {await response.Content.ReadAsStringAsync()}";
+                            throw new Exception(errorMessage);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("An error occurred while uploading the file to Firebase.", ex);
+            }
         }
     }
 }
