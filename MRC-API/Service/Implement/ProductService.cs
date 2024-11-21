@@ -47,7 +47,7 @@ namespace MRC_API.Service.Implement
             }
 
             // Check product name
-            var prodCheck = await _unitOfWork.GetRepository<Product>().SingleOrDefaultAsync(predicate: p => p.ProductName.Equals(createProductRequest.ProductName));
+            var prodCheck = await _unitOfWork.GetRepository<Product>().SingleOrDefaultAsync(predicate: p => p.ProductName.Equals(createProductRequest.ProductName) && p.Status.Equals(StatusEnum.Available.ToString()));
             if (prodCheck != null)
             {
                 return new ApiResponse { status = StatusCodes.Status400BadRequest.ToString(), message = MessageConstant.ProductMessage.ProductNameExisted, data = null };
