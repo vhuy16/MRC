@@ -359,7 +359,7 @@ namespace MRC_API.Service.Implement
         public async Task<ApiResponse> UpdateProduct(Guid productId, UpdateProductRequest updateProductRequest)
         {
             // Check if the product exists
-            var existingProduct = await _unitOfWork.GetRepository<Product>().SingleOrDefaultAsync(predicate: p => p.Id.Equals(productId) && p.Status.Equals(StatusEnum.Available.ToString()));
+            var existingProduct = await _unitOfWork.GetRepository<Product>().SingleOrDefaultAsync(predicate: p => p.Id.Equals(productId));
             if (existingProduct == null)
             {
                 return new ApiResponse { status = StatusCodes.Status404NotFound.ToString(), message = MessageConstant.ProductMessage.ProductNotExist, data = null };
