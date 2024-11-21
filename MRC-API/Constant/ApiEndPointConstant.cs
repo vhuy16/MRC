@@ -60,6 +60,7 @@
             public const string GetProductById = ProductEndpoint + "/{id}";
             public const string GetListProductsByCategoryId = ProductEndpoint +"/{id}" + "/category";
             public const string UpdateProduct = ProductEndpoint + "/{id}";
+            public const string EnableProduct = ProductEndpoint + "/enableProduct" + "/{id}"  ;
             public const string DeleteProduct = ProductEndpoint + "/{id}";
             public const string UploadImg = "upload-img";
         }

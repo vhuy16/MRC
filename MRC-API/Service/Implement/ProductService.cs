@@ -12,6 +12,7 @@ using MRC_API.Utils;
 using Repository.Entity;
 using Repository.Enum;
 using Repository.Paginate;
+using System;
 using System.Drawing;
 using System.Net.Http.Headers;
 using System.Text.Json;
@@ -47,7 +48,7 @@ namespace MRC_API.Service.Implement
             }
 
             // Check product name
-            var prodCheck = await _unitOfWork.GetRepository<Product>().SingleOrDefaultAsync(predicate: p => p.ProductName.Equals(createProductRequest.ProductName) && p.Status.Equals(StatusEnum.Available.ToString()));
+            var prodCheck = await _unitOfWork.GetRepository<Product>().SingleOrDefaultAsync(predicate: p => p.ProductName.Equals(createProductRequest.ProductName));
             if (prodCheck != null)
             {
                 return new ApiResponse { status = StatusCodes.Status400BadRequest.ToString(), message = MessageConstant.ProductMessage.ProductNameExisted, data = null };
@@ -131,20 +132,28 @@ namespace MRC_API.Service.Implement
                 };
             }
         }
-        public async Task<ApiResponse> GetAllProduct()
+        public async Task<ApiResponse> GetAllProduct( int page, int size, string status)
         {
-            var products = await _unitOfWork.GetRepository<Product>().GetListAsync(selector: s => new GetProductResponse
-            {
-                Id = s.Id,
-                CategoryName = s.Category.CategoryName,
-                Description = s.Description,
-                Images = s.Images.Select(i => i.LinkImage).ToList(),
-                ProductName = s.ProductName,
-                Quantity = s.Quantity,
-                Price = s.Price,
-                Status = s.Status
-            });
-            if (products == null)
+            var products = await _unitOfWork.GetRepository<Product>().GetPagingListAsync(
+                selector: s => new GetProductResponse
+                {
+                    Id = s.Id,
+                    CategoryName = s.Category.CategoryName,
+                    Description = s.Description,
+                    Images = s.Images.Select(i => i.LinkImage).ToList(),
+                    ProductName = s.ProductName,
+                    Quantity = s.Quantity,
+                    Price = s.Price,
+                     CategoryID = s.CategoryId,
+                    Status = s.Status
+                },
+                predicate: p => string.IsNullOrEmpty(status) || p.Status.Equals(status),
+
+
+                page: page,
+                size: size
+                );
+            if (products == null || products.Items.Count == 0)
             {
                 return new ApiResponse
                 {
@@ -260,12 +269,16 @@ namespace MRC_API.Service.Implement
                 selector: s => new GetProductResponse
                 {
                     Id = s.Id,
+                    CategoryID = s.CategoryId,
                     CategoryName = s.Category.CategoryName,
                     Description = s.Description,
                     Images = s.Images.Select(i => i.LinkImage).ToList(),
                     ProductName = s.ProductName,
                     Quantity = s.Quantity,
-                    Price = s.Price,
+                    Status = s.Status,
+                    Price = s.Price,    
+
+
                 },
                 predicate: p => p.Id.Equals(productId));
 
@@ -427,6 +440,49 @@ namespace MRC_API.Service.Implement
             }
 
             return new ApiResponse { status = StatusCodes.Status500InternalServerError.ToString(), message = "Failed to update product.", data = null };
+        }
+        public async Task<ApiResponse> EnableProduct (Guid productId)
+        {
+            if (productId == null)
+            {
+                return new ApiResponse
+                {
+                    data = null,
+                    message = "productId is null",
+                    status = StatusCodes.Status400BadRequest.ToString()
+                };
+            }
+            var product = await _unitOfWork.GetRepository<Product>().SingleOrDefaultAsync(predicate: p => p.Id.Equals(productId));
+            if (product == null) 
+            {
+                return new ApiResponse()
+                {
+                    data = null,
+                    message = MessageConstant.ProductMessage.ProductNotExist,
+                    status = StatusCodes.Status400BadRequest.ToString()
+                };
+            }
+            if (product.Status.Equals(StatusEnum.Unavailable.ToString()))
+            {
+                product.Status = StatusEnum.Available.ToString();
+            }
+            _unitOfWork.GetRepository<Product>().UpdateAsync(product);
+            bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
+
+            if (isSuccessful)
+            {
+               
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "Product updated successfully.",
+                    data = product.Status,
+
+                };
+            }
+
+            return new ApiResponse { status = StatusCodes.Status500InternalServerError.ToString(), message = "Failed to update product.", data = null };
+
         }
         public async Task<bool> DeleteProduct(Guid productId)
         {
