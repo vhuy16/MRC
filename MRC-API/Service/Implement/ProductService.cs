@@ -16,7 +16,6 @@ using System;
 using System.Drawing;
 using System.Net.Http.Headers;
 using System.Text.Json;
-
 using Image = Repository.Entity.Image;
 
 
@@ -59,6 +58,16 @@ namespace MRC_API.Service.Implement
             {
                 return new ApiResponse { status = StatusCodes.Status400BadRequest.ToString(), message = MessageConstant.ProductMessage.NegativeQuantity, data = null };
             }
+            var validationResult = ValidateImages(createProductRequest.ImageLink);
+            if (validationResult.Any())
+            {
+                return new ApiResponse()
+                {
+                    status = "400",
+                    listErrorMessage = validationResult,
+                    data = null
+                };
+            }
             createProductRequest.Description = _sanitizer.Sanitize(createProductRequest.Description);
             Product product = new Product
             {
@@ -73,7 +82,7 @@ namespace MRC_API.Service.Implement
                 Status = StatusEnum.Available.GetDescriptionFromEnum(),
                 Images = new List<Image>()
             };
-
+            
             if (createProductRequest.ImageLink != null && createProductRequest.ImageLink.Any())
             {
                 var imageUrls = await UploadFilesToFirebase(createProductRequest.ImageLink);
@@ -144,22 +153,30 @@ namespace MRC_API.Service.Implement
                     ProductName = s.ProductName,
                     Quantity = s.Quantity,
                     Price = s.Price,
-                     CategoryID = s.CategoryId,
+                    CategoryID = s.CategoryId,
                     Status = s.Status
                 },
                 predicate: p => string.IsNullOrEmpty(status) || p.Status.Equals(status),
-
-
                 page: page,
                 size: size
                 );
+
+            int totalItems = products.Total;
+            int totalPages = (int)Math.Ceiling((double)totalItems / size);
             if (products == null || products.Items.Count == 0)
             {
                 return new ApiResponse
                 {
-                    status = StatusCodes.Status404NotFound.ToString(),
-                    message = "No products found.",
-                    data = null
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "Products retrieved successfully.",
+                    data = new Paginate<Product>()
+                    {
+                        Page = page,
+                        Size = size,
+                        Total = totalItems,
+                        TotalPages = totalPages,
+                        Items = new List<Product>()
+                    }
                 };
             }
 
@@ -641,6 +658,29 @@ namespace MRC_API.Service.Implement
             {
                 throw new Exception("An error occurred while uploading the file to Firebase.", ex);
             }
+        }
+        private List<string> ValidateImages(List<IFormFile> imageLinks)
+        {
+            var errorList = new List<string>();
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png" };
+            var allowedContentTypes = new[] { "image/jpeg", "image/png" };
+            long maxFileSize = 300 * 1024;
+
+            foreach (var formFile in imageLinks)
+            {
+                if (!allowedContentTypes.Contains(formFile.ContentType, StringComparer.OrdinalIgnoreCase) ||
+                    !allowedExtensions.Contains(Path.GetExtension(formFile.FileName), StringComparer.OrdinalIgnoreCase))
+                {
+                    errorList.Add($"File '{formFile.FileName}' is invalid. Only .jpg, .jpeg, and .png files are allowed.");
+                }
+
+                if (formFile.Length > maxFileSize)
+                {
+                    errorList.Add($"File '{formFile.FileName}' is too large. Maximum size is 300 KB.");
+                }
+            }
+
+            return errorList;
         }
     }
 }
