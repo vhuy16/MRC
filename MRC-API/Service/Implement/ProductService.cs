@@ -187,7 +187,7 @@ namespace MRC_API.Service.Implement
                 data = products
             };
         }
-        public async Task<ApiResponse> GetListProduct(int page, int size, string searchName = null, bool? isAscending = null)
+        public async Task<ApiResponse> GetListProduct(int page, int size, string? searchName, bool? isAscending)
         {
             var products = await _unitOfWork.GetRepository<Product>().GetPagingListAsync(
                 selector: s => new GetProductResponse
