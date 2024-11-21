@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using MRC_API.Constant;
 using MRC_API.Payload.Request.Product;
 using MRC_API.Payload.Request.User;
+using MRC_API.Payload.Response;
 using MRC_API.Payload.Response.Product;
 using MRC_API.Service.Implement;
 using MRC_API.Service.Interface;
@@ -38,6 +39,19 @@ namespace MRC_API.Controllers
             {
                 return StatusCode(int.Parse(response.status), response);
             }
+        }
+
+        [HttpPost(ApiEndPointConstant.Product.UploadImg)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+        [ProducesErrorResponseType(typeof(ProblemDetails))]
+        public async Task<IActionResult> UploadImg(IFormFile formFile)
+        {
+
+            var response = await _productService.UpImageForDescription(formFile);
+
+            return StatusCode(int.Parse(response.status), response);
+
         }
 
         [HttpGet(ApiEndPointConstant.Product.GetListProducts)]
@@ -95,7 +109,7 @@ namespace MRC_API.Controllers
         [ProducesErrorResponseType(typeof(ProblemDetails))]
         public async Task<IActionResult> GetProductById([FromRoute] Guid id)
         {
-            
+
             var response = await _productService.GetProductById(id);
             if (response == null)
             {
