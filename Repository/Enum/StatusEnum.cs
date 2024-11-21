@@ -9,7 +9,6 @@ namespace Repository.Enum
 {
     public enum StatusEnum
     {
-        [Description("Available Approval")]
         Available,
         Unavailable,
         Pending,
