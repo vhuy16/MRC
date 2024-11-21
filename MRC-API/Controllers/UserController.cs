@@ -39,14 +39,9 @@ namespace MRC_API.Controllers
         public async Task<IActionResult> CreateNewMangerAccount([FromBody] CreateNewAccountRequest createNewAccountRequest)
         {
             ApiResponse createNewAccountResponse = await _userService.CreateNewManagerAccount(createNewAccountRequest);
-            if (createNewAccountResponse == null)
+            if (createNewAccountResponse.status == StatusCodes.Status400BadRequest.ToString())
             {
-                return BadRequest(new ErrorResponse()
-                {
-                    StatusCode = StatusCodes.Status400BadRequest,
-                    Error = "Failed to create manager",
-                    TimeStamp = TimeUtils.GetCurrentSEATime()
-                });
+                return BadRequest(createNewAccountResponse);
             }
             return Ok(createNewAccountResponse);
         }
@@ -57,9 +52,9 @@ namespace MRC_API.Controllers
         public async Task<IActionResult> CreateNewCustomerAccount([FromBody] CreateNewAccountRequest createNewAccountRequest)
         {
             ApiResponse createNewAccountResponse = await _userService.CreateNewCustomerAccount(createNewAccountRequest);
-            if (createNewAccountResponse == null)
+            if(createNewAccountResponse.status == StatusCodes.Status400BadRequest.ToString())
             {
-                return Problem(MessageConstant.UserMessage.CreateUserAdminFail);
+                return BadRequest(createNewAccountResponse);
             }
             return CreatedAtAction(nameof(CreateNewAccount), createNewAccountResponse);
         }

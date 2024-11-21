@@ -9,6 +9,8 @@ namespace MRC_API.Payload.Response
         public string? message { get; set; }
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string? WarnMessage { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public List<string>? listErrorMessage { get; set; }
         public object? data { get; set; }
     }
 }
