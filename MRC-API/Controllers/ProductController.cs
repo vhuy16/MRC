@@ -32,7 +32,7 @@ namespace MRC_API.Controllers
 
             if (response.status == StatusCodes.Status201Created.ToString())
             {
-                return CreatedAtAction(nameof(CreateProduct), new { id = response.data }, response.data);
+                return CreatedAtAction(nameof(CreateProduct), new { id = response.data }, response);
             }
             else
             {
