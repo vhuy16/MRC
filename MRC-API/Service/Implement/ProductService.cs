@@ -428,7 +428,7 @@ namespace MRC_API.Service.Implement
 
             return new ApiResponse { status = StatusCodes.Status500InternalServerError.ToString(), message = "Failed to update product.", data = null };
         }
-        public async Task<ApiResponse> DeleteProduct(Guid productId)
+        public async Task<bool> DeleteProduct(Guid productId)
         {
             if (productId == Guid.Empty)
             {
@@ -439,7 +439,7 @@ namespace MRC_API.Service.Implement
             var existingProduct = await _unitOfWork.GetRepository<Product>().SingleOrDefaultAsync(predicate: p => p.Id.Equals(productId) && p.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
             if (existingProduct == null)
             {
-                return new ApiResponse { status = StatusCodes.Status404NotFound.ToString(), message = MessageConstant.ProductMessage.ProductNotExist, data = null };
+                return false;
             }
 
             // Mark as deleted
@@ -449,10 +449,10 @@ namespace MRC_API.Service.Implement
 
             if (isSuccessful)
             {
-                return new ApiResponse { status = StatusCodes.Status204NoContent.ToString(), message = "Product deleted successfully.", data = null };
+                return true;
             }
 
-            return new ApiResponse { status = StatusCodes.Status500InternalServerError.ToString(), message = "Failed to delete product.", data = null };
+            return false;
         }
         private async Task<List<string>> UploadFilesToFirebase(List<IFormFile> formFiles)
         {
