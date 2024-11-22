@@ -69,6 +69,16 @@ namespace MRC_API.Controllers
             return StatusCode(int.Parse(loginResponse.status), loginResponse);
         }
 
+        [HttpPost(ApiEndPointConstant.User.LoginCustomer)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> LoginCustomer([FromBody] LoginRequest loginRequest)
+        {
+            var loginResponse = await _userService.LoginCustomer(loginRequest);
+            return StatusCode(int.Parse(loginResponse.status), loginResponse);
+        }
+
         [HttpDelete(ApiEndPointConstant.User.DeleteUser)]
         [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]

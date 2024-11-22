@@ -23,6 +23,7 @@
             public const string RegisterManager = UserEndPoint + "/manager";
             public const string RegisterCustomer = UserEndPoint + "/customer";
             public const string Login = UserEndPoint + "/login";
+            public const string LoginCustomer = UserEndPoint + "/login-customer";
             public const string DeleteUser = UserEndPoint + "/{id}";
             public const string GetAllUser = UserEndPoint;
             public const string GetUserById = UserEndPoint + "/{id}";
