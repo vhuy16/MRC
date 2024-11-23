@@ -16,6 +16,8 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
+
+
 namespace MRC_API.Service.Implement
 {
     public class BookingService : BaseService<Booking>, IBookingService
@@ -148,16 +150,25 @@ namespace MRC_API.Service.Implement
                     BookingDate = b.BookingDate,
                     Status = b.Status,
                 },
-                size: size,
+            size: size,
                 page: page);
 
+            int totalItems = bookings.Total;
+            int totalPages = (int)Math.Ceiling((double)totalItems / size);
             if (bookings == null || bookings.Items.Count == 0)
             {
                 return new ApiResponse
                 {
-                    status = StatusCodes.Status404NotFound.ToString(),
-                    message = "No bookings found.",
-                    data = null
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "Booking retrieved successfully.",
+                    data = new Paginate<Booking>()
+                    {
+                        Page = page,
+                        Size = size,
+                        Total = totalItems,
+                        TotalPages = totalPages,
+                        Items = new List<Booking>()
+                    }
                 };
             }
 
@@ -169,9 +180,9 @@ namespace MRC_API.Service.Implement
             };
         }
 
-        public async Task<ApiResponse> GetBookingByStatus(string status)
+        public async Task<ApiResponse> GetBookingByStatus(int page, int size, string status)
         {
-            var listBooking = await _unitOfWork.GetRepository<Booking>().GetListAsync(
+            var listBooking = await _unitOfWork.GetRepository<Booking>().GetPagingListAsync(
                 selector: b => new GetBookingResponse
                 {
                     Id = b.Id,
@@ -180,15 +191,27 @@ namespace MRC_API.Service.Implement
                     BookingDate = b.BookingDate,
                     Status = b.Status,
                 },
-                predicate: p => p.Status.Equals(status));
+                predicate: p => p.Status.Equals(status),
+                page: page,
+            size: size
 
-            if (listBooking == null || listBooking.Count == 0)
+                );
+            int totalItems = listBooking.Total;
+            int totalPages = (int)Math.Ceiling((double)totalItems / size);
+            if (listBooking == null || listBooking.Items.Count == 0)
             {
                 return new ApiResponse
                 {
-                    status = StatusCodes.Status404NotFound.ToString(),
-                    message = "No bookings found with the given status.",
-                    data = null
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "Booking retrieved successfully.",
+                    data = new Paginate<Booking>()
+                    {
+                        Page = page,
+                        Size = size,
+                        Total = totalItems,
+                        TotalPages = totalPages,
+                        Items = new List<Booking>()
+                    }
                 };
             }
 

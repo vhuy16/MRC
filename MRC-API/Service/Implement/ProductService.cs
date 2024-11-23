@@ -78,6 +78,7 @@ namespace MRC_API.Service.Implement
                 InsDate = TimeUtils.GetCurrentSEATime(),
                 UpDate = TimeUtils.GetCurrentSEATime(),
                 Price = createProductRequest.Price,
+                Message = createProductRequest.Message,
                 Quantity = createProductRequest.Quantity,
                 Status = StatusEnum.Available.GetDescriptionFromEnum(),
                 Images = new List<Image>()
@@ -118,6 +119,7 @@ namespace MRC_API.Service.Implement
                             Images = product.Images.Select(i => i.LinkImage).ToList(),
                             ProductName = product.ProductName,
                             Quantity = product.Quantity,
+                            Message = product.Message,
                             CategoryName = category.CategoryName,
                             price = product.Price,
                         }
@@ -152,6 +154,7 @@ namespace MRC_API.Service.Implement
                     Images = s.Images.Select(i => i.LinkImage).ToList(),
                     ProductName = s.ProductName,
                     Quantity = s.Quantity,
+                    Message = s.Message,
                     Price = s.Price,
                     CategoryID = s.CategoryId,
                     Status = s.Status
@@ -197,6 +200,7 @@ namespace MRC_API.Service.Implement
                     Description = s.Description,
                     Images = s.Images.Select(i => i.LinkImage).ToList(),
                     ProductName = s.ProductName,
+                    Message = s.Message,
                     Quantity = s.Quantity,
                     Price = s.Price,
                     Status = s.Status
@@ -210,13 +214,22 @@ namespace MRC_API.Service.Implement
                 size: size
             );
 
+            int totalItems = products.Total;
+            int totalPages = (int)Math.Ceiling((double)totalItems / size);
             if (products == null || products.Items.Count == 0)
             {
                 return new ApiResponse
                 {
-                    status = StatusCodes.Status404NotFound.ToString(),
-                    message = "No products found.",
-                    data = null
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "Products retrieved successfully.",
+                    data = new Paginate<Product>()
+                    {
+                        Page = page,
+                        Size = size,
+                        Total = totalItems,
+                        TotalPages = totalPages,
+                        Items = new List<Product>()
+                    }
                 };
             }
 
@@ -255,6 +268,7 @@ namespace MRC_API.Service.Implement
                     Images = s.Images.Select(i => i.LinkImage).ToList(),
                     ProductName = s.ProductName,
                     Quantity = s.Quantity,
+                    Message = s.Message,
                     Price = s.Price,
                     Status = s.Status
                 },
@@ -263,13 +277,22 @@ namespace MRC_API.Service.Implement
                 size: size
             );
 
+            int totalItems = products.Total;
+            int totalPages = (int)Math.Ceiling((double)totalItems / size);
             if (products == null || products.Items.Count == 0)
             {
                 return new ApiResponse
                 {
-                    status = StatusCodes.Status404NotFound.ToString(),
-                    message = "No products found in this category.",
-                    data = null
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "Products retrieved successfully.",
+                    data = new Paginate<Product>()
+                    {
+                        Page = page,
+                        Size = size,
+                        Total = totalItems,
+                        TotalPages = totalPages,
+                        Items = new List<Product>()
+                    }
                 };
             }
 
@@ -292,6 +315,7 @@ namespace MRC_API.Service.Implement
                     Images = s.Images.Select(i => i.LinkImage).ToList(),
                     ProductName = s.ProductName,
                     Quantity = s.Quantity,
+                    Message = s.Message,
                     Status = s.Status,
                     Price = s.Price,    
 
@@ -400,7 +424,10 @@ namespace MRC_API.Service.Implement
                 }
                 existingProduct.Quantity = updateProductRequest.Quantity.Value;
             }
-
+            if (!string.IsNullOrEmpty(updateProductRequest.Message))
+            {
+                existingProduct.Message = updateProductRequest.Message;
+            }
             // Update description if provided
             if (!string.IsNullOrEmpty(updateProductRequest.Description))
             {
@@ -450,6 +477,7 @@ namespace MRC_API.Service.Implement
                         Images = existingProduct.Images.Select(i => i.LinkImage).ToList(),
                         ProductName = existingProduct.ProductName,
                         Quantity = existingProduct.Quantity,
+                        Message = existingProduct.Message,
                         CategoryName = category.CategoryName,
                         Price = existingProduct.Price
                     }
