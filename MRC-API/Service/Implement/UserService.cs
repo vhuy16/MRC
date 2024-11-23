@@ -323,8 +323,7 @@ namespace MRC_API.Service.Implement
                   p.UserName.Equals(loginRequest.Username) &&
                   p.Password.Equals(PasswordUtil.HashPassword(loginRequest.Password)) &&
                   (p.Role == RoleEnum.Manager.GetDescriptionFromEnum() ||
-                   p.Role == RoleEnum.Admin.GetDescriptionFromEnum() ||
-                   p.Role == RoleEnum.Customer.GetDescriptionFromEnum()) &&
+                   p.Role == RoleEnum.Admin.GetDescriptionFromEnum()) &&
                   (!p.DelDate.HasValue);
 
             // Retrieve the user based on the search filter
@@ -365,6 +364,85 @@ namespace MRC_API.Service.Implement
                     WarnMessage = "You need to verify your email, we have sent you an OTP",
                     data = new GetUserResponse() 
                     { 
+                        UserId = user.Id,
+                        Email = user.Email,
+                        FullName = user.FullName,
+                        Gender = user.Gender,
+                        PhoneNumber = user.PhoneNumber
+                    }
+                };
+            }
+
+            // Create the login response
+            RoleEnum role = EnumUtil.ParseEnum<RoleEnum>(user.Role);
+            Tuple<string, Guid> guildClaim = new Tuple<string, Guid>("userID", user.Id);
+            var token = JwtUtil.GenerateJwtToken(user, guildClaim);
+
+            // Create the login response object
+            var loginResponse = new LoginResponse()
+            {
+                RoleEnum = role.ToString(),
+                UserId = user.Id,
+                UserName = user.UserName,
+                token = token // Assign the generated token
+            };
+
+            // Return a success response
+            return new ApiResponse
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "Login successful.",
+                data = loginResponse
+            };
+        }
+
+
+        public async Task<ApiResponse> LoginCustomer(Payload.Request.User.LoginRequest loginRequest)
+        {
+            // Define the search filter for the user
+            Expression<Func<User, bool>> searchFilter = p =>
+                  p.UserName.Equals(loginRequest.Username) &&
+                  p.Password.Equals(PasswordUtil.HashPassword(loginRequest.Password)) &&
+                  (p.Role == RoleEnum.Customer.GetDescriptionFromEnum()) &&(!p.DelDate.HasValue);
+
+            // Retrieve the user based on the search filter
+            User user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: searchFilter);
+            if (user == null)
+            {
+                return new ApiResponse()
+                {
+                    status = StatusCodes.Status401Unauthorized.ToString(),
+                    message = MessageConstant.LoginMessage.InvalidUsernameOrPassword,
+                    data = null
+                };
+            }
+
+            if (user.Status.Equals(StatusEnum.Unavailable.GetDescriptionFromEnum()))
+            {
+                string otp = OtpUltil.GenerateOtp();
+                var otpRecord = new Otp
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = user.Id,
+                    OtpCode = otp,
+                    CreateDate = TimeUtils.GetCurrentSEATime(),
+                    ExpiresAt = TimeUtils.GetCurrentSEATime().AddMinutes(10),
+                    IsValid = true
+                };
+                await _unitOfWork.GetRepository<Otp>().InsertAsync(otpRecord);
+                await _unitOfWork.CommitAsync();
+
+                // Send OTP email
+                await SendOtpEmail(user.Email, otp);
+
+                // Optionally, handle OTP expiration as discussed
+                ScheduleOtpCancellation(otpRecord.Id, TimeSpan.FromMinutes(10));
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status400BadRequest.ToString(),
+                    WarnMessage = "You need to verify your email, we have sent you an OTP",
+                    data = new GetUserResponse()
+                    {
                         UserId = user.Id,
                         Email = user.Email,
                         FullName = user.FullName,

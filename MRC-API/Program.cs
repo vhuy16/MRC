@@ -52,7 +52,7 @@ builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(name: CorsConstant.PolicyName,
-        policy => { policy.WithOrigins("http://localhost:5173", "https://mrc-web-mu.vercel.app", "https://mrc-project.vercel.app", "https://chatgpt.com", "http://localhost:5174").AllowAnyHeader().AllowAnyMethod().AllowCredentials(); });
+        policy => { policy.WithOrigins("http://localhost:5173", "https://mrc-web-mu.vercel.app", "https://mrc-project.vercel.app", "https://mrc-web-admin.vercel.app", "http://localhost:5174").AllowAnyHeader().AllowAnyMethod().AllowCredentials(); });
 });
 
 // Configure Swagger/OpenAPI

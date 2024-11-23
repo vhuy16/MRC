@@ -12,6 +12,7 @@ namespace MRC_API.Service.Interface
        Task<ApiResponse> CreateNewManagerAccount(CreateNewAccountRequest createNewAccountRequest);
        Task<ApiResponse> CreateNewCustomerAccount(CreateNewAccountRequest createNewAccountRequest);
        Task<ApiResponse> Login(LoginRequest loginRequest);
+       Task<ApiResponse> LoginCustomer(LoginRequest loginRequest);
        Task<ApiResponse> DeleteUser(Guid id);
        Task<ApiResponse> GetAllUser(int page, int size);
        Task<ApiResponse> GetUser(Guid id);
