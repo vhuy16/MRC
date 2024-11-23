@@ -20,7 +20,7 @@ using System.Data;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text.RegularExpressions;
-using static System.Net.WebRequestMethods;
+
 
 namespace MRC_API.Service.Implement
 {
@@ -546,6 +546,17 @@ namespace MRC_API.Service.Implement
                 page: page,
                 size: size);
 
+            int totalItems = users.Total;
+            int totalPages = (int)Math.Ceiling((double)totalItems / size);
+            if(users == null)
+            {
+                return new ApiResponse()
+                {
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "Users retrieved successfully.",
+                    data = new LinkedList<CartItem>()
+                };
+            }
             return new ApiResponse
             {
                 status = StatusCodes.Status200OK.ToString(),

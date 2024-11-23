@@ -213,14 +213,15 @@ namespace MRC_API.Service.Implement
 
             var cartItems = await _unitOfWork.GetRepository<CartItem>().GetListAsync(
                 predicate: c => c.CartId.Equals(cart.Id) && c.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()),
-                include: c => c.Include(c => c.Product));
+                include: c => c.Include(c => c.Product),
+                orderBy: c => c.OrderByDescending(o => o.InsDate));
             if (cartItems == null || !cartItems.Any())
             {
                 return new ApiResponse()
                 {
                     status = StatusCodes.Status200OK.ToString(),
                     message = "CartItem list",
-                    data = null
+                    data = new LinkedList<CartItem>()
                 };
             }
 

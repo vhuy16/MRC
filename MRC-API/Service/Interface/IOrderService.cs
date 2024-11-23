@@ -10,6 +10,6 @@ namespace MRC_API.Service.Interface
     {
         //Task<CreateOrderResponse> CreateOrder( List<OrderDetailRequest> orderDetailRequests);
         Task<ApiResponse> CreateOrder(CreateOrderRequest createOrderRequest);
-        Task<IPaginate<GetOrderResponse>> GetListOrder(int page, int size);
+        Task<ApiResponse> GetListOrder(int page, int size);
     }
 }
