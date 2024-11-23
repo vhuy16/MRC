@@ -14,6 +14,7 @@ using Repository.Enum;
 using Repository.Paginate;
 using System.Transactions;
 
+
 namespace MRC_API.Service.Implement
 {
     public class OrderService : BaseService<OrderService>, IOrderService
@@ -306,7 +307,7 @@ namespace MRC_API.Service.Implement
             }
         }
 
-        public async Task<IPaginate<GetOrderResponse>> GetListOrder (int page, int size)
+        public async Task<ApiResponse> GetListOrder (int page, int size)
         {
             var orders = await _unitOfWork.GetRepository<Order>().GetPagingListAsync(
                 selector: s => new GetOrderResponse
@@ -325,7 +326,31 @@ namespace MRC_API.Service.Implement
                 size: size,
                 predicate: od => od.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum())
                 );
-            return orders;
+            int totalItems = orders.Total;
+            int totalPages = (int)Math.Ceiling((double)totalItems / size);
+            if (orders == null)
+            {
+                return new ApiResponse()
+                {
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "List Cart Item",
+                    data = new Paginate<Order>()
+                    {
+                        Page = page,
+                        Size = size,
+                        Total = totalItems,
+                        TotalPages = totalPages,
+                        Items = new List<Order>()
+                    }
+                };
+            }
+
+            return new ApiResponse()
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "List Cart Item",
+                data = orders
+            };
         }
 
     }

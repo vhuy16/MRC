@@ -36,17 +36,13 @@ namespace MRC_API.Controllers
             return CreatedAtAction(nameof(CreateOrder), createOrderResponse);
         }
         [HttpGet(ApiEndPointConstant.Order.GetListOrder)]
-        [ProducesResponseType(typeof(IPaginate<GetOrderResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(IPaginate<ApiResponse>), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
         public async Task<IActionResult> GetListOrder([FromQuery] int? page, [FromQuery] int? size)
         {
             int pageNumber = page ?? 1;
             int pageSize = size ?? 10;
             var response = await _orderService.GetListOrder(pageNumber, pageSize);
-            if (response == null)
-            {
-                return Problem(MessageConstant.OrderMessage.OrderIsEmpty);
-            }
             return Ok(response);
         }
 
