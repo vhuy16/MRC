@@ -6,7 +6,7 @@
         public string ProductName { get; set; } = null!;
 
         public string Description { get; set; } = null!;
-
+        public string Message { get; set; }
         public int Quantity { get; set; }
 
         public string CategoryName { get; set; }

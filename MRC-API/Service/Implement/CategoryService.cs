@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
+
 namespace MRC_API.Service.Implement
 {
     public class CategoryService : BaseService<Category>, ICategoryService
@@ -153,16 +154,24 @@ namespace MRC_API.Service.Implement
                     CategoryName = c.CategoryName,
                 },
                 predicate: c => c.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()),
-                size: size,
+            size: size,
                 page: page);
-
+            int totalItems = categories.Total;
+            int totalPages = (int)Math.Ceiling((double)totalItems / size);
             if (categories == null || categories.Items.Count == 0)
             {
                 return new ApiResponse
                 {
-                    status = StatusCodes.Status404NotFound.ToString(),
-                    message = "No categories found.",
-                    data = null
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "Category retrieved successfully.",
+                    data = new Paginate<Category>()
+                    {
+                        Page = page,
+                        Size = size,
+                        Total = totalItems,
+                        TotalPages = totalPages,
+                        Items = new List<Category>()
+                    }
                 };
             }
 
