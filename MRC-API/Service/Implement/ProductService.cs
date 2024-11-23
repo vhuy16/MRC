@@ -121,7 +121,7 @@ namespace MRC_API.Service.Implement
                             Quantity = product.Quantity,
                             Message = product.Message,
                             CategoryName = category.CategoryName,
-                            price = product.Price,
+                            Price = product.Price,
                         }
                     };
                 }
@@ -143,7 +143,7 @@ namespace MRC_API.Service.Implement
                 };
             }
         }
-        public async Task<ApiResponse> GetAllProduct( int page, int size, string status)
+        public async Task<ApiResponse> GetAllProduct( int page, int size, string status, string? searchName, bool? isAscending)
         {
             var products = await _unitOfWork.GetRepository<Product>().GetPagingListAsync(
                 selector: s => new GetProductResponse
@@ -159,7 +159,12 @@ namespace MRC_API.Service.Implement
                     CategoryID = s.CategoryId,
                     Status = s.Status
                 },
-                predicate: p => string.IsNullOrEmpty(status) || p.Status.Equals(status),
+                predicate: p => p.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()) &&
+                                (string.IsNullOrEmpty(searchName) || p.ProductName.Contains(searchName)),
+                orderBy: q => isAscending.HasValue
+                    ? (isAscending.Value ? q.OrderBy(p => p.Price) : q.OrderByDescending(p => p.Price))
+                    : q.OrderByDescending(p => p.InsDate),
+                
                 page: page,
                 size: size
                 );

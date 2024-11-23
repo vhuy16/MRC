@@ -29,16 +29,8 @@ namespace MRC_API.Service.Implement
 
         public async Task<ApiResponse> CreateNewBooking(CreateNewBookingRequest createNewBookingRequest)
         {
-            Guid? userId = UserUtil.GetAccountId(_httpContextAccessor.HttpContext);
-            if (userId == null)
-            {
-                return new ApiResponse
-                {
-                    status = StatusCodes.Status400BadRequest.ToString(),
-                    message = "User ID cannot be null.",
-                    data = null
-                };
-            }
+           
+        
             var service = await _unitOfWork.GetRepository<Repository.Entity.Service>().SingleOrDefaultAsync(
                 predicate: p => p.Id.Equals(createNewBookingRequest.ServiceId));
             if (service == null)
@@ -51,28 +43,20 @@ namespace MRC_API.Service.Implement
                 };
             }
             var bookingExists = await _unitOfWork.GetRepository<Booking>().SingleOrDefaultAsync(
-                predicate: b => b.UserId.Equals(userId) && b.BookingDate.Equals(createNewBookingRequest.BookingDate));
+                predicate: b => b.BookingDate.Equals(createNewBookingRequest.BookingDate));
 
-            if (bookingExists != null)
-            {
-                return new ApiResponse
-                {
-                    status = StatusCodes.Status400BadRequest.ToString(),
-                    message = MessageConstant.BookingMessage.BookingExists,
-                    data = null
-                };
-            }
+         
 
             Booking booking = new Booking
             {
                 Id = Guid.NewGuid(),
-                UserId = userId,
+                
                 ServiceId = createNewBookingRequest.ServiceId,
                 BookingDate = createNewBookingRequest.BookingDate,
                 Content = createNewBookingRequest.Content,
                 InsDate = TimeUtils.GetCurrentSEATime(),
                 UpDate = TimeUtils.GetCurrentSEATime(),
-                Status = StatusEnum.Confirmed.GetDescriptionFromEnum()
+                Status = StatusEnum.Available.GetDescriptionFromEnum()
             };
 
             await _unitOfWork.GetRepository<Booking>().InsertAsync(booking);
@@ -139,17 +123,23 @@ namespace MRC_API.Service.Implement
             };
         }
 
-        public async Task<ApiResponse> GetAllBookings(int page, int size)
+        public async Task<ApiResponse> GetAllBookings(int page, int size, bool? isAscending)
         {
             var bookings = await _unitOfWork.GetRepository<Booking>().GetPagingListAsync(
                 selector: b => new GetBookingResponse
                 {
-                    Id = b.Id,
-                    UserId = b.UserId,
+                    Id = b.Id,         
+                    ServiceName = b.Service.ServiceName,
+                    content = b.Content,
+                    InsDate = b.InsDate,
                     ServiceId = b.ServiceId,
                     BookingDate = b.BookingDate,
                     Status = b.Status,
                 },
+                 predicate: p => p.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()),
+                 orderBy: q => isAscending.HasValue
+            ? (isAscending.Value ? q.OrderBy(p => p.InsDate) : q.OrderByDescending(p => p.InsDate)) // Sắp xếp theo ngày tạo
+            : q.OrderByDescending(p => p.InsDate),
             size: size,
                 page: page);
 
@@ -186,7 +176,7 @@ namespace MRC_API.Service.Implement
                 selector: b => new GetBookingResponse
                 {
                     Id = b.Id,
-                    UserId = b.UserId,
+                    
                     ServiceId = b.ServiceId,
                     BookingDate = b.BookingDate,
                     Status = b.Status,
@@ -229,7 +219,7 @@ namespace MRC_API.Service.Implement
                 selector: b => new GetBookingResponse
                 {
                     Id = b.Id,
-                    UserId = b.UserId,
+                   
                     ServiceId = b.ServiceId,
                     BookingDate = b.BookingDate,
                     Status = b.Status,

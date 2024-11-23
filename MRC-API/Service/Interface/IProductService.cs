@@ -9,7 +9,7 @@ namespace MRC_API.Service.Interface
     {
         Task<ApiResponse> CreateProduct(CreateProductRequest createProductRequest);
         Task<ApiResponse> GetListProduct(int page, int size, string searchName = null, bool? isAscending = null);
-        Task<ApiResponse> GetAllProduct(int page, int size, string status);
+        Task<ApiResponse> GetAllProduct(int page, int size, string status, string? searchName, bool? isAscending);
         Task<ApiResponse> GetListProductByCategoryId(Guid CateID, int page, int size);
         //Task<bool> UpdateProduct(Guid ProID, UpdateProductRequest updateProductRequest);
         Task<ApiResponse> UpdateProduct(Guid productId, UpdateProductRequest updateProductRequest);

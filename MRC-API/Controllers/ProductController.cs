@@ -80,13 +80,15 @@ namespace MRC_API.Controllers
         [ProducesErrorResponseType(typeof(ProblemDetails))]
         public async Task<IActionResult> GetAllProduct([FromQuery] int? page,
                                                  [FromQuery] int? size,
-                                                 [FromQuery] string? status)
+                                                 [FromQuery] string? status,
+                                                 [FromQuery] string searchName = null,
+                                                 [FromQuery] bool? isAscending = null)
         {
 
             int pageNumber = page ?? 1;
             int pageSize = size ?? 10;
             
-            var response = await _productService.GetAllProduct(pageNumber, pageSize, status );
+            var response = await _productService.GetAllProduct(pageNumber, pageSize, status, searchName, isAscending);
 
             if (response == null || response.data == null)
             {

@@ -145,7 +145,7 @@ namespace MRC_API.Service.Implement
             };
         }
 
-        public async Task<ApiResponse> GetAllCategory(int page, int size)
+        public async Task<ApiResponse> GetAllCategory(int page, int size, string? searchName, bool? isAscending)
         {
             var categories = await _unitOfWork.GetRepository<Category>().GetPagingListAsync(
                 selector: c => new GetCategoryResponse
@@ -153,7 +153,11 @@ namespace MRC_API.Service.Implement
                     CategoryId = c.Id,
                     CategoryName = c.CategoryName,
                 },
-                predicate: c => c.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()),
+                predicate: p => p.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()) &&
+                                (string.IsNullOrEmpty(searchName) || p.CategoryName.Contains(searchName)),
+                orderBy: q => isAscending.HasValue
+                    ? (isAscending.Value ? q.OrderBy(p => p.CategoryName) : q.OrderByDescending(p => p.CategoryName))
+                    : q.OrderByDescending(p => p.InsDate),
             size: size,
                 page: page);
             int totalItems = categories.Total;

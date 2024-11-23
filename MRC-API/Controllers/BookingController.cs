@@ -34,9 +34,9 @@ namespace MRC_API.Controllers
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
-        public async Task<IActionResult> GetAllBookings([FromQuery] int? page, [FromQuery] int? size)
+        public async Task<IActionResult> GetAllBookings([FromQuery] int? page, [FromQuery] int? size, [FromQuery] bool? isAscending = null)
         {
-            var response = await _bookingService.GetAllBookings(page ?? 1, size ?? 10);
+            var response = await _bookingService.GetAllBookings(page ?? 1, size ?? 10, isAscending);
             return StatusCode(int.Parse(response.status), response);
         }
 
