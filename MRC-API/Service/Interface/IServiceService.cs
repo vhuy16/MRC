@@ -10,7 +10,7 @@ namespace MRC_API.Service.Interface
     public interface IServiceService
     {
         Task<ApiResponse> CreateNewService(CreateNewServiceRequest createNewServiceRequest);
-        Task<ApiResponse> GetAllServices(int page, int size);
+        Task<ApiResponse> GetAllServices(int page, int size, string? searchName, bool? isAscending);
         Task<ApiResponse> GetService(Guid id);
         Task<ApiResponse> UpdateService(Guid id, UpdateServiceRequest updateServiceRequest);
         Task<ApiResponse> DeleteService(Guid id);

@@ -112,7 +112,7 @@ namespace MRC_API.Service.Implement
             };
         }
 
-        public async Task<ApiResponse> GetAllServices(int page, int size)
+        public async Task<ApiResponse> GetAllServices(int page, int size, string? searchName, bool? isAscending)
         {
             var services = await _unitOfWork.GetRepository<Repository.Entity.Service>().GetPagingListAsync(
                 selector: s => new GetServiceResponse()
@@ -120,8 +120,12 @@ namespace MRC_API.Service.Implement
                     ServiceId = s.Id,
                     ServiceName = s.ServiceName,
                 },
-                predicate: s => s.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()),
-            size: size,
+               predicate: p => p.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()) &&
+                                (string.IsNullOrEmpty(searchName) || p.ServiceName.Contains(searchName)),
+                orderBy: q => isAscending.HasValue
+                    ? (isAscending.Value ? q.OrderBy(p => p.ServiceName) : q.OrderByDescending(p => p.ServiceName))
+                    : q.OrderByDescending(p => p.InsDate),
+                size: size,
                 page: page);
             int totalItems = services.Total;
             int totalPages = (int)Math.Ceiling((double)totalItems / size);

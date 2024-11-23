@@ -7,8 +7,6 @@ public partial class Booking
 {
     public Guid Id { get; set; }
 
-    public Guid? UserId { get; set; }
-
     public Guid? ServiceId { get; set; }
 
     public DateTime BookingDate { get; set; }
@@ -22,6 +20,4 @@ public partial class Booking
     public string Content { get; set; } = null!;
 
     public virtual Service? Service { get; set; }
-
-    public virtual User? User { get; set; }
 }

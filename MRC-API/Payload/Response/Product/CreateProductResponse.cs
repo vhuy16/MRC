@@ -7,10 +7,11 @@ namespace MRC_API.Payload.Response.Product
         public Guid Id { get; set; }
         public string ProductName { get; set; } = null!;
         public string Description { get; set; } = null!;
+        public string Message { get; set; } 
         public int Quantity { get; set; }
         public string CategoryName { get; set; }
-        public string Message { get; set; }
-        public decimal? price { get; set; }
+       
+        public decimal? Price { get; set; }
 
         public List<string> Images { get; set; } = new List<string>();
     }

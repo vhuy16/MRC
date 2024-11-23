@@ -69,15 +69,10 @@ public partial class MrcContext : DbContext
             entity.Property(e => e.UpDate)
                 .HasColumnType("datetime")
                 .HasColumnName("upDate");
-            entity.Property(e => e.UserId).HasColumnName("userId");
 
             entity.HasOne(d => d.Service).WithMany(p => p.Bookings)
                 .HasForeignKey(d => d.ServiceId)
                 .HasConstraintName("FK_Booking_Service");
-
-            entity.HasOne(d => d.User).WithMany(p => p.Bookings)
-                .HasForeignKey(d => d.UserId)
-                .HasConstraintName("FK_Booking_User");
         });
 
         modelBuilder.Entity<Cart>(entity =>

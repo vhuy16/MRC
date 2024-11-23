@@ -34,9 +34,10 @@ namespace MRC_API.Controllers
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
-        public async Task<IActionResult> GetAllCategory([FromQuery] int? page, [FromQuery] int? size)
+        public async Task<IActionResult> GetAllCategory([FromQuery] int? page, [FromQuery] int? size, [FromQuery] string searchName = null,
+                                                 [FromQuery] bool? isAscending = null)
         {
-            var response = await _categoryService.GetAllCategory(page ?? 1, size ?? 10);
+            var response = await _categoryService.GetAllCategory(page ?? 1, size ?? 10, searchName, isAscending);
             return StatusCode(int.Parse(response.status), response);
         }
 
