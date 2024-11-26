@@ -101,6 +101,7 @@
             public const string ServiceEndPoint = ApiEndpoint + "/service";
             public const string CreateNewService = ServiceEndPoint;
             public const string GetAllService = ServiceEndPoint;
+            public const string GetAllServiceBySatus = ServiceEndPoint + "get-all-service-by-satus";
             public const string GetService = ServiceEndPoint + "/{id}";
             public const string UpdateService = ServiceEndPoint + "/{id}";
             public const string DeleteService = ServiceEndPoint + "/{id}";

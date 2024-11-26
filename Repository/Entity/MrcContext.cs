@@ -336,14 +336,12 @@ public partial class MrcContext : DbContext
             entity.Property(e => e.Id)
                 .ValueGeneratedNever()
                 .HasColumnName("id");
-            entity.Property(e => e.Description).HasColumnName("description");
-            entity.Property(e => e.Duration).HasColumnName("duration");
+            entity.Property(e => e.DeleteAt)
+                .HasColumnType("datetime")
+                .HasColumnName("deleteAt");
             entity.Property(e => e.InsDate)
                 .HasColumnType("datetime")
                 .HasColumnName("insDate");
-            entity.Property(e => e.Price)
-                .HasColumnType("decimal(10, 2)")
-                .HasColumnName("price");
             entity.Property(e => e.ServiceName)
                 .HasMaxLength(255)
                 .IsUnicode(false)

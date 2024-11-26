@@ -91,6 +91,7 @@ namespace MRC_API.Service.Implement
 
             service.Status = StatusEnum.Unavailable.GetDescriptionFromEnum();
             service.UpDate = TimeUtils.GetCurrentSEATime();
+            service.DeleteAt = TimeUtils.GetCurrentSEATime();
             _unitOfWork.GetRepository<Repository.Entity.Service>().UpdateAsync(service);
             bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
 
@@ -119,9 +120,57 @@ namespace MRC_API.Service.Implement
                 {
                     ServiceId = s.Id,
                     ServiceName = s.ServiceName,
+                    DeleteAt = s.DeleteAt,
+                    InsDate = s.InsDate,
+                    UpDate = s.UpDate,
+                    Status = s.Status
                 },
                predicate: p => p.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()) &&
                                 (string.IsNullOrEmpty(searchName) || p.ServiceName.Contains(searchName)),
+                orderBy: q => isAscending.HasValue
+                    ? (isAscending.Value ? q.OrderBy(p => p.ServiceName) : q.OrderByDescending(p => p.ServiceName))
+                    : q.OrderByDescending(p => p.InsDate),
+                size: size,
+                page: page);
+            int totalItems = services.Total;
+            int totalPages = (int)Math.Ceiling((double)totalItems / size);
+            if (services == null || services.Items.Count == 0)
+            {
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "Service retrieved successfully.",
+                    data = new Paginate<Repository.Entity.Service>()
+                    {
+                        Page = page,
+                        Size = size,
+                        Total = totalItems,
+                        TotalPages = totalPages,
+                        Items = new List<Repository.Entity.Service>()
+                    }
+                };
+            }
+            return new ApiResponse
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "Services retrieved successfully.",
+                data = services
+            };
+        }
+        public async Task<ApiResponse> GetAllServicesByStatus(int page, int size, string? searchName, string status, bool? isAscending)
+        {
+            var services = await _unitOfWork.GetRepository<Repository.Entity.Service>().GetPagingListAsync(
+                selector: s => new GetServiceResponse()
+                {
+                    ServiceId = s.Id,
+                    ServiceName = s.ServiceName,
+                    Status = s.Status,
+                    DeleteAt = s.DeleteAt,
+                    InsDate = s.InsDate,
+                    UpDate = s.UpDate,
+                },
+               predicate: p =>  (string.IsNullOrEmpty(searchName) || p.ServiceName.Contains(searchName))
+                                && (string.IsNullOrEmpty(status) || p.Status.Equals(status)),
                 orderBy: q => isAscending.HasValue
                     ? (isAscending.Value ? q.OrderBy(p => p.ServiceName) : q.OrderByDescending(p => p.ServiceName))
                     : q.OrderByDescending(p => p.InsDate),
@@ -160,6 +209,10 @@ namespace MRC_API.Service.Implement
                 {
                     ServiceId = s.Id,
                     ServiceName = s.ServiceName,
+                    DeleteAt = s.DeleteAt,
+                    InsDate = s.InsDate,
+                    UpDate = s.UpDate,
+                    Status = s.Status
                 },
                 predicate: s => s.Id.Equals(id) && s.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
 
@@ -215,7 +268,15 @@ namespace MRC_API.Service.Implement
             {
                 status = StatusCodes.Status200OK.ToString(),
                 message = "Service updated successfully.",
-                data = true
+                data = new GetServiceResponse
+                {
+                    ServiceId = service.Id,
+                    ServiceName = service.ServiceName,
+                    DeleteAt = service.DeleteAt,
+                    InsDate = service.InsDate,
+                    UpDate = service.UpDate,
+                    Status = service.Status
+                }
             };
         }
     }
