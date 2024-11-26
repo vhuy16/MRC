@@ -44,6 +44,19 @@ namespace MRC_API.Controllers
             var response = await _serviceService.GetAllServices(page ?? 1, size ?? 10, searchName, isAscending);
             return StatusCode(int.Parse(response.status), response);
         }
+        [HttpGet(ApiEndPointConstant.Service.GetAllServiceBySatus)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+        [ProducesErrorResponseType(typeof(ProblemDetails))]
+        public async Task<IActionResult> GetAllServiceBySatus([FromQuery] int? page,
+                                                 [FromQuery] int? size,
+                                                 [FromQuery] string searchName = null,
+                                                 [FromQuery] bool? isAscending = null,
+                                                 [FromQuery] string status = null)
+        {
+            var response = await _serviceService.GetAllServicesByStatus(page ?? 1, size ?? 10, searchName, status, isAscending);
+            return StatusCode(int.Parse(response.status), response);
+        }
 
         [HttpGet(ApiEndPointConstant.Service.GetService)]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
