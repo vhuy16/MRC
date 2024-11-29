@@ -1,4 +1,6 @@
-﻿namespace MRC_API.Payload.Response.CartItem
+﻿using Repository.Entity;
+
+namespace MRC_API.Payload.Response.CartItem
 {
     public class GetAllCartItemResponse
     {
@@ -8,5 +10,7 @@
         public string? ProductName { get; set; }
         public decimal? UnitPrice { get; set; }
         public decimal? Price { get; set; }
+        public virtual ICollection<string> Images { get; set; } = new List<string>();
+        public string CategoryName { get; set; }
     }
 }

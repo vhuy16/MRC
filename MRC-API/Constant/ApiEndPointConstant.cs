@@ -71,6 +71,7 @@
             public const string OrderEndpoint = ApiEndpoint + "/order";
             public const string CreateNewOrder = OrderEndpoint;
             public const string GetListOrder = OrderEndpoint;
+            public const string GetALLOrder = OrderEndpoint + "/getAllOrder";
         }
 
         public static class GoogleAuthentication

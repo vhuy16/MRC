@@ -22,9 +22,11 @@ namespace MRC_API.Service.Implement
 {
     public class BookingService : BaseService<Booking>, IBookingService
     {
-        public BookingService(IUnitOfWork<MrcContext> unitOfWork, ILogger<Booking> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor)
+        private readonly HtmlSanitizerUtils _sanitizer;
+        public BookingService(IUnitOfWork<MrcContext> unitOfWork, ILogger<Booking> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, HtmlSanitizerUtils htmlSanitizer)
             : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
+            _sanitizer = htmlSanitizer;
         }
 
         public async Task<ApiResponse> CreateNewBooking(CreateNewBookingRequest createNewBookingRequest)
@@ -45,7 +47,7 @@ namespace MRC_API.Service.Implement
             var bookingExists = await _unitOfWork.GetRepository<Booking>().SingleOrDefaultAsync(
                 predicate: b => b.BookingDate.Equals(createNewBookingRequest.BookingDate));
 
-         
+            createNewBookingRequest.Content = _sanitizer.Sanitize(createNewBookingRequest.Content);
 
             Booking booking = new Booking
             {
@@ -54,6 +56,7 @@ namespace MRC_API.Service.Implement
                 ServiceId = createNewBookingRequest.ServiceId,
                 BookingDate = createNewBookingRequest.BookingDate,
                 Content = createNewBookingRequest.Content,
+                Tile = createNewBookingRequest.Tile,
                 InsDate = TimeUtils.GetCurrentSEATime(),
                 UpDate = TimeUtils.GetCurrentSEATime(),
                 Status = StatusEnum.Available.GetDescriptionFromEnum()
@@ -88,7 +91,7 @@ namespace MRC_API.Service.Implement
         public async Task<ApiResponse> DeleteBooking(Guid id)
         {
             var booking = await _unitOfWork.GetRepository<Booking>().SingleOrDefaultAsync(
-                predicate: b => b.Id.Equals(id) && b.Status.Equals(StatusEnum.Confirmed.GetDescriptionFromEnum()));
+                predicate: b => b.Id.Equals(id) && b.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
 
             if (booking == null)
             {
@@ -130,8 +133,10 @@ namespace MRC_API.Service.Implement
                 {
                     Id = b.Id,         
                     ServiceName = b.Service.ServiceName,
-                    content = b.Content,
+                    Content = b.Content,
                     InsDate = b.InsDate,
+                    UpDate = b.UpDate,
+                    Tile = b.Tile,
                     ServiceId = b.ServiceId,
                     BookingDate = b.BookingDate,
                     Status = b.Status,
@@ -176,6 +181,10 @@ namespace MRC_API.Service.Implement
                 selector: b => new GetBookingResponse
                 {
                     Id = b.Id,
+                    Content = b.Content,
+                    ServiceName = b.Service.ServiceName,
+                    Tile = b.Tile,
+                    InsDate = b.InsDate,
                     
                     ServiceId = b.ServiceId,
                     BookingDate = b.BookingDate,
@@ -219,12 +228,15 @@ namespace MRC_API.Service.Implement
                 selector: b => new GetBookingResponse
                 {
                     Id = b.Id,
-                   
+                    ServiceName = b.Service.ServiceName,
+                    Content = b.Content,
+                    InsDate = b.InsDate,
+                    Tile = b.Tile,
                     ServiceId = b.ServiceId,
                     BookingDate = b.BookingDate,
                     Status = b.Status,
                 },
-                predicate: b => b.Id.Equals(id) && b.Status.Equals(StatusEnum.Confirmed.GetDescriptionFromEnum()));
+                predicate: b => b.Id.Equals(id) && b.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
 
             if (booking == null)
             {
@@ -247,7 +259,7 @@ namespace MRC_API.Service.Implement
         public async Task<ApiResponse> UpdateBooking(Guid id, UpdateBookingRequest updateBookingRequest)
         {
             var booking = await _unitOfWork.GetRepository<Booking>().SingleOrDefaultAsync(
-                predicate: b => b.Id.Equals(id) && b.Status.Equals(StatusEnum.Confirmed.GetDescriptionFromEnum()));
+                predicate: b => b.Id.Equals(id) && b.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
 
             if (booking == null)
             {
@@ -280,7 +292,17 @@ namespace MRC_API.Service.Implement
             {
                 status = StatusCodes.Status200OK.ToString(),
                 message = "Booking updated successfully.",
-                data = true
+                data =  new GetBookingResponse
+                {
+                    Id = booking.Id,
+                    ServiceName = booking.Service.ServiceName,
+                    Content = booking.Content,
+                    InsDate = booking.InsDate,
+                    Tile = booking.Tile,
+                    ServiceId = booking.ServiceId,
+                    BookingDate = booking.BookingDate,
+                    Status = booking.Status,
+                }
             };
         }
     }

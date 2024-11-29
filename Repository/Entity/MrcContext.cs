@@ -39,15 +39,17 @@ public partial class MrcContext : DbContext
 
     public virtual DbSet<User> Users { get; set; }
 
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) { }
-//#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-//        => optionsBuilder.UseSqlServer("Server=mrcdb-admin.database.windows.net;database=MRC;user=mrcadmin;password=@Jpassword123;TrustServerCertificate=True");
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
+        => optionsBuilder.UseSqlServer("Server=137.59.106.43;database=MRC;user=mrcadmin;password=mrc@admin123;TrustServerCertificate=True");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.HasDefaultSchema("mrcadmin");
+
         modelBuilder.Entity<Booking>(entity =>
         {
-            entity.ToTable("Booking");
+            entity.ToTable("Booking", "dbo");
 
             entity.Property(e => e.Id)
                 .ValueGeneratedNever()
@@ -55,9 +57,7 @@ public partial class MrcContext : DbContext
             entity.Property(e => e.BookingDate)
                 .HasColumnType("datetime")
                 .HasColumnName("bookingDate");
-            entity.Property(e => e.Content)
-                .IsUnicode(false)
-                .HasColumnName("content");
+            entity.Property(e => e.Content).HasColumnName("content");
             entity.Property(e => e.InsDate)
                 .HasColumnType("datetime")
                 .HasColumnName("insDate");
@@ -66,6 +66,7 @@ public partial class MrcContext : DbContext
                 .HasMaxLength(255)
                 .IsUnicode(false)
                 .HasColumnName("status");
+            entity.Property(e => e.Tile).HasColumnName("tile");
             entity.Property(e => e.UpDate)
                 .HasColumnType("datetime")
                 .HasColumnName("upDate");
@@ -77,7 +78,7 @@ public partial class MrcContext : DbContext
 
         modelBuilder.Entity<Cart>(entity =>
         {
-            entity.ToTable("Cart");
+            entity.ToTable("Cart", "dbo");
 
             entity.Property(e => e.Id)
                 .ValueGeneratedNever()
@@ -101,7 +102,7 @@ public partial class MrcContext : DbContext
 
         modelBuilder.Entity<CartItem>(entity =>
         {
-            entity.ToTable("CartItem");
+            entity.ToTable("CartItem", "dbo");
 
             entity.Property(e => e.Id)
                 .ValueGeneratedNever()
@@ -134,7 +135,7 @@ public partial class MrcContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("PK__Category__3213E83F7E91D615");
 
-            entity.ToTable("Category");
+            entity.ToTable("Category", "dbo");
 
             entity.Property(e => e.Id)
                 .ValueGeneratedNever()
@@ -157,7 +158,7 @@ public partial class MrcContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("PK__Image__3213E83F81CDEAC7");
 
-            entity.ToTable("Image");
+            entity.ToTable("Image", "dbo");
 
             entity.Property(e => e.Id)
                 .ValueGeneratedNever()
@@ -182,11 +183,12 @@ public partial class MrcContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("PK__Order__3213E83F1F39A9ED");
 
-            entity.ToTable("Order");
+            entity.ToTable("Order", "dbo");
 
             entity.Property(e => e.Id)
                 .ValueGeneratedNever()
                 .HasColumnName("id");
+            entity.Property(e => e.Address).HasColumnName("address");
             entity.Property(e => e.InsDate)
                 .HasColumnType("datetime")
                 .HasColumnName("insDate");
@@ -212,6 +214,8 @@ public partial class MrcContext : DbContext
         modelBuilder.Entity<OrderDetail>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__OrderDet__3213E83FACD9307B");
+
+            entity.ToTable("OrderDetails", "dbo");
 
             entity.Property(e => e.Id)
                 .ValueGeneratedNever()
@@ -240,7 +244,7 @@ public partial class MrcContext : DbContext
 
         modelBuilder.Entity<Otp>(entity =>
         {
-            entity.ToTable("Otp");
+            entity.ToTable("Otp", "dbo");
 
             entity.Property(e => e.Id)
                 .ValueGeneratedNever()
@@ -265,9 +269,9 @@ public partial class MrcContext : DbContext
 
         modelBuilder.Entity<Payment>(entity =>
         {
-            entity.HasKey(e => e.PaymentId).HasName("PK__Payment__9B556A5874E74347");
+            entity.HasKey(e => e.PaymentId).HasName("PK__Payment__9B556A58CAA8A5C6");
 
-            entity.ToTable("Payment");
+            entity.ToTable("Payment", "dbo");
 
             entity.Property(e => e.PaymentId)
                 .HasDefaultValueSql("(newid())")
@@ -297,7 +301,7 @@ public partial class MrcContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("PK__Product__3213E83F30DB6A16");
 
-            entity.ToTable("Product");
+            entity.ToTable("Product", "dbo");
 
             entity.Property(e => e.Id)
                 .ValueGeneratedNever()
@@ -331,7 +335,7 @@ public partial class MrcContext : DbContext
 
         modelBuilder.Entity<Service>(entity =>
         {
-            entity.ToTable("Service");
+            entity.ToTable("Service", "dbo");
 
             entity.Property(e => e.Id)
                 .ValueGeneratedNever()
@@ -344,7 +348,6 @@ public partial class MrcContext : DbContext
                 .HasColumnName("insDate");
             entity.Property(e => e.ServiceName)
                 .HasMaxLength(255)
-                .IsUnicode(false)
                 .HasColumnName("serviceName");
             entity.Property(e => e.Status)
                 .HasMaxLength(255)
@@ -359,7 +362,7 @@ public partial class MrcContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("PK__User__3213E83F97239305");
 
-            entity.ToTable("User");
+            entity.ToTable("User", "dbo");
 
             entity.HasIndex(e => e.UserName, "User_index_0");
 

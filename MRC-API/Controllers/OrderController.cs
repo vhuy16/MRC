@@ -38,14 +38,35 @@ namespace MRC_API.Controllers
         [HttpGet(ApiEndPointConstant.Order.GetListOrder)]
         [ProducesResponseType(typeof(IPaginate<ApiResponse>), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
-        public async Task<IActionResult> GetListOrder([FromQuery] int? page, [FromQuery] int? size)
+        public async Task<IActionResult> GetListOrder([FromQuery] int? page, [FromQuery] int? size, [FromQuery] bool? isAscending = null)
         {
             int pageNumber = page ?? 1;
             int pageSize = size ?? 10;
-            var response = await _orderService.GetListOrder(pageNumber, pageSize);
+            var response = await _orderService.GetListOrder(pageNumber, pageSize, isAscending);
+            if (response == null || response.data == null)
+            {
+                return Problem(detail: MessageConstant.OrderMessage.OrderIsEmpty, statusCode: StatusCodes.Status404NotFound);
+            }
             return Ok(response);
         }
-
+        [HttpGet(ApiEndPointConstant.Order.GetALLOrder)]
+        [ProducesResponseType(typeof(IPaginate<ApiResponse>), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(ProblemDetails))]
+        public async Task<IActionResult> GetALLOrder([FromQuery] int? page,
+                                                    [FromQuery] int? size,
+                                                    [FromQuery] string? status,
+                                                    [FromQuery] bool? isAscending = null,
+                                                    [FromQuery]  string userName = null)
+        {
+            int pageNumber = page ?? 1;
+            int pageSize = size ?? 10;
+            var response = await _orderService.GetAllOrder(pageNumber, pageSize,status, isAscending, userName);
+            if (response == null || response.data == null)
+            {
+                return Problem(detail: MessageConstant.OrderMessage.OrderIsEmpty, statusCode: StatusCodes.Status404NotFound);
+            }
+            return Ok(response);
+        }
 
     }
 }
