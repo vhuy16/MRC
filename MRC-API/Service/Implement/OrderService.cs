@@ -192,7 +192,15 @@ namespace MRC_API.Service.Implement
                         cartItems.Add(cartItem);
                     }
                 }
-
+                if (cartItems.Count == 0)
+                {
+                    return new ApiResponse()
+                    {
+                        status = StatusCodes.Status400BadRequest.ToString(),
+                        message = "None of the Cart Items are available for checkout. Please verify your cart.",
+                        data = null
+                    };
+                }
                 decimal totalprice = 0;
                 if (cartItems.Count == 0)
                 {
