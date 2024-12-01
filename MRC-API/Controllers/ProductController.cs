@@ -1,6 +1,7 @@
 ﻿
 using Microsoft.AspNetCore.Mvc;
 using MRC_API.Constant;
+using MRC_API.Infrastructure;
 using MRC_API.Payload.Request.Product;
 using MRC_API.Payload.Request.User;
 using MRC_API.Payload.Response;
@@ -19,6 +20,7 @@ namespace MRC_API.Controllers
         {
             _productService = productService;
         }
+        [CustomAuthorize(roles: "Admin,Manager")]
         [HttpPost(ApiEndPointConstant.Product.CreateNewProduct)]
         [ProducesResponseType(typeof(CreateProductResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
@@ -139,6 +141,7 @@ namespace MRC_API.Controllers
             }
             return Ok(response);
         }
+        [CustomAuthorize(roles: "Admin,Manager")]
         [HttpPut(ApiEndPointConstant.Product.UpdateProduct)]
         [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
@@ -158,6 +161,7 @@ namespace MRC_API.Controllers
 
             return StatusCode(int.Parse(response.status), response);
         }
+        [CustomAuthorize(roles: "Admin,Manager")]
         [HttpDelete(ApiEndPointConstant.Product.UpdateProduct)]
         [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]

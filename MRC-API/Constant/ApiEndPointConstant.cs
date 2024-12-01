@@ -31,7 +31,8 @@
             public const string UpdateUser = UserEndPoint + "/{id}";
             public const string VerifyOtp = UserEndPoint + "/verify-otp";
             public const string ForgotPassword = UserEndPoint + "/forgot-password";
-            public const string VerifyAndResetPassword = UserEndPoint + "/{id}" + "/forgot-password/verify";
+            public const string ResetPassword = UserEndPoint + "/reset-password";
+            public const string VerifyForgotPassword = UserEndPoint + "/verify-forgot-password";
         }
         public static class Payment
         {
@@ -120,6 +121,14 @@
             public const string GetbookingByStatus = BookingEndPoint + "/status";
 
         }
-        
+        public static class Form
+        {
+            public const string FormEndPoint = ApiEndpoint + "/form";
+            public const string SentForm = FormEndPoint;
+            public const string GetForms = FormEndPoint;
+            public const string GetForm = FormEndPoint + "/{id}";
+            public const string DeleteForm = FormEndPoint + "/{id}";
+        }
+
     }
 }

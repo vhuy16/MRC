@@ -29,7 +29,7 @@ namespace MRC_API.Service.Implement
         private readonly IEmailSender _emailSender;
 
         public UserService(IUnitOfWork<MrcContext> unitOfWork, ILogger<UserService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IEmailSender emailSender) : base(unitOfWork, logger, mapper, httpContextAccessor)
-        {  
+        {
 
             _emailSender = emailSender;
         }
@@ -183,19 +183,19 @@ namespace MRC_API.Service.Implement
             };
         }
 
-        public async Task<bool> VerifyOtp (Guid UserId, string otpCheck)
+        public async Task<bool> VerifyOtp(Guid UserId, string otpCheck)
         {
             var otp = await _unitOfWork.GetRepository<Otp>().SingleOrDefaultAsync(predicate: p => p.OtpCode.Equals(otpCheck) && p.UserId.Equals(UserId));
-            if(otp != null && TimeUtils.GetCurrentSEATime() < otp.ExpiresAt && otp.IsValid == true)
+            if (otp != null && TimeUtils.GetCurrentSEATime() < otp.ExpiresAt && otp.IsValid == true)
             {
                 var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: u => u.Id.Equals(UserId));
-                if(user != null)
+                if (user != null)
                 {
                     user.Status = StatusEnum.Available.GetDescriptionFromEnum();
                     _unitOfWork.GetRepository<User>().UpdateAsync(user);
                     _unitOfWork.GetRepository<Otp>().DeleteAsync(otp); // Delete the OTP record
-                
-                    
+
+
                     await _unitOfWork.CommitAsync();
                     return true;
                 }
@@ -328,7 +328,7 @@ namespace MRC_API.Service.Implement
 
             // Retrieve the user based on the search filter
             User user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: searchFilter);
-            if(user == null)
+            if (user == null)
             {
                 return new ApiResponse()
                 {
@@ -362,8 +362,8 @@ namespace MRC_API.Service.Implement
                 {
                     status = StatusCodes.Status400BadRequest.ToString(),
                     WarnMessage = "You need to verify your email, we have sent you an OTP",
-                    data = new GetUserResponse() 
-                    { 
+                    data = new GetUserResponse()
+                    {
                         UserId = user.Id,
                         Email = user.Email,
                         FullName = user.FullName,
@@ -403,7 +403,7 @@ namespace MRC_API.Service.Implement
             Expression<Func<User, bool>> searchFilter = p =>
                   p.UserName.Equals(loginRequest.Username) &&
                   p.Password.Equals(PasswordUtil.HashPassword(loginRequest.Password)) &&
-                  (p.Role == RoleEnum.Customer.GetDescriptionFromEnum()) &&(!p.DelDate.HasValue);
+                  (p.Role == RoleEnum.Customer.GetDescriptionFromEnum()) && (!p.DelDate.HasValue);
 
             // Retrieve the user based on the search filter
             User user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: searchFilter);
@@ -497,7 +497,7 @@ namespace MRC_API.Service.Implement
                 var cartItems = await _unitOfWork.GetRepository<CartItem>().GetListAsync(predicate: ci => ci.CartId.Equals(cart.Id));
                 foreach (var cartItem in cartItems)
                 {
-                     _unitOfWork.GetRepository<CartItem>().DeleteAsync(cartItem);
+                    _unitOfWork.GetRepository<CartItem>().DeleteAsync(cartItem);
                 }
 
                 cart.Status = StatusEnum.Unavailable.GetDescriptionFromEnum();
@@ -548,7 +548,7 @@ namespace MRC_API.Service.Implement
 
             int totalItems = users.Total;
             int totalPages = (int)Math.Ceiling((double)totalItems / size);
-            if(users == null)
+            if (users == null)
             {
                 return new ApiResponse()
                 {
@@ -789,7 +789,7 @@ namespace MRC_API.Service.Implement
             }
         }
 
-        public async Task<bool> ForgotPassword(Payload.Request.User.ForgotPasswordRequest request)
+        public async Task<ApiResponse> ForgotPassword(Payload.Request.User.ForgotPasswordRequest request)
         {
             string emailPattern = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
             if (!Regex.IsMatch(request.Email, emailPattern))
@@ -800,9 +800,14 @@ namespace MRC_API.Service.Implement
             var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
                 predicate: u => u.Email.Equals(request.Email) && u.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
 
-            if (user == null) 
+            if (user == null)
             {
-                throw new BadHttpRequestException(MessageConstant.UserMessage.AccountNotExist);
+                return new ApiResponse()
+                {
+                    status = StatusCodes.Status404NotFound.ToString(),
+                    message = MessageConstant.UserMessage.AccountNotExist,
+                    data = false
+                };
             }
 
             string otp = OtpUltil.GenerateOtp();
@@ -816,24 +821,23 @@ namespace MRC_API.Service.Implement
                 IsValid = true
             };
             await _unitOfWork.GetRepository<Otp>().InsertAsync(otpRecord);
+            await _unitOfWork.CommitAsync();
             await SendOtpEmail(user.Email, otp);
-            bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
             ScheduleOtpCancellation(otpRecord.Id, TimeSpan.FromMinutes(10));
-            return isSuccessful;
+            return new ApiResponse()
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "send otp successful",
+                data = user.Id
+            };
 
         }
 
-        public async Task<bool> VerifyAndResetPassword(Guid id,VerifyAndResetPasswordRequest request)
+        public async Task<ApiResponse> ResetPassword(VerifyAndResetPasswordRequest request)
         {
-            var otp = await _unitOfWork.GetRepository<Otp>().SingleOrDefaultAsync(
-                predicate: o => o.OtpCode.Equals(request.Otp) && o.UserId.Equals(id));
-            if (otp == null)
-            {
-                throw new BadHttpRequestException("OTP không chính xác");
-            }
-
+            Guid? userId = UserUtil.GetAccountId(_httpContextAccessor.HttpContext);
             var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
-                predicate: u => u.Id.Equals(id) && u.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
+                predicate: u => u.Id.Equals(userId) && u.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
             if (user == null)
             {
                 throw new BadHttpRequestException(MessageConstant.UserMessage.UserNotExist);
@@ -848,10 +852,13 @@ namespace MRC_API.Service.Implement
             user.UpDate = TimeUtils.GetCurrentSEATime();
             _unitOfWork.GetRepository<User>().UpdateAsync(user);
 
-            _unitOfWork.GetRepository<Otp>().DeleteAsync(otp);
             await _unitOfWork.CommitAsync();
-            return true;
-
+            return new ApiResponse()
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "Reset successful",
+                data = true
+            };
         }
 
         public async Task<ApiResponse> GetUser()
@@ -895,6 +902,51 @@ namespace MRC_API.Service.Implement
                 status = StatusCodes.Status200OK.ToString(),
                 message = "User retrieved successfully.",
                 data = user
+            };
+        }
+
+        public async Task<ApiResponse> VerifyForgotPassword(Guid userId, string otp)
+        {
+            Otp? otpExist = await _unitOfWork.GetRepository<Otp>().SingleOrDefaultAsync(
+                predicate: o => o.OtpCode.Equals(otp) && o.UserId.Equals(userId));
+            if (otpExist == null)
+            {
+                return new ApiResponse()
+                {
+                    status = StatusCodes.Status404NotFound.ToString(),
+                    message = "Otp không tồn tại",
+                    data = null
+                };
+            }
+            if(TimeUtils.GetCurrentSEATime() > otpExist.ExpiresAt && otpExist.IsValid != true)
+            {
+                return new ApiResponse()
+                {
+                    status = StatusCodes.Status400BadRequest.ToString(),
+                    message = "Otp hết hạn",
+                    data = null
+                };
+            }
+            _unitOfWork.GetRepository<Otp>().DeleteAsync(otpExist);
+
+
+            var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
+                predicate: o => o.Id.Equals(userId) && o.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()) && o.Role.Equals(RoleEnum.Customer.GetDescriptionFromEnum()));
+            RoleEnum role = EnumUtil.ParseEnum<RoleEnum>(user.Role);
+            Tuple<string, Guid> guildClaim = new Tuple<string, Guid>("userID", user.Id);
+            var token = JwtUtil.GenerateJwtToken(user, guildClaim);
+            var loginResponse = new LoginResponse()
+            {
+                RoleEnum = role.ToString(),
+                UserId = user.Id,
+                UserName = user.UserName,
+                token = token
+            };
+            return new ApiResponse()
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "Xác thực thành công",
+                data = loginResponse
             };
         }
 

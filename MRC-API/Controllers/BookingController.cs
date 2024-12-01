@@ -5,6 +5,7 @@ using MRC_API.Payload.Response;
 using MRC_API.Service.Interface;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Authorization;
+using MRC_API.Infrastructure;
 
 namespace MRC_API.Controllers
 {   
@@ -20,7 +21,6 @@ namespace MRC_API.Controllers
             _logger = logger;
             _bookingService = bookingService;
         }
-        [Authorize(Roles = "Admin")]
         [HttpPost(ApiEndPointConstant.Booking.CreateNewBooking)]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
@@ -31,6 +31,7 @@ namespace MRC_API.Controllers
             return StatusCode(int.Parse(response.status), response);
         }
 
+        [CustomAuthorize(roles: "Admin,Manager")]
         [HttpGet(ApiEndPointConstant.Booking.GetAllBookings)]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
@@ -40,6 +41,8 @@ namespace MRC_API.Controllers
             var response = await _bookingService.GetAllBookings(page ?? 1, size ?? 10, isAscending);
             return StatusCode(int.Parse(response.status), response);
         }
+
+        [CustomAuthorize(roles: "Admin,Manager")]
         [HttpGet(ApiEndPointConstant.Booking.GetBookings)]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
