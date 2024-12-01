@@ -23,6 +23,8 @@ public partial class MrcContext : DbContext
 
     public virtual DbSet<Category> Categories { get; set; }
 
+    public virtual DbSet<Form> Forms { get; set; }
+
     public virtual DbSet<Image> Images { get; set; }
 
     public virtual DbSet<Order> Orders { get; set; }
@@ -39,9 +41,9 @@ public partial class MrcContext : DbContext
 
     public virtual DbSet<User> Users { get; set; }
 
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) { }
-//#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-//        => optionsBuilder.UseSqlServer("Server=137.59.106.46;database=MRC;user=mrcadmin;password=admin@123456;TrustServerCertificate=True");
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
+        => optionsBuilder.UseSqlServer("Server=137.59.106.46;database=MRC;user=mrcadmin;password=admin@123456;TrustServerCertificate=True");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -152,6 +154,19 @@ public partial class MrcContext : DbContext
             entity.Property(e => e.UpDate)
                 .HasColumnType("datetime")
                 .HasColumnName("upDate");
+        });
+
+        modelBuilder.Entity<Form>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__Form__3214EC075D3AADF8");
+
+            entity.ToTable("Form", "dbo");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.CompanyName).HasMaxLength(50);
+            entity.Property(e => e.Email).HasMaxLength(50);
+            entity.Property(e => e.Question).HasColumnType("text");
+            entity.Property(e => e.ServiceType).HasMaxLength(50);
         });
 
         modelBuilder.Entity<Image>(entity =>

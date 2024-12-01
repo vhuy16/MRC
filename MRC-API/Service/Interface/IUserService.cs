@@ -1,4 +1,5 @@
-﻿using MRC_API.Payload.Request.User;
+﻿using Microsoft.AspNetCore.Mvc;
+using MRC_API.Payload.Request.User;
 using MRC_API.Payload.Response;
 using MRC_API.Payload.Response.GoogleAuth;
 using MRC_API.Payload.Response.User;
@@ -23,7 +24,8 @@ namespace MRC_API.Service.Interface
        Task<bool> GetAccountByEmail(string email);
        Task<bool> VerifyOtp(Guid UserId, string otpCheck);
        Task<ApiResponse> CreateNewUserAccountByGoogle(GoogleAuthResponse response);
-       Task<bool> ForgotPassword(ForgotPasswordRequest request);
-       Task<bool> VerifyAndResetPassword(Guid id,VerifyAndResetPasswordRequest request);
+       Task<ApiResponse> ForgotPassword(ForgotPasswordRequest request);
+       Task<ApiResponse> ResetPassword(VerifyAndResetPasswordRequest request);
+       Task<ApiResponse> VerifyForgotPassword(Guid userId, string otp);
     }
 }
