@@ -41,7 +41,7 @@ public partial class MrcContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) { }
 //#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-//        => optionsBuilder.UseSqlServer("Server=137.59.106.43;database=MRC;user=mrcadmin;password=mrc@admin123;TrustServerCertificate=True");
+//        => optionsBuilder.UseSqlServer("Server=137.59.106.46;database=MRC;user=mrcadmin;password=admin@123456;TrustServerCertificate=True");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -66,7 +66,7 @@ public partial class MrcContext : DbContext
                 .HasMaxLength(255)
                 .IsUnicode(false)
                 .HasColumnName("status");
-            entity.Property(e => e.Tile).HasColumnName("tile");
+            entity.Property(e => e.Title).HasColumnName("title");
             entity.Property(e => e.UpDate)
                 .HasColumnType("datetime")
                 .HasColumnName("upDate");
@@ -269,7 +269,7 @@ public partial class MrcContext : DbContext
 
         modelBuilder.Entity<Payment>(entity =>
         {
-            entity.HasKey(e => e.PaymentId).HasName("PK__Payment__9B556A58CAA8A5C6");
+            entity.HasKey(e => e.PaymentId).HasName("PK__Payment__9B556A583B56A9BE");
 
             entity.ToTable("Payment", "dbo");
 

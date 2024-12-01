@@ -112,6 +112,8 @@
             public const string BookingEndPoint = ApiEndpoint + "/booking";
             public const string CreateNewBooking = BookingEndPoint;
             public const string GetAllBookings = BookingEndPoint;
+            public const string GetBookings = BookingEndPoint + "/getBookings-admin";
+
             public const string GetBooking = BookingEndPoint + "/{id}";
             public const string UpdateBooking = BookingEndPoint + "/{id}";
             public const string DeleteBooking = BookingEndPoint + "/{id}";

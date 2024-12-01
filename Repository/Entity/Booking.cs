@@ -19,7 +19,7 @@ public partial class Booking
 
     public string Content { get; set; } = null!;
 
-    public string? Tile { get; set; }
+    public string? Title { get; set; }
 
     public virtual Service? Service { get; set; }
 }
