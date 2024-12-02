@@ -12,5 +12,6 @@ namespace MRC_API.Service.Interface
         Task<ApiResponse> CreateOrder(CreateOrderRequest createOrderRequest);
         Task<ApiResponse> GetListOrder(int page, int size, bool? isAscending);
         Task<ApiResponse> GetAllOrder(int page, int size, string status, bool? isAscending, string userName);
+        Task<ApiResponse> GetOrderById(Guid id);
     }
 }
