@@ -68,5 +68,15 @@ namespace MRC_API.Controllers
             return Ok(response);
         }
 
+        [HttpGet(ApiEndPointConstant.Order.GetOrderById)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+        [ProducesErrorResponseType(typeof(ProblemDetails))]
+        public async Task<IActionResult> GetOrder([FromRoute] Guid id)
+        {
+            var response = await _orderService.GetOrderById(id);
+            return StatusCode(int.Parse(response.status), response);
+        }
+
     }
 }

@@ -477,5 +477,46 @@ namespace MRC_API.Service.Implement
                 data = orders
             };
         }
+
+        public async Task<ApiResponse> GetOrderById(Guid id)
+        {
+            var order = await _unitOfWork.GetRepository<Order>().SingleOrDefaultAsync(
+                selector: o => new GetOrderResponse()
+                {
+                    OrderId = o.Id,
+                    TotalPrice = o.TotalPrice,
+                    Address = o.Address,
+                    Status = o.Status,
+                    OrderDetails = o.OrderDetails.Select(od => new GetOrderResponse.OrderDetailCreateResponseModel
+                    {
+                        Price = od.Price,
+                        ProductName = od.Product.ProductName,
+                        Quantity = od.Quantity
+                    }).ToList(),
+                    User = new GetOrderResponse.UserResponse
+                    {
+                        Name = o.User.UserName,
+                        Email = o.User.Email, 
+                        PhoneNumber = o.User.PhoneNumber
+                    }
+
+                },
+                predicate: o => o.Id.Equals(id));
+            if(order == null)
+            {
+                return new ApiResponse()
+                {
+                    status = StatusCodes.Status404NotFound.ToString(),
+                    message = "Không tìm thấy đơn hàng",
+                    data = null
+                };
+            }
+            return new ApiResponse()
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "Đơn hàng",
+                data = order
+            };
+        }
     }
 }
