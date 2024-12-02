@@ -6,11 +6,11 @@ namespace MRC_API.Infrastructure
 {
     public class CustomAuthorizeAttribute : Attribute, IAuthorizationFilter
     {
-        private readonly string _roles;
+        private readonly string[] _roles;
 
         public CustomAuthorizeAttribute(string roles)
         {
-            _roles = roles;
+            _roles = roles.Split(',').Select(r => r.Trim()).ToArray();
         }
 
         public void OnAuthorization(AuthorizationFilterContext context)
@@ -29,7 +29,7 @@ namespace MRC_API.Infrastructure
                     StatusCode = 401
                 };
             }
-            else if (!user.IsInRole(_roles))
+            else if (!_roles.Any(role => user.IsInRole(role)))
             {
                 context.Result = new JsonResult(new ApiResponse()
                 {

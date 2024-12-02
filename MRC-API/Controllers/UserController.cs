@@ -176,5 +176,16 @@ namespace MRC_API.Controllers
 
             return StatusCode(int.Parse(response.status), response);
         }
+        [HttpPost(ApiEndPointConstant.User.ChangePassword)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+        [ProducesErrorResponseType(typeof(ProblemDetails))]
+        public async Task<IActionResult> ChangPassword([FromBody] ChangePasswordRequest request)
+        {
+            var response = await _userService.ChangePassword(request);
+
+            return StatusCode(int.Parse(response.status), response);
+        }
     }
 }

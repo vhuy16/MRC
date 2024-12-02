@@ -22,7 +22,7 @@ namespace MRC_API.Controllers
             _categoryService = categoryService;
         }
 
-        [CustomAuthorize(roles: "Admin")]
+        [CustomAuthorize(roles: "Admin,Manager")]
         [HttpPost(ApiEndPointConstant.Category.CreateNewCategory)]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
