@@ -33,6 +33,7 @@
             public const string ForgotPassword = UserEndPoint + "/forgot-password";
             public const string ResetPassword = UserEndPoint + "/reset-password";
             public const string VerifyForgotPassword = UserEndPoint + "/verify-forgot-password";
+            public const string ChangePassword = UserEndPoint + "/change-password";
         }
         public static class Payment
         {
@@ -58,11 +59,11 @@
             public const string ProductEndpoint = ApiEndpoint + "/product";
             public const string CreateNewProduct = ProductEndpoint;
             public const string GetListProducts = ProductEndpoint;
-            public const string GetAllProducts = ProductEndpoint + "/getAllProduct";
+            public const string GetAllProducts = ProductEndpoint + "/get-all-product";
             public const string GetProductById = ProductEndpoint + "/{id}";
             public const string GetListProductsByCategoryId = ProductEndpoint +"/{id}" + "/category";
             public const string UpdateProduct = ProductEndpoint + "/{id}";
-            public const string EnableProduct = ProductEndpoint + "/enableProduct" + "/{id}"  ;
+            public const string EnableProduct = ProductEndpoint + "/enable-product" + "/{id}"  ;
             public const string DeleteProduct = ProductEndpoint + "/{id}";
             public const string UploadImg = "upload-img";
         }
@@ -72,7 +73,7 @@
             public const string OrderEndpoint = ApiEndpoint + "/order";
             public const string CreateNewOrder = OrderEndpoint;
             public const string GetListOrder = OrderEndpoint;
-            public const string GetALLOrder = OrderEndpoint + "/getAllOrder";
+            public const string GetALLOrder = OrderEndpoint + "/get-all-order";
         }
 
         public static class GoogleAuthentication
@@ -103,7 +104,7 @@
             public const string ServiceEndPoint = ApiEndpoint + "/service";
             public const string CreateNewService = ServiceEndPoint;
             public const string GetAllService = ServiceEndPoint;
-            public const string GetAllServiceBySatus = ServiceEndPoint + "get-all-service-by-satus";
+            public const string GetAllServiceBySatus = ServiceEndPoint + "/get-all-service-by-satus";
             public const string GetService = ServiceEndPoint + "/{id}";
             public const string UpdateService = ServiceEndPoint + "/{id}";
             public const string DeleteService = ServiceEndPoint + "/{id}";
@@ -113,7 +114,7 @@
             public const string BookingEndPoint = ApiEndpoint + "/booking";
             public const string CreateNewBooking = BookingEndPoint;
             public const string GetAllBookings = BookingEndPoint;
-            public const string GetBookings = BookingEndPoint + "/getBookings-admin";
+            public const string GetBookings = BookingEndPoint + "/get-bookings-admin";
 
             public const string GetBooking = BookingEndPoint + "/{id}";
             public const string UpdateBooking = BookingEndPoint + "/{id}";

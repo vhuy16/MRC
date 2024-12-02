@@ -599,6 +599,16 @@ namespace MRC_API.Service.Implement
 
         public async Task<ApiResponse> UpdateUser(Guid id, UpdateUserRequest updateUserRequest)
         {
+            string phonePattern = @"^0\d{9}$";
+            if (updateUserRequest.PhoneNumber != null && !Regex.IsMatch(updateUserRequest.PhoneNumber, phonePattern))
+            {
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status400BadRequest.ToString(),
+                    message = MessageConstant.PatternMessage.PhoneIncorrect,
+                    data = null
+                };
+            }
             var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
                 predicate: u => u.Id.Equals(id) && u.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
 
@@ -613,7 +623,6 @@ namespace MRC_API.Service.Implement
             }
 
             user.FullName = string.IsNullOrEmpty(updateUserRequest.FullName) ? user.FullName : updateUserRequest.FullName;
-            user.Email = string.IsNullOrEmpty(updateUserRequest.Email) ? user.Email : updateUserRequest.Email;
             user.PhoneNumber = string.IsNullOrEmpty(updateUserRequest.PhoneNumber) ? user.PhoneNumber : updateUserRequest.PhoneNumber;
             user.Gender = updateUserRequest.Gender.HasValue ? updateUserRequest.Gender.GetDescriptionFromEnum() : user.Gender.GetDescriptionFromEnum();
             user.UpDate = TimeUtils.GetCurrentSEATime();
@@ -918,7 +927,7 @@ namespace MRC_API.Service.Implement
                     data = null
                 };
             }
-            if(TimeUtils.GetCurrentSEATime() > otpExist.ExpiresAt && otpExist.IsValid != true)
+            if (TimeUtils.GetCurrentSEATime() > otpExist.ExpiresAt && otpExist.IsValid != true)
             {
                 return new ApiResponse()
                 {
@@ -950,5 +959,49 @@ namespace MRC_API.Service.Implement
             };
         }
 
+        public async Task<ApiResponse> ChangePassword(ChangePasswordRequest request)
+        {
+            Guid? userId = UserUtil.GetAccountId(_httpContextAccessor.HttpContext);
+            var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
+                predicate: u => u.Id.Equals(userId) && u.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
+            if (user == null)
+            {
+                return new ApiResponse()
+                {
+                    status = StatusCodes.Status404NotFound.ToString(),
+                    message = "Bạn cần đăng nhập",
+                    data = false
+                };
+            }
+            if (!user.Password.Equals(PasswordUtil.HashPassword(request.OldPassword)))
+            {
+                return new ApiResponse()
+                {
+                    status = StatusCodes.Status400BadRequest.ToString(),
+                    message = "Mật khẩu cũ không chính xác",
+                    data = false
+                };
+            }
+            if (!request.NewPassword.Equals(request.ConfirmPassword))
+            {
+                return new ApiResponse()
+                {
+                    status = StatusCodes.Status400BadRequest.ToString(),
+                    message = "Mật khẩu xác nhận không trùng khớp",
+                    data = false
+                };
+            }
+            user.Password = PasswordUtil.HashPassword(request.NewPassword);
+            _unitOfWork.GetRepository<User>().UpdateAsync(user);
+            await _unitOfWork.CommitAsync();
+
+            return new ApiResponse()
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "Đổi mật khẩu thành công",
+                data = true
+            };
+
+        }
     }
 }

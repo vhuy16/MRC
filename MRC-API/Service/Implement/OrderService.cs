@@ -218,7 +218,7 @@ namespace MRC_API.Service.Implement
                     InsDate = TimeUtils.GetCurrentSEATime(),
                     UserId = userId,
                     ShipStatus = (int)ShipEnum.NewOrder,
-                    Status = StatusEnum.Available.GetDescriptionFromEnum(),
+                    Status = OrderStatus.PENDING_PAYMENT.GetDescriptionFromEnum(),
                     ShipCost = createOrderRequest.ShipCost,
                     Address = createOrderRequest.Address,
                     OrderDetails = new List<OrderDetail>()
@@ -426,6 +426,7 @@ namespace MRC_API.Service.Implement
                 {
                     OrderId = s.Id,
                     TotalPrice = s.TotalPrice,
+                    Address = s.Address,
                     Status = s.Status,
                     User = new GetOrderResponse.UserResponse
                     {

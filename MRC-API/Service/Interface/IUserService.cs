@@ -27,5 +27,6 @@ namespace MRC_API.Service.Interface
        Task<ApiResponse> ForgotPassword(ForgotPasswordRequest request);
        Task<ApiResponse> ResetPassword(VerifyAndResetPasswordRequest request);
        Task<ApiResponse> VerifyForgotPassword(Guid userId, string otp);
+       Task<ApiResponse> ChangePassword(ChangePasswordRequest request);
     }
 }
