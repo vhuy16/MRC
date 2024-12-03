@@ -373,6 +373,7 @@ namespace MRC_API.Service.Implement
                     Status = s.Status,
                     Address = s.Address,
                     ShipCost = s.ShipCost,
+                    OrderDate = s.InsDate,
                     User = new GetOrderResponse.UserResponse
                     {
                         Name = s.User.UserName,  // Fetch user's name
@@ -433,6 +434,7 @@ namespace MRC_API.Service.Implement
                     Address = s.Address,
                     ShipCost = s.ShipCost,
                     Status = s.Status,
+                    OrderDate = s.InsDate,
                     User = new GetOrderResponse.UserResponse
                     {
                         Name = s.User.UserName,  // Fetch user's name
@@ -505,6 +507,7 @@ namespace MRC_API.Service.Implement
                     Address = o.Address,
                     Status = o.Status,
                     ShipCost = o.ShipCost,
+                    OrderDate = o.InsDate,
                     OrderDetails = o.OrderDetails.Select(od => new GetOrderResponse.OrderDetailCreateResponseModel
                     {
                         Price = od.Price,

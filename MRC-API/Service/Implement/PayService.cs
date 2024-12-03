@@ -289,7 +289,7 @@ namespace MRC_API.Service.Implement
 
             var orderCode = new Random().Next(1, 1000);
             var description = "VQRIO123";
-            var totalPrice = order.TotalPrice + order.ShipCost;
+            var totalPrice = order.TotalPrice;
             var signatureData = new Dictionary<string, object>
     {
         { "amount", totalPrice },
