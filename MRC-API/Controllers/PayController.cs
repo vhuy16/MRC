@@ -50,5 +50,40 @@ namespace MRC_API.Controllers
                 return Problem(MessageConstant.PaymentMessage.PaymentNotFound);
             }
         }
+
+        [HttpGet("ReturnUrl")]
+        public async Task<IActionResult> ReturnUrl()
+        {
+
+            // Lấy các tham số từ query string
+            string responseCode = Request.Query["code"].ToString();
+            string id = Request.Query["id"].ToString();
+            string cancel = Request.Query["cancel"].ToString();
+            string status = Request.Query["status"].ToString();
+            string orderCode = Request.Query["orderCode"];
+
+            if (responseCode == "00" && status == "PAID")
+            {
+                try
+                {
+
+                    var response = await _payService.HandlePaymentCallback(id, long.Parse(orderCode));
+                    return Redirect("http://localhost:5173/payment/callback?status=success");
+
+                }
+                catch (Exception ex)
+                {
+                    return Problem("Đã xảy ra lỗi: " + ex.Message);
+                }
+            }
+            else if (status == "CANCELLED")
+            {
+                return Content("Thanh toán đã bị hủy.");
+            }
+            else
+            {
+                return Redirect("http://localhost:5173/payment/callback?status=failed");
+            }
+        }
     }
 }

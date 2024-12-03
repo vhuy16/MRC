@@ -7,6 +7,7 @@
         public Guid UserId { get; set; }
         public string? PaymentMethod { get; set; }
         public string? Status {  get; set; }
-        
+        public long OrderCode { get; set; }
+        public Guid OrderId { get; set; }
     }
 }
