@@ -8,6 +8,7 @@
         public decimal? TotalPrice { get; set; }
         public string? Status { get; set; }
         public string? Address { get; set; }
+        public DateTime? OrderDate { get; set; }
         public List<OrderDetailCreateResponseModel> OrderDetails { get; set; } = new List<OrderDetailCreateResponseModel>();
         public UserResponse User { get; set; } = new UserResponse(); // Added user information property
 
