@@ -19,6 +19,7 @@ using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using MRC_API.Payload.Response;
 using MRC_API.Constant;
 using Microsoft.EntityFrameworkCore;
+using System;
 
 
 namespace MRC_API.Service.Implement
@@ -286,8 +287,8 @@ namespace MRC_API.Service.Implement
             string buyerName = user.FullName;
             string buyerPhone = user.PhoneNumber;
             string buyerEmail = user.Email;
-
-            var orderCode = new Random().Next(1, 1000);
+            Random random = new Random();
+            long orderCode = (DateTime.Now.Ticks % 1000000000000000L) * 10 + random.Next(0, 1000);
             var description = "VQRIO123";
             var totalPrice = order.TotalPrice;
             var signatureData = new Dictionary<string, object>
@@ -329,7 +330,9 @@ namespace MRC_API.Service.Implement
                     Amount = totalPrice,
                     PaymentMethod = "PayOS",  // Adjust based on your actual method
                     Status = "Pending",  // You can adjust this status accordingly
-                    UserId = userId.Value
+                    UserId = userId.Value,
+                    OrderCode = orderCode,
+                    OrderId = orderId,
                 };
 
                 var paymentCreated = await CreatePayment(createPaymentRequest);
@@ -354,124 +357,124 @@ namespace MRC_API.Service.Implement
             };
         }
 
-        public async Task<ExtendedPaymentInfo> GetPaymentInfo(string paymentLinkId)
-        {
-            try
-            {
-                var getUrl = $"https://api-merchant.payos.vn/v2/payment-requests/{paymentLinkId}";
+        //public async Task<ExtendedPaymentInfo> GetPaymentInfo(string paymentLinkId)
+        //{
+        //    try
+        //    {
+        //        var getUrl = $"https://api-merchant.payos.vn/v2/payment-requests/{paymentLinkId}";
 
-                // Create a new HttpRequestMessage
-                var request = new HttpRequestMessage(HttpMethod.Get, getUrl);
-                request.Headers.Add("x-client-id", _payOSSettings.ClientId);
-                request.Headers.Add("x-api-key", _payOSSettings.ApiKey);
+        //        // Create a new HttpRequestMessage
+        //        var request = new HttpRequestMessage(HttpMethod.Get, getUrl);
+        //        request.Headers.Add("x-client-id", _payOSSettings.ClientId);
+        //        request.Headers.Add("x-api-key", _payOSSettings.ApiKey);
 
-                // Send the request
-                var response = await _client.SendAsync(request);
+        //        // Send the request
+        //        var response = await _client.SendAsync(request);
 
-                // Ensure the request is successful
-                response.EnsureSuccessStatusCode();
+        //        // Ensure the request is successful
+        //        response.EnsureSuccessStatusCode();
 
-                // Read the response content
-                var responseContent = await response.Content.ReadAsStringAsync();
+        //        // Read the response content
+        //        var responseContent = await response.Content.ReadAsStringAsync();
 
-                // Deserialize the response JSON to JObject
-                var responseObject = JsonConvert.DeserializeObject<JObject>(responseContent);
-                var paymentInfo = responseObject["data"].ToObject<ObjectPayment>();
+        //        // Deserialize the response JSON to JObject
+        //        var responseObject = JsonConvert.DeserializeObject<JObject>(responseContent);
+        //        var paymentInfo = responseObject["data"].ToObject<ObjectPayment>();
 
-                // Fetch payment information from the external service
-                // Lấy thông tin người dùng
-                Guid? userId = UserUtil.GetAccountId(_httpContextAccessor.HttpContext);
-                var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
-                    predicate: u => u.Id.Equals(userId) && u.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
+        //        // Fetch payment information from the external service
+        //        // Lấy thông tin người dùng
+        //        Guid? userId = UserUtil.GetAccountId(_httpContextAccessor.HttpContext);
+        //        var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
+        //            predicate: u => u.Id.Equals(userId) && u.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
 
-                if (user == null)
-                {
-                    throw new BadHttpRequestException("You need to log in.");
-                }
+        //        if (user == null)
+        //        {
+        //            throw new BadHttpRequestException("You need to log in.");
+        //        }
 
-                // Lấy thông tin giỏ hàng của người dùng
-                var cart = await _unitOfWork.GetRepository<Cart>().SingleOrDefaultAsync(
-                    predicate: c => c.UserId.Equals(userId));
+        //        // Lấy thông tin giỏ hàng của người dùng
+        //        var cart = await _unitOfWork.GetRepository<Cart>().SingleOrDefaultAsync(
+        //            predicate: c => c.UserId.Equals(userId));
 
-                if (cart == null)
-                {
-                    throw new BadHttpRequestException("Cart is empty.");
-                }
+        //        if (cart == null)
+        //        {
+        //            throw new BadHttpRequestException("Cart is empty.");
+        //        }
 
-                var cartItems = await _unitOfWork.GetRepository<CartItem>().GetListAsync(
-                    predicate: p => p.CartId.Equals(cart.Id)
-                                && p.Status.Equals(StatusEnum.Pending.GetDescriptionFromEnum()));
+        //        var cartItems = await _unitOfWork.GetRepository<CartItem>().GetListAsync(
+        //            predicate: p => p.CartId.Equals(cart.Id)
+        //                        && p.Status.Equals(StatusEnum.Pending.GetDescriptionFromEnum()));
 
-                int totalPrice = 0;
-                var items = new List<CustomItemData>();
+        //        int totalPrice = 0;
+        //        var items = new List<CustomItemData>();
 
-                // Lấy thông tin sản phẩm từ CartItems
-                foreach (var cartItem in cartItems)
-                {
-                    var product = await _unitOfWork.GetRepository<Product>().SingleOrDefaultAsync(
-                        predicate: p => p.Id.Equals(cartItem.ProductId));
+        //        // Lấy thông tin sản phẩm từ CartItems
+        //        foreach (var cartItem in cartItems)
+        //        {
+        //            var product = await _unitOfWork.GetRepository<Product>().SingleOrDefaultAsync(
+        //                predicate: p => p.Id.Equals(cartItem.ProductId));
 
-                    if (product == null)
-                    {
-                        throw new BadHttpRequestException($"Product with ID {cartItem.ProductId} does not exist.");
-                    }
+        //            if (product == null)
+        //            {
+        //                throw new BadHttpRequestException($"Product with ID {cartItem.ProductId} does not exist.");
+        //            }
 
-                    // Tạo đối tượng ItemData và thêm vào danh sách
-                    var itemData = new CustomItemData(product.ProductName, cartItem.Quantity, (int)product.Price, product.Id);
-                    items.Add(itemData);
-                    // Tính tổng giá trị
-                    totalPrice += cartItem.Quantity * (int)product.Price;
-                }
+        //            // Tạo đối tượng ItemData và thêm vào danh sách
+        //            var itemData = new CustomItemData(product.ProductName, cartItem.Quantity, (int)product.Price, product.Id);
+        //            items.Add(itemData);
+        //            // Tính tổng giá trị
+        //            totalPrice += cartItem.Quantity * (int)product.Price;
+        //        }
 
-                // Thông tin người mua
-                string buyerName = user.FullName;
-                string buyerPhone = user.PhoneNumber;
-                string buyerEmail = user.Email;
+        //        // Thông tin người mua
+        //        string buyerName = user.FullName;
+        //        string buyerPhone = user.PhoneNumber;
+        //        string buyerEmail = user.Email;
 
-                var extendedPaymentInfo = new ExtendedPaymentInfo
-                {
-                    Amount = totalPrice,
-                    Description = "VQRIO123",
-                    Items = items,
-                    BuyerName = buyerName,
-                    BuyerPhone = buyerPhone,
-                    BuyerEmail = buyerEmail,
-                    Status = paymentInfo.Status,
+        //        var extendedPaymentInfo = new ExtendedPaymentInfo
+        //        {
+        //            Amount = totalPrice,
+        //            Description = "VQRIO123",
+        //            Items = items,
+        //            BuyerName = buyerName,
+        //            BuyerPhone = buyerPhone,
+        //            BuyerEmail = buyerEmail,
+        //            Status = paymentInfo.Status,
 
-                    // Add other properties as needed
-                };
+        //            // Add other properties as needed
+        //        };
 
-                // Update product status if payment is completed
-                if (paymentInfo.Status == "PAID")
-                {
-                    foreach (var cartItem in cartItems)
-                    {
-                        var product = await _unitOfWork.GetRepository<Product>()
-                            .SingleOrDefaultAsync(predicate: p => p.Id.Equals(cartItem.ProductId));
+        //        // Update product status if payment is completed
+        //        if (paymentInfo.Status == "PAID")
+        //        {
+        //            foreach (var cartItem in cartItems)
+        //            {
+        //                var product = await _unitOfWork.GetRepository<Product>()
+        //                    .SingleOrDefaultAsync(predicate: p => p.Id.Equals(cartItem.ProductId));
 
-                        if (product != null)
-                        {
-                            // Update product quantity
-                            product.Quantity -= cartItem.Quantity;
-                            _unitOfWork.GetRepository<Product>().UpdateAsync(product);
+        //                if (product != null)
+        //                {
+        //                    // Update product quantity
+        //                    product.Quantity -= cartItem.Quantity;
+        //                    _unitOfWork.GetRepository<Product>().UpdateAsync(product);
 
-                            // Update cart item status to "Paid"
-                            cartItem.Status = StatusEnum.Paid.GetDescriptionFromEnum();
-                            _unitOfWork.GetRepository<CartItem>().UpdateAsync(cartItem);
-                        }
-                    }
+        //                    // Update cart item status to "Paid"
+        //                    cartItem.Status = StatusEnum.Paid.GetDescriptionFromEnum();
+        //                    _unitOfWork.GetRepository<CartItem>().UpdateAsync(cartItem);
+        //                }
+        //            }
 
-                    // Save changes to the database
-                    await _unitOfWork.CommitAsync();
-                }
-                return extendedPaymentInfo;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An error occurred while getting payment info.");
-                throw new BadHttpRequestException("An error occurred while getting payment info.", ex);
-            }
-        }
+        //            // Save changes to the database
+        //            await _unitOfWork.CommitAsync();
+        //        }
+        //        return extendedPaymentInfo;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.LogError(ex, "An error occurred while getting payment info.");
+        //        throw new BadHttpRequestException("An error occurred while getting payment info.", ex);
+        //    }
+        //}
         public async Task<bool> CreatePayment(CreatePaymentRequest createPaymentRequest)
         {
             var payment = new Payment
@@ -483,11 +486,80 @@ namespace MRC_API.Service.Implement
                 PaymentMethod = createPaymentRequest.PaymentMethod,
                 Status = createPaymentRequest.Status,
                 UserId = createPaymentRequest.UserId,
-
+                OrderCode = createPaymentRequest.OrderCode,
+                OrderId = createPaymentRequest.OrderId,
             };
             await _unitOfWork.GetRepository<Payment>().InsertAsync(payment);
             bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
             return isSuccessful;
+        }
+
+        public async Task<ApiResponse> HandlePaymentCallback(string paymentLinkId, long orderCode)
+        {
+            try
+            {
+                var paymentInfo = await GetPaymentInfo(paymentLinkId);
+
+                if (paymentInfo.Status == "PAID")
+                {
+                    var payment = await _unitOfWork.GetRepository<Payment>().SingleOrDefaultAsync(
+                        predicate: p => p.OrderCode.Equals(orderCode));
+
+                    if (payment != null)
+                    {
+                        payment.Status = StatusEnum.Paid.GetDescriptionFromEnum();
+                        var order = await _unitOfWork.GetRepository<Order>().SingleOrDefaultAsync(
+                            predicate: o => o.Id.Equals(payment.OrderId));
+                        order.Status = OrderStatus.SHIPPING.GetDescriptionFromEnum();
+                        _unitOfWork.GetRepository<Payment>().UpdateAsync(payment);
+                        _unitOfWork.GetRepository<Order>().UpdateAsync(order);
+                        await _unitOfWork.CommitAsync();
+                        return new ApiResponse()
+                        {
+                            status = StatusCodes.Status200OK.ToString(),
+                            message = "Thanh toán thành công",
+                            data = true
+                        };
+                    }
+                }
+                return new ApiResponse()
+                {
+                    status = StatusCodes.Status400BadRequest.ToString(),
+                    message = "Thanh toán không thành công",
+                    data = false
+                };
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("An error occurred while handling payment callback.", ex);
+            }
+        }
+
+        public async Task<ExtendedPaymentInfo> GetPaymentInfo(string paymentLinkId)
+        {
+            try
+            {
+                var getUrl = $"https://api-merchant.payos.vn/v2/payment-requests/{paymentLinkId}";
+
+                var request = new HttpRequestMessage(HttpMethod.Get, getUrl);
+                request.Headers.Add("x-client-id", _payOSSettings.ClientId);
+                request.Headers.Add("x-api-key", _payOSSettings.ApiKey);
+
+                // Gửi yêu cầu HTTP
+                var response = await _client.SendAsync(request);
+                response.EnsureSuccessStatusCode();
+
+                var responseContent = await response.Content.ReadAsStringAsync();
+                var responseObject = JsonConvert.DeserializeObject<JObject>(responseContent);
+                var paymentInfo = responseObject["data"].ToObject<ExtendedPaymentInfo>();
+
+                return paymentInfo;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("An error occurred while getting payment info.", ex);
+            }
+            return new ExtendedPaymentInfo();
         }
     }
 }
