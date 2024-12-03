@@ -369,14 +369,16 @@ namespace MRC_API.Service.Implement
                 selector: s => new GetOrderResponse
                 {
                     OrderId = s.Id,
-                    TotalPrice = s.TotalPrice,
+                    TotalPayment = s.TotalPrice,
                     Status = s.Status,
                     Address = s.Address,
+                    ShipCost = s.ShipCost,
                     User = new GetOrderResponse.UserResponse
                     {
                         Name = s.User.UserName,  // Fetch user's name
                         Email = s.User.Email,    // Fetch user's email
-                        PhoneNumber = s.User.PhoneNumber // Fetch user's phone number
+                        PhoneNumber = s.User.PhoneNumber, // Fetch user's phone number
+                        FullName = s.User.FullName
                     },
                     OrderDetails = s.OrderDetails.Select(od => new GetOrderResponse.OrderDetailCreateResponseModel
                     {
@@ -384,11 +386,12 @@ namespace MRC_API.Service.Implement
                         Price = od.Price,
                         ProductName = od.Product.ProductName,
                         Quantity = od.Quantity
-                    }).ToList()
+                    }).ToList(),
+                    TotalPrice = s.OrderDetails.Sum(od => od.Price * od.Quantity)
                 },
                 page: page,
                 size: size,
-                predicate: od => od.UserId.Equals(userId) && od.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()),
+                predicate: od => od.UserId.Equals(userId),
                 orderBy: q => isAscending.HasValue
                 ? (isAscending.Value ? q.OrderBy(p => p.InsDate) : q.OrderByDescending(p => p.InsDate))
             : q.OrderByDescending(p => p.InsDate)
@@ -421,25 +424,30 @@ namespace MRC_API.Service.Implement
         }
         public async Task<ApiResponse> GetAllOrder(int page, int size, string status, bool? isAscending, string userName)
         {
+            //decimal? sum = 0;
             var orders = await _unitOfWork.GetRepository<Order>().GetPagingListAsync(
                 selector: s => new GetOrderResponse
                 {
                     OrderId = s.Id,
-                    TotalPrice = s.TotalPrice,
+                    TotalPayment = s.TotalPrice,    
                     Address = s.Address,
+                    ShipCost = s.ShipCost,
                     Status = s.Status,
                     User = new GetOrderResponse.UserResponse
                     {
                         Name = s.User.UserName,  // Fetch user's name
                         Email = s.User.Email,    // Fetch user's email
-                        PhoneNumber = s.User.PhoneNumber // Fetch user's phone number
+                        PhoneNumber = s.User.PhoneNumber, // Fetch user's phone number
+                        FullName = s.User.FullName
                     },
                     OrderDetails = s.OrderDetails.Select(od => new GetOrderResponse.OrderDetailCreateResponseModel
                     {
                         Price = od.Price,
                         ProductName = od.Product.ProductName,
-                        Quantity = od.Quantity
-                    }).ToList()
+                        Quantity = od.Quantity,
+                    }).ToList(),
+                    TotalPrice = s.OrderDetails.Sum(od => od.Price * od.Quantity)
+
                 },
                 page: page,
                 size: size,
@@ -449,6 +457,15 @@ namespace MRC_API.Service.Implement
                     ? (isAscending.Value ? q.OrderBy(p => p.InsDate) : q.OrderByDescending(p => p.InsDate))
                     : q.OrderByDescending(p => p.InsDate)
             );
+
+            //foreach(var o in orders.Items)
+            //{
+            //    foreach(var od in o.OrderDetails)
+            //    {
+            //        sum += od.Price * od.Quantity;
+
+            //    }
+            //}
 
             int totalItems = orders.Total;
             int totalPages = (int)Math.Ceiling((double)totalItems / size);
@@ -484,9 +501,10 @@ namespace MRC_API.Service.Implement
                 selector: o => new GetOrderResponse()
                 {
                     OrderId = o.Id,
-                    TotalPrice = o.TotalPrice,
+                    TotalPayment = o.TotalPrice,
                     Address = o.Address,
                     Status = o.Status,
+                    ShipCost = o.ShipCost,
                     OrderDetails = o.OrderDetails.Select(od => new GetOrderResponse.OrderDetailCreateResponseModel
                     {
                         Price = od.Price,
@@ -497,9 +515,10 @@ namespace MRC_API.Service.Implement
                     {
                         Name = o.User.UserName,
                         Email = o.User.Email, 
-                        PhoneNumber = o.User.PhoneNumber
-                    }
-
+                        PhoneNumber = o.User.PhoneNumber,
+                        FullName = o.User.FullName
+                    },
+                    TotalPrice = o.OrderDetails.Sum(od => od.Price * od.Quantity)
                 },
                 predicate: o => o.Id.Equals(id));
             if(order == null)
