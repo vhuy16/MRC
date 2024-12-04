@@ -133,5 +133,11 @@
             public const string DeleteForm = FormEndPoint + "/{id}";
         }
 
+        public static class DashBoard
+        {
+            public const string DashBoardEndPoint = ApiEndpoint + "/dashboard";
+            public const string GetDashBoard = DashBoardEndPoint;
+        }
+
     }
 }
