@@ -541,7 +541,7 @@ namespace MRC_API.Service.Implement
             };
         }
 
-        public async Task<ApiResponse> UpdateOrder(Guid id, ShipEnum shipStatus)
+        public async Task<ApiResponse> UpdateOrder(Guid id, OrderStatus? orderStatus, ShipEnum? shipStatus)
         {
             var order = await _unitOfWork.GetRepository<Order>().SingleOrDefaultAsync(
                 predicate: o => !o.Status.Equals(OrderStatus.PENDING_PAYMENT.GetDescriptionFromEnum()) && o.Id.Equals(id));
@@ -554,15 +554,32 @@ namespace MRC_API.Service.Implement
                     data = null
                 };
             }
-            if (order.Status.Equals(OrderStatus.SHIPPING.GetDescriptionFromEnum()))
+            
+            //if (order.Status.Equals(OrderStatus.SHIPPING.GetDescriptionFromEnum()))
+            //{
+            //    order.Status = OrderStatus.PENDING_DELIVERY.GetDescriptionFromEnum();
+            //}
+            //else if (order.Status.Equals(OrderStatus.PENDING_DELIVERY.GetDescriptionFromEnum()))
+            //{
+            //    order.Status = OrderStatus.COMPLETED.GetDescriptionFromEnum();
+            //}
+            if (order.Status.Equals(OrderStatus.COMPLETED.GetDescriptionFromEnum()))
             {
-                order.Status = OrderStatus.PENDING_DELIVERY.GetDescriptionFromEnum();
+                return new ApiResponse()
+                {
+                    status = StatusCodes.Status400BadRequest.ToString(),
+                    message = "Đơn hàng đã hoàn thành",
+                    data = false
+                };
             }
-            else if (order.Status.Equals(OrderStatus.PENDING_DELIVERY.GetDescriptionFromEnum()))
+            if (orderStatus.HasValue)
             {
-                order.Status = OrderStatus.COMPLETED.GetDescriptionFromEnum();
+                order.Status = orderStatus.Value.GetDescriptionFromEnum();
             }
-            order.ShipStatus = (int?)shipStatus;
+            if (shipStatus.HasValue)
+            {
+                order.ShipStatus = (int?)shipStatus;
+            }
             _unitOfWork.GetRepository<Order>().UpdateAsync(order);
             await _unitOfWork.CommitAsync();
             return new ApiResponse()
