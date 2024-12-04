@@ -540,5 +540,37 @@ namespace MRC_API.Service.Implement
                 data = order
             };
         }
+
+        public async Task<ApiResponse> UpdateOrder(Guid id, ShipEnum shipStatus)
+        {
+            var order = await _unitOfWork.GetRepository<Order>().SingleOrDefaultAsync(
+                predicate: o => !o.Status.Equals(OrderStatus.PENDING_PAYMENT.GetDescriptionFromEnum()) && o.Id.Equals(id));
+            if(order == null)
+            {
+                return new ApiResponse()
+                {
+                    status = StatusCodes.Status404NotFound.ToString(),
+                    message = "Đơn hàng này không tồn tại",
+                    data = null
+                };
+            }
+            if (order.Status.Equals(OrderStatus.SHIPPING.GetDescriptionFromEnum()))
+            {
+                order.Status = OrderStatus.PENDING_DELIVERY.GetDescriptionFromEnum();
+            }
+            else if (order.Status.Equals(OrderStatus.PENDING_DELIVERY.GetDescriptionFromEnum()))
+            {
+                order.Status = OrderStatus.COMPLETED.GetDescriptionFromEnum();
+            }
+            order.ShipStatus = (int?)shipStatus;
+            _unitOfWork.GetRepository<Order>().UpdateAsync(order);
+            await _unitOfWork.CommitAsync();
+            return new ApiResponse()
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "Cập nhật đơn hàng thành công",
+                data = true
+            };
+        }
     }
 }

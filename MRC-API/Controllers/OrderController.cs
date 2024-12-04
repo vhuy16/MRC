@@ -5,6 +5,7 @@ using MRC_API.Payload.Response;
 using MRC_API.Payload.Response.CartItem;
 using MRC_API.Payload.Response.Order;
 using MRC_API.Service.Interface;
+using Repository.Enum;
 using Repository.Paginate;
 
 namespace MRC_API.Controllers
@@ -75,6 +76,16 @@ namespace MRC_API.Controllers
         public async Task<IActionResult> GetOrder([FromRoute] Guid id)
         {
             var response = await _orderService.GetOrderById(id);
+            return StatusCode(int.Parse(response.status), response);
+        }
+
+        [HttpPut(ApiEndPointConstant.Order.UpdateOrder)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+        [ProducesErrorResponseType(typeof(ProblemDetails))]
+        public async Task<IActionResult> UpdateOrder([FromRoute] Guid id, [FromQuery]ShipEnum shipStatus)
+        {
+            var response = await _orderService.UpdateOrder(id, shipStatus);
             return StatusCode(int.Parse(response.status), response);
         }
 
