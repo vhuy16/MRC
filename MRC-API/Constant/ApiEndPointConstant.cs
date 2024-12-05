@@ -76,6 +76,7 @@
             public const string GetALLOrder = OrderEndpoint + "/get-all-order";
             public const string GetOrderById = OrderEndpoint + "/{id}";
             public const string UpdateOrder = OrderEndpoint + "/{id}";
+            public const string CancelOrder = OrderEndpoint + "/cancel-order" + "/{id}";
         }
 
         public static class GoogleAuthentication

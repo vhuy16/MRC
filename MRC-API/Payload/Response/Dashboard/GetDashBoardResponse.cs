@@ -7,6 +7,7 @@
         public List<CategoryDetail> Categories { get; set; }
         public int TotalProducts { get; set; }
         public List<ProductDetail> Products { get; set; }
+        public int? TotalOrder { get; set; }
         public decimal? TotalRevenue { get; set; }
         public class CategoryDetail
         {

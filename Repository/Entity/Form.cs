@@ -13,7 +13,7 @@ public partial class Form
 
     public string ServiceType { get; set; } = null!;
 
-    public string Question { get; set; } = null!;
+    public string? Question { get; set; }
 
-    public DateOnly DateSent { get; set; }
+    public DateTime? DateSent { get; set; }
 }

@@ -23,8 +23,10 @@ namespace MRC_API.Service.Implement
             var totalRevenue = (await _unitOfWork.GetRepository<Order>().GetListAsync(
                                 predicate: o => (!month.HasValue || (o.InsDate.HasValue && o.InsDate.Value.Month == month.Value)) &&
                                                 (!year.HasValue || (o.InsDate.HasValue && o.InsDate.Value.Year == year.Value)) &&
-                                                !o.Status.Equals(OrderStatus.PENDING_PAYMENT.GetDescriptionFromEnum())
+                                                !o.Status.Equals(OrderStatus.PENDING_PAYMENT.GetDescriptionFromEnum()) &&
+                                                !o.Status.Equals(OrderStatus.CANCELLED.GetDescriptionFromEnum())
                                 )).Sum(o => o.TotalPrice);
+            var orders = await _unitOfWork.GetRepository<Order>().GetListAsync();
             return new ApiResponse()
             {
                 status = StatusCodes.Status200OK.ToString(),
@@ -44,6 +46,7 @@ namespace MRC_API.Service.Implement
                         Quantity = p.Quantity,
                         Price = p.Price,
                     }).ToList(),
+                    TotalOrder = orders.Count,
                     TotalRevenue = totalRevenue,
                 }
             };

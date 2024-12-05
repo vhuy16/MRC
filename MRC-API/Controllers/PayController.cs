@@ -78,7 +78,8 @@ namespace MRC_API.Controllers
             }
             else if (status == "CANCELLED")
             {
-                return Content("Thanh toán đã bị hủy.");
+                var response = await _payService.HandlePaymentCallback(id, long.Parse(orderCode));
+                return Redirect("http://localhost:5173/payment/callback?status=failed");
             }
             else
             {
