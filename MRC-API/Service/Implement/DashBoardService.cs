@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Business.Interface;
+using Microsoft.EntityFrameworkCore;
 using MRC_API.Payload.Response;
 using MRC_API.Payload.Response.Dashboard;
 using MRC_API.Service.Interface;
@@ -26,7 +27,9 @@ namespace MRC_API.Service.Implement
                                                 !o.Status.Equals(OrderStatus.PENDING_PAYMENT.GetDescriptionFromEnum()) &&
                                                 !o.Status.Equals(OrderStatus.CANCELLED.GetDescriptionFromEnum())
                                 )).Sum(o => o.TotalPrice);
-            var orders = await _unitOfWork.GetRepository<Order>().GetListAsync();
+            var orders = await _unitOfWork.GetRepository<Order>().GetListAsync(
+                include: o => o.Include(o => o.User));
+            var latestOrders = orders.OrderByDescending(o => o.InsDate).Take(5).ToList();
             return new ApiResponse()
             {
                 status = StatusCodes.Status200OK.ToString(),
@@ -47,6 +50,12 @@ namespace MRC_API.Service.Implement
                         Price = p.Price,
                     }).ToList(),
                     TotalOrder = orders.Count,
+                    orderDetails = latestOrders.Select(od => new GetDashBoardResponse.OrderDetail()
+                    {
+                        FullName = od.User.FullName,
+                        OrderId = od.Id,
+                        OrderStatus = od.Status,
+                    }).ToList(),
                     TotalRevenue = totalRevenue,
                 }
             };
