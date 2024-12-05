@@ -572,10 +572,18 @@ namespace MRC_API.Service.Implement
                     data = false
                 };
             }
-            if (orderStatus.HasValue)
+            if (order.Status.Equals(OrderStatus.PENDING_DELIVERY.GetDescriptionFromEnum()) &&
+    orderStatus.HasValue &&
+    !orderStatus.Value.Equals(OrderStatus.SHIPPING))
             {
-                order.Status = orderStatus.Value.GetDescriptionFromEnum();
+                return new ApiResponse()
+                {
+                    status = StatusCodes.Status400BadRequest.ToString(),
+                    message = "Đơn hàng đang chờ giao chỉ có thể cập nhật lên trạng thái SHIPPING",
+                    data = false
+                };
             }
+            order.Status = orderStatus.Value.GetDescriptionFromEnum();
             if (shipStatus.HasValue)
             {
                 order.ShipStatus = (int?)shipStatus;
@@ -587,6 +595,37 @@ namespace MRC_API.Service.Implement
                 status = StatusCodes.Status200OK.ToString(),
                 message = "Cập nhật đơn hàng thành công",
                 data = true
+            };
+        }
+
+        public async Task<ApiResponse> CancelOrder(Guid id)
+        {
+            Guid? userId = UserUtil.GetAccountId(_httpContextAccessor.HttpContext);
+            var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
+                predicate: u => u.Id.Equals(userId) && u.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
+            if (user == null)
+            {
+                throw new BadHttpRequestException("You need log in.");
+            }
+            var order = await _unitOfWork.GetRepository<Order>().SingleOrDefaultAsync(
+                predicate: o => o.Status.Equals(OrderStatus.PENDING_PAYMENT.GetDescriptionFromEnum()) && o.UserId.Equals(userId));
+            if(order == null)
+            {
+                return new ApiResponse()
+                {
+                    status = StatusCodes.Status400BadRequest.ToString(),
+                    message = "Đơn hàng đã thanh toán hoặc không tồn tại",
+                    data = false
+                };
+            }
+            order.Status = OrderStatus.CANCELLED.GetDescriptionFromEnum();
+            _unitOfWork.GetRepository<Order>().UpdateAsync(order);
+            bool isSuccess = await _unitOfWork.CommitAsync() > 0;
+            return new ApiResponse()
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "Hủy đơn hàng thành công",
+                data = isSuccess
             };
         }
     }

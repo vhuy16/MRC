@@ -89,5 +89,15 @@ namespace MRC_API.Controllers
             return StatusCode(int.Parse(response.status), response);
         }
 
+        [HttpDelete(ApiEndPointConstant.Order.CancelOrder)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+        [ProducesErrorResponseType(typeof(ProblemDetails))]
+        public async Task<IActionResult> CancelOrder([FromRoute] Guid id)
+        {
+            var response = await _orderService.CancelOrder(id);
+            return StatusCode(int.Parse(response.status), response);
+        }
+
     }
 }

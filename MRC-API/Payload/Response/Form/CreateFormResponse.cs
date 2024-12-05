@@ -7,6 +7,6 @@
         public string? Email { get; set; }
         public string? ServiceType { get; set; }
         public string? Question { get; set; }
-        public DateOnly? DateSent { get; set; }
+        public DateTime? DateSent { get; set; }
     }
 }

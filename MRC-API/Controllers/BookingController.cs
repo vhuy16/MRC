@@ -31,7 +31,6 @@ namespace MRC_API.Controllers
             return StatusCode(int.Parse(response.status), response);
         }
 
-        [CustomAuthorize(roles: "Admin,Manager")]
         [HttpGet(ApiEndPointConstant.Booking.GetAllBookings)]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]

@@ -510,7 +510,7 @@ namespace MRC_API.Service.Implement
                         payment.Status = StatusEnum.Paid.GetDescriptionFromEnum();
                         var order = await _unitOfWork.GetRepository<Order>().SingleOrDefaultAsync(
                             predicate: o => o.Id.Equals(payment.OrderId));
-                        order.Status = OrderStatus.SHIPPING.GetDescriptionFromEnum();
+                        order.Status = OrderStatus.PENDING_DELIVERY.GetDescriptionFromEnum();
                         _unitOfWork.GetRepository<Payment>().UpdateAsync(payment);
                         _unitOfWork.GetRepository<Order>().UpdateAsync(order);
                         await _unitOfWork.CommitAsync();
@@ -518,6 +518,24 @@ namespace MRC_API.Service.Implement
                         {
                             status = StatusCodes.Status200OK.ToString(),
                             message = "Thanh toán thành công",
+                            data = true
+                        };
+                    }
+                }
+                else if(paymentInfo.Status == "CANCELLED")
+                {
+                    var payment = await _unitOfWork.GetRepository<Payment>().SingleOrDefaultAsync(
+                        predicate: p => p.OrderCode.Equals(orderCode));
+
+                    if (payment != null)
+                    {
+                        payment.Status = StatusEnum.Cancelled.GetDescriptionFromEnum();
+                        _unitOfWork.GetRepository<Payment>().UpdateAsync(payment);
+                        await _unitOfWork.CommitAsync();
+                        return new ApiResponse()
+                        {
+                            status = StatusCodes.Status200OK.ToString(),
+                            message = "Hủy thanh toán",
                             data = true
                         };
                     }

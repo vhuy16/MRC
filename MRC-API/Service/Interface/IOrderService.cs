@@ -15,5 +15,6 @@ namespace MRC_API.Service.Interface
         Task<ApiResponse> GetAllOrder(int page, int size, string status, bool? isAscending, string userName);
         Task<ApiResponse> GetOrderById(Guid id);
         Task<ApiResponse> UpdateOrder(Guid id, OrderStatus? orderStatus, ShipEnum? shipStatus);
+        Task<ApiResponse> CancelOrder(Guid id);
     }
 }

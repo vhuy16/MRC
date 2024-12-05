@@ -26,7 +26,7 @@ namespace MRC_API.Service.Implement
                 Email = request.Email,
                 ServiceType = request.ServiceType,
                 Question = request.Question,
-                DateSent = DateOnly.FromDateTime(DateTime.Now),
+                DateSent = TimeUtils.GetCurrentSEATime(),
             };
             await _unitOfWork.GetRepository<Form>().InsertAsync(newForm);
             await _unitOfWork.CommitAsync();
