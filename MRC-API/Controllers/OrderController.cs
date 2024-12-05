@@ -83,9 +83,9 @@ namespace MRC_API.Controllers
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
-        public async Task<IActionResult> UpdateOrder([FromRoute] Guid id, [FromQuery]ShipEnum shipStatus)
+        public async Task<IActionResult> UpdateOrder([FromRoute] Guid id, [FromQuery] OrderStatus? orderStatus, [FromQuery]ShipEnum? shipStatus)
         {
-            var response = await _orderService.UpdateOrder(id, shipStatus);
+            var response = await _orderService.UpdateOrder(id, orderStatus, shipStatus);
             return StatusCode(int.Parse(response.status), response);
         }
 

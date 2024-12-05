@@ -1,4 +1,5 @@
-﻿using Microsoft.OpenApi.Models;
+﻿using Microsoft.OpenApi.Any;
+using Microsoft.OpenApi.Models;
 using MRC_API.Configurations;
 using MRC_API.Constant;
 using MRC_API.Infrastructure;
@@ -6,6 +7,7 @@ using MRC_API.Middlewares;
 using MRC_API.Payload.Request.Email;
 using MRC_API.Payload.Response.Pay;
 using Prepare;
+using Repository.Enum;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -86,6 +88,13 @@ builder.Services.AddSwaggerGen(c =>
         },
     };
     c.AddSecurityRequirement(securityRequirement);
+    c.MapType<OrderStatus>(() => new OpenApiSchema
+    {
+        Type = "string",
+        Enum = Enum.GetNames(typeof(OrderStatus))
+               .Select(name => new OpenApiString(name) as IOpenApiAny)
+               .ToList()
+    });
 });
 
 // Add AutoMapper
