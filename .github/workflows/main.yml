@@ -1,0 +1,23 @@
+name: Deploy to Plesk via FTP
+
+on:
+  push:
+    branches:
+      - main # Thay đổi nếu cần
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Deploy via FTP
+      uses: SamKirkland/FTP-Deploy-Action@4.5.0
+      with:
+        ftp-server: 137.59.106.46
+        ftp-username: mrcweb
+        ftp-password: q!87yd8C6
+        local-dir: ./ # Thư mục gốc của repository
+        server-dir: /httpdocs
