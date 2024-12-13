@@ -1,23 +1,39 @@
-name: Deploy to Plesk via FTP
+name: Build and Deploy .NET Application to Plesk via FTP
 
 on:
   push:
     branches:
-      - main # Thay đổi nếu cần
+      - main # Thay đổi nhánh nếu cần
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
+    # 1. Lấy mã nguồn từ repository
+    - name: Checkout repository
       uses: actions/checkout@v3
 
+    # 2. Cài đặt .NET SDK
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 8.0 # Thay đổi phiên bản .NET nếu cần
+
+    # 3. Build dự án .NET
+    - name: Build project
+      run: dotnet publish -c Release -o ./publish
+
+    # 4. Triển khai mã nguồn qua FTP
     - name: Deploy via FTP
       uses: SamKirkland/FTP-Deploy-Action@4.5.0
       with:
-        ftp-server: 137.59.106.46
-        ftp-username: mrcweb
-        ftp-password: q!87yd8C6
-        local-dir: ./ # Thư mục gốc của repository
-        server-dir: /httpdocs
+        ftp-server: ${{ secrets.FTP_HOST }} # Địa chỉ FTP
+        ftp-username: ${{ secrets.FTP_USERNAME }} # Tên người dùng FTP
+        ftp-password: ${{ secrets.FTP_PASSWORD }} # Mật khẩu FTP
+        local-dir: ./publish # Thư mục build sau khi xuất bản
+        server-dir: ${{ secrets.FTP_TARGET_DIR }} # Thư mục đích trên server
+        exclude: |
+          **/*.pdb   # Loại trừ file PDB (debug)
+          **/*.config # Nếu không muốn upload config file
+        log-level: verbose
