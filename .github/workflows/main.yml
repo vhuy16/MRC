@@ -31,7 +31,7 @@ jobs:
          server: 137.59.106.46 # Địa chỉ FTP
          username: mrcweb # Tên người dùng FTP
          password: q!87yd8C6 # Mật khẩu FTP
-         local-dir: ./publish/ # Thư mục build sau khi xuất bản
+         local-dir: ./
          server-dir: /httpdocs # Thư mục đích trên server
          exclude: |
           **/*.pdb   # Loại trừ file PDB (debug)
