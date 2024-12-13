@@ -32,7 +32,7 @@ jobs:
          username: mrcweb # Tên người dùng FTP
          password: q!87yd8C6 # Mật khẩu FTP
          local-dir: ./
-         server-dir: /httpdocs # Thư mục đích trên server
+         server-dir: /httpdocs/ # Thư mục đích trên server
          exclude: |
           **/*.pdb   # Loại trừ file PDB (debug)
           **/*.config # Nếu không muốn upload config file
