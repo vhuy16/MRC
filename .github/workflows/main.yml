@@ -28,12 +28,12 @@ jobs:
     - name: Deploy via FTP
       uses: SamKirkland/FTP-Deploy-Action@4.3.0
       with:
-        ftp-server: 137.59.106.46 # Địa chỉ FTP
-        ftp-username: mrcweb # Tên người dùng FTP
-        ftp-password: q!87yd8C6 # Mật khẩu FTP
-        local-dir: ./publish # Thư mục build sau khi xuất bản
-        server-dir: /httpdocs # Thư mục đích trên server
-        exclude: |
+         server: 137.59.106.46 # Địa chỉ FTP
+         username: mrcweb # Tên người dùng FTP
+         password: q!87yd8C6 # Mật khẩu FTP
+         local-dir: ./publish # Thư mục build sau khi xuất bản
+         server-dir: /httpdocs # Thư mục đích trên server
+         exclude: |
           **/*.pdb   # Loại trừ file PDB (debug)
           **/*.config # Nếu không muốn upload config file
-        log-level: verbose
+         log-level: verbose
