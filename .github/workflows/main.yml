@@ -26,7 +26,7 @@ jobs:
 
     # 4. Triển khai mã nguồn qua FTP
     - name: Deploy via FTP
-      uses: SamKirkland/FTP-Deploy-Action@4.5.0
+      uses: SamKirkland/FTP-Deploy-Action@4.3.0
       with:
         ftp-server: ${{ secrets.FTP_HOST }} # Địa chỉ FTP
         ftp-username: ${{ secrets.FTP_USERNAME }} # Tên người dùng FTP
