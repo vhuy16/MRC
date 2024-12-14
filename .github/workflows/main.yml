@@ -28,7 +28,7 @@ jobs:
     - name: Deploy via FTP
       uses: SamKirkland/FTP-Deploy-Action@4.3.0
       with:
-         server: ${{ secrets.FPT_HOST }} # Địa chỉ FTP
+         server: ${{ secrets.FTP_HOST }} # Địa chỉ FTP
          username: ${{ secrets.FTP_USERNAME }} # Tên người dùng FTP
          password: ${{ secrets.FTP_PASSWORD }} # Mật khẩu FTP
          local-dir: ./publish/
