@@ -8,5 +8,7 @@ namespace MRC_API.Service.Interface
     {
         Task<ExtendedPaymentInfo> GetPaymentInfo(string paymentLinkId);
         Task<ApiResponse> CreatePaymentUrlRegisterCreator(Guid orderId);
+        Task<ApiResponse> HandlePaymentCallback(string paymentLinkId, long orderCode);
+
     }
 }

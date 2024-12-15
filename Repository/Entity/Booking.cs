@@ -9,7 +9,7 @@ public partial class Booking
 
     public Guid? ServiceId { get; set; }
 
-    public DateTime BookingDate { get; set; }
+    public DateTime? BookingDate { get; set; }
 
     public string? Status { get; set; }
 
@@ -18,6 +18,8 @@ public partial class Booking
     public DateTime? UpDate { get; set; }
 
     public string Content { get; set; } = null!;
+
+    public string? Title { get; set; }
 
     public virtual Service? Service { get; set; }
 }

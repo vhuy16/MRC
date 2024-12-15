@@ -19,5 +19,11 @@ public partial class Payment
 
     public DateTime? UpdatedAt { get; set; }
 
+    public long? OrderCode { get; set; }
+
+    public Guid? OrderId { get; set; }
+
+    public virtual Order? Order { get; set; }
+
     public virtual User User { get; set; } = null!;
 }

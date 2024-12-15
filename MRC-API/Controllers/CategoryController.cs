@@ -4,6 +4,8 @@ using MRC_API.Payload.Request.Category;
 using MRC_API.Payload.Response;
 using MRC_API.Service.Interface;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Authorization;
+using MRC_API.Infrastructure;
 
 namespace MRC_API.Controllers
 {
@@ -20,6 +22,7 @@ namespace MRC_API.Controllers
             _categoryService = categoryService;
         }
 
+        [CustomAuthorize(roles: "Admin,Manager")]
         [HttpPost(ApiEndPointConstant.Category.CreateNewCategory)]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
@@ -51,6 +54,7 @@ namespace MRC_API.Controllers
             return StatusCode(int.Parse(response.status), response);
         }
 
+        [CustomAuthorize(roles: "Admin,Manager")]
         [HttpPut(ApiEndPointConstant.Category.UpdateCategory)]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
@@ -62,6 +66,7 @@ namespace MRC_API.Controllers
             return StatusCode(int.Parse(response.status), response);
         }
 
+        [CustomAuthorize(roles: "Admin,Manager")]
         [HttpDelete(ApiEndPointConstant.Category.DeleteCategory)]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]

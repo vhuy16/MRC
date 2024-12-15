@@ -13,6 +13,7 @@ using MRC_API.Utils;
 using Repository.Entity;
 using Repository.Enum;
 
+
 namespace MRC_API.Service.Implement
 {
     public class CartService : BaseService<Cart>, ICartService
@@ -105,12 +106,18 @@ namespace MRC_API.Service.Implement
             AddCartItemResponse? addCartItemResponse = null;
             if (isSuccesfully)
             {
+                product = await _unitOfWork.GetRepository<Product>().SingleOrDefaultAsync(include: query => query.Include(p => p.Category).Include(p => p.Images),
+                                                                                           predicate: p => p.Id.Equals(addCartItemRequest.ProductId)
+                                                                                           && p.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum())); // Ensure Category is loaded
+
                 addCartItemResponse = new AddCartItemResponse() 
                 {
                     CartItemId = existingCartItem?.Id ?? cart.Id,
                     ProductId = product.Id,
                     ProductName = product.ProductName,
                     Price = product.Price * addCartItemRequest.Quantity,
+                    Images = product.Images.Select(i => i.LinkImage).ToList(),
+                    CategoryName = product.Category.CategoryName,
                 };
             }
             return new ApiResponse()
@@ -158,42 +165,80 @@ namespace MRC_API.Service.Implement
             };
         }
 
-        public async Task<ApiResponse> DeleteCartItem(Guid ItemId)
+        public async Task<ApiResponse> DeleteCartItem(Guid itemId)
         {
+            // Get the user ID from the HTTP context
             Guid? userId = UserUtil.GetAccountId(_httpContextAccessor.HttpContext);
+
+            // Validate the user
             var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
                 predicate: u => u.Id.Equals(userId) && u.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
 
             if (user == null)
             {
-                throw new BadHttpRequestException("You need log in.");
+                throw new BadHttpRequestException("You need to log in.");
             }
 
+            // Retrieve the cart associated with the user
             var cart = await _unitOfWork.GetRepository<Cart>().SingleOrDefaultAsync(
                 predicate: c => c.UserId.Equals(userId));
 
+            // Retrieve the cart item with eager loading for related entities
             var cartItem = await _unitOfWork.GetRepository<CartItem>().SingleOrDefaultAsync(
-                predicate: c => c.CartId.Equals(cart.Id) && c.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum())&& c.Id.Equals(ItemId));
+                predicate: c => c.CartId.Equals(cart.Id)
+                             && c.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum())
+                             && c.Id.Equals(itemId),
+                include: ci => ci.Include(ci => ci.Product)
+                                 .ThenInclude(p => p.Category)
+                                 .Include(ci => ci.Product.Images));
 
-            if(cartItem == null)
+            if (cartItem == null)
             {
                 return new ApiResponse()
                 {
                     status = StatusCodes.Status404NotFound.ToString(),
                     message = MessageConstant.CartMessage.CartItemNotExist,
-                    data = false
+                    data = null
                 };
             }
 
+            // Mark the cart item as unavailable
             cartItem.Status = StatusEnum.Unavailable.GetDescriptionFromEnum();
             cartItem.UpDate = TimeUtils.GetCurrentSEATime();
             _unitOfWork.GetRepository<CartItem>().UpdateAsync(cartItem);
+
+            // Commit the changes
             bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
+
+            // Prepare the response data
+            if (isSuccessful)
+            {
+                var response = new GetAllCartItemResponse
+                {
+                    CartItemId = cartItem.Id,
+                    ProductId = cartItem.ProductId,
+                    ProductName = cartItem.Product.ProductName,
+                    Quantity = cartItem.Quantity,
+                    UnitPrice = cartItem.Product.Price,
+                    Price = cartItem.Product.Price * cartItem.Quantity,
+                    Images = cartItem.Product.Images?.Select(i => i.LinkImage).ToList() ?? new List<string>(),
+                    CategoryName = cartItem.Product.Category?.CategoryName ?? "Unknown"
+                };
+
+                return new ApiResponse()
+                {
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "Delete successful",
+                    data = response
+                };
+            }
+
+            // Handle failure scenario
             return new ApiResponse()
             {
-                status = StatusCodes.Status200OK.ToString(),
-                message = "Delete successful",
-                data = true
+                status = StatusCodes.Status500InternalServerError.ToString(),
+                message = "Failed to delete the cart item",
+                data = null
             };
         }
 
@@ -212,9 +257,12 @@ namespace MRC_API.Service.Implement
                 predicate: c => c.UserId.Equals(userId));
 
             var cartItems = await _unitOfWork.GetRepository<CartItem>().GetListAsync(
-                predicate: c => c.CartId.Equals(cart.Id) && c.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()),
-                include: c => c.Include(c => c.Product),
-                orderBy: c => c.OrderByDescending(o => o.InsDate));
+           predicate: c => c.CartId.Equals(cart.Id) && c.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()),
+           include: c => c.Include(ci => ci.Product) // Include Product
+                         .ThenInclude(p => p.Category) // Include Category of Product
+                         .Include(ci => ci.Product.Images), // Include Images of Product
+           orderBy: c => c.OrderByDescending(ci => ci.InsDate));
+
             if (cartItems == null || !cartItems.Any())
             {
                 return new ApiResponse()
@@ -233,6 +281,8 @@ namespace MRC_API.Service.Implement
                 Quantity = cartItem.Quantity,
                 UnitPrice = cartItem.Product.Price,
                 Price = cartItem.Product.Price * cartItem.Quantity,
+                Images = cartItem.Product.Images.Select(i => i.LinkImage).ToList(),
+                CategoryName = cartItem.Product.Category.CategoryName,
             }).ToList();
             return new ApiResponse()
             {
@@ -320,10 +370,10 @@ namespace MRC_API.Service.Implement
                 predicate: c => c.UserId.Equals(userId));
 
             var existingCartItem = await _unitOfWork.GetRepository<CartItem>().SingleOrDefaultAsync(
-                predicate: ci => ci.Id.Equals(id) && ci.CartId.Equals(cart.Id) 
-                && ci.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
+        predicate: ci => ci.Id.Equals(id) && ci.CartId.Equals(cart.Id) && ci.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()),
+        include: ci => ci.Include(ci => ci.Product).ThenInclude(p => p.Category).Include(ci => ci.Product.Images));
 
-            if(existingCartItem == null)
+            if (existingCartItem == null)
             {
                 return new ApiResponse()
                 {
@@ -353,12 +403,14 @@ namespace MRC_API.Service.Implement
                     status = StatusCodes.Status200OK.ToString(),
                     data = new UpdateCartItemResponse
                     {
-                        CartItemId = id,
-                        ProductId = product.Id,
+                        CartItemId = existingCartItem.Id,
+                        ProductId = existingCartItem.Product.Id,
                         Quantity = existingCartItem.Quantity,
-                        ProductName = product.ProductName,
-                        UnitPrice = product.Price,
-                        Price = product.Price * existingCartItem.Quantity,
+                        ProductName = existingCartItem.Product.ProductName,
+                        UnitPrice = existingCartItem.Product.Price,
+                        Price = existingCartItem.Product.Price * existingCartItem.Quantity,
+                        Images = existingCartItem.Product.Images.Select(i => i.LinkImage).ToList(),
+                        CategoryName = existingCartItem.Product.Category.CategoryName
                     }
                 };
 
@@ -379,12 +431,14 @@ namespace MRC_API.Service.Implement
             {
                 updateCartItemResponse = new UpdateCartItemResponse()
                 {
-                    CartItemId = id,
-                    ProductId = product.Id,
-                    Quantity = updateCartItemRequest.Quantity,
-                    ProductName = product.ProductName,
-                    UnitPrice = product.Price,
-                    Price = product.Price * updateCartItemRequest.Quantity,
+                    CartItemId = existingCartItem.Id,
+                    ProductId = existingCartItem.Product.Id,
+                    Quantity = existingCartItem.Quantity,
+                    ProductName = existingCartItem.Product.ProductName,
+                    UnitPrice = existingCartItem.Product.Price,
+                    Price = existingCartItem.Product.Price * existingCartItem.Quantity,
+                    Images = existingCartItem.Product.Images.Select(i => i.LinkImage).ToList(),
+                    CategoryName = existingCartItem.Product.Category.CategoryName
                 };
             }
             return new ApiResponse()

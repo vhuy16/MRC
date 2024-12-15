@@ -1,4 +1,5 @@
-﻿using Microsoft.OpenApi.Models;
+﻿using Microsoft.OpenApi.Any;
+using Microsoft.OpenApi.Models;
 using MRC_API.Configurations;
 using MRC_API.Constant;
 using MRC_API.Infrastructure;
@@ -6,6 +7,7 @@ using MRC_API.Middlewares;
 using MRC_API.Payload.Request.Email;
 using MRC_API.Payload.Response.Pay;
 using Prepare;
+using Repository.Enum;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -52,7 +54,7 @@ builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(name: CorsConstant.PolicyName,
-        policy => { policy.WithOrigins("http://localhost:5173", "https://mrc-web-mu.vercel.app", "https://mrc-project.vercel.app", "https://mrc-web-admin.vercel.app", "http://localhost:5174").AllowAnyHeader().AllowAnyMethod().AllowCredentials(); });
+        policy => { policy.WithOrigins("http://localhost:5173", "https://www.mrc.vn", "https://nhomchiaseyeuthuong.io.vn/", "https://mrc-web-mu.vercel.app", "https://mrc-project.vercel.app", "https://mrc-web-admin.vercel.app", "http://localhost:5174").AllowAnyHeader().AllowAnyMethod().AllowCredentials(); });
 });
 
 // Configure Swagger/OpenAPI
@@ -86,6 +88,13 @@ builder.Services.AddSwaggerGen(c =>
         },
     };
     c.AddSecurityRequirement(securityRequirement);
+    c.MapType<OrderStatus>(() => new OpenApiSchema
+    {
+        Type = "string",
+        Enum = Enum.GetNames(typeof(OrderStatus))
+               .Select(name => new OpenApiString(name) as IOpenApiAny)
+               .ToList()
+    });
 });
 
 // Add AutoMapper

@@ -16,5 +16,6 @@ namespace MRC_API.Service.Interface
         Task<ApiResponse> UpdateBooking(Guid id, UpdateBookingRequest request);
         Task<ApiResponse> DeleteBooking(Guid id);
         Task<ApiResponse> GetBookingByStatus(int page, int size, string status);
+        Task<ApiResponse> GetBookings(int page, int size, bool? isAscending, string status);
     }
 }

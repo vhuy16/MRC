@@ -1,6 +1,7 @@
 ﻿
 using Microsoft.AspNetCore.Mvc;
 using MRC_API.Constant;
+using MRC_API.Infrastructure;
 using MRC_API.Payload.Request.Product;
 using MRC_API.Payload.Request.User;
 using MRC_API.Payload.Response;
@@ -19,6 +20,7 @@ namespace MRC_API.Controllers
         {
             _productService = productService;
         }
+        [CustomAuthorize(roles: "Admin,Manager")]
         [HttpPost(ApiEndPointConstant.Product.CreateNewProduct)]
         [ProducesResponseType(typeof(CreateProductResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
@@ -53,28 +55,41 @@ namespace MRC_API.Controllers
             return StatusCode(int.Parse(response.status), response);
 
         }
-
         [HttpGet(ApiEndPointConstant.Product.GetListProducts)]
         [ProducesResponseType(typeof(IPaginate<GetProductResponse>), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
         public async Task<IActionResult> GetListProduct(
-                                                 [FromQuery] int? page,
-                                                 [FromQuery] int? size,
-                                                 [FromQuery] string searchName = null,
-                                                 [FromQuery] bool? isAscending = null)
+            [FromQuery] int? page,
+            [FromQuery] int? size,
+            [FromQuery] string? search = null, // Tìm kiếm tổng quát
+            [FromQuery] bool? isAscending = null,
+            [FromQuery] string? categoryName = null, // Lọc theo danh mục
+            [FromQuery] decimal? minPrice = null, // Giá tối thiểu
+            [FromQuery] decimal? maxPrice = null // Giá tối đa
+        )
         {
             int pageNumber = page ?? 1;
             int pageSize = size ?? 10;
 
-            var response = await _productService.GetListProduct(pageNumber, pageSize, searchName, isAscending);
+            var response = await _productService.GetListProduct(
+                pageNumber,
+                pageSize,
+                search,
+                isAscending,
+                categoryName,
+                minPrice,
+                maxPrice
+            );
 
-            if (response == null || response.data == null)
+            if (response == null || response.data == null )
             {
                 return Problem(detail: MessageConstant.ProductMessage.ProductIsEmpty, statusCode: StatusCodes.Status404NotFound);
             }
 
             return Ok(response);
         }
+
+
         [HttpGet(ApiEndPointConstant.Product.GetAllProducts)]
         [ProducesResponseType(typeof(GetProductResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
@@ -82,13 +97,14 @@ namespace MRC_API.Controllers
                                                  [FromQuery] int? size,
                                                  [FromQuery] string? status,
                                                  [FromQuery] string searchName = null,
-                                                 [FromQuery] bool? isAscending = null)
+                                                 [FromQuery] bool? isAscending = null,
+                                                 [FromQuery] string? categoryName = null)
         {
 
             int pageNumber = page ?? 1;
             int pageSize = size ?? 10;
             
-            var response = await _productService.GetAllProduct(pageNumber, pageSize, status, searchName, isAscending);
+            var response = await _productService.GetAllProduct(pageNumber, pageSize, status, searchName, isAscending, categoryName);
 
             if (response == null || response.data == null)
             {
@@ -125,6 +141,7 @@ namespace MRC_API.Controllers
             }
             return Ok(response);
         }
+        [CustomAuthorize(roles: "Admin,Manager")]
         [HttpPut(ApiEndPointConstant.Product.UpdateProduct)]
         [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
@@ -144,6 +161,7 @@ namespace MRC_API.Controllers
 
             return StatusCode(int.Parse(response.status), response);
         }
+        [CustomAuthorize(roles: "Admin,Manager")]
         [HttpDelete(ApiEndPointConstant.Product.UpdateProduct)]
         [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]

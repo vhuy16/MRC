@@ -69,6 +69,7 @@ namespace MRC_API.Service.Implement
                 };
             }
             createProductRequest.Description = _sanitizer.Sanitize(createProductRequest.Description);
+            createProductRequest.Message = _sanitizer.Sanitize(createProductRequest.Message);
             Product product = new Product
             {
                 Id = Guid.NewGuid(),
@@ -83,7 +84,7 @@ namespace MRC_API.Service.Implement
                 Status = StatusEnum.Available.GetDescriptionFromEnum(),
                 Images = new List<Image>()
             };
-            
+
             if (createProductRequest.ImageLink != null && createProductRequest.ImageLink.Any())
             {
                 var imageUrls = await UploadFilesToFirebase(createProductRequest.ImageLink);
@@ -143,7 +144,7 @@ namespace MRC_API.Service.Implement
                 };
             }
         }
-        public async Task<ApiResponse> GetAllProduct( int page, int size, string status, string? searchName, bool? isAscending)
+        public async Task<ApiResponse> GetAllProduct(int page, int size, string status, string? searchName, bool? isAscending, string? categoryName)
         {
             var products = await _unitOfWork.GetRepository<Product>().GetPagingListAsync(
                 selector: s => new GetProductResponse
@@ -159,14 +160,16 @@ namespace MRC_API.Service.Implement
                     CategoryID = s.CategoryId,
                     Status = s.Status
                 },
-                predicate: p => p.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()) &&
-                                (string.IsNullOrEmpty(searchName) || p.ProductName.Contains(searchName)),
-                orderBy: q => isAscending.HasValue
-                    ? (isAscending.Value ? q.OrderBy(p => p.Price) : q.OrderByDescending(p => p.Price))
-                    : q.OrderByDescending(p => p.InsDate),
-                
-                page: page,
-                size: size
+                 include: i => i.Include(p => p.Category),
+        predicate: p =>
+            (string.IsNullOrEmpty(searchName) || p.ProductName.Contains(searchName)) && // Filter theo tên
+            (string.IsNullOrEmpty(status) || p.Status.Equals(status)) &&              // Filter theo trạng thái
+            (string.IsNullOrEmpty(categoryName) || p.Category.CategoryName.Contains(categoryName)), // Filter theo tên danh mục
+        orderBy: q => isAscending.HasValue
+            ? (isAscending.Value ? q.OrderBy(p => p.Price) : q.OrderByDescending(p => p.Price))
+            : q.OrderByDescending(p => p.InsDate),
+        page: page,
+        size: size
                 );
 
             int totalItems = products.Total;
@@ -195,7 +198,8 @@ namespace MRC_API.Service.Implement
                 data = products
             };
         }
-        public async Task<ApiResponse> GetListProduct(int page, int size, string? searchName, bool? isAscending)
+        public async Task<ApiResponse> GetListProduct(int page, int size, string? search, bool? isAscending,
+                                               string? categoryName, decimal? minPrice, decimal? maxPrice)
         {
             var products = await _unitOfWork.GetRepository<Product>().GetPagingListAsync(
                 selector: s => new GetProductResponse
@@ -210,8 +214,16 @@ namespace MRC_API.Service.Implement
                     Price = s.Price,
                     Status = s.Status
                 },
-                predicate: p => p.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()) &&
-                                (string.IsNullOrEmpty(searchName) || p.ProductName.Contains(searchName)),
+                predicate: p =>
+    p.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()) &&
+    (string.IsNullOrEmpty(search) ||
+     p.ProductName.ToLower().Contains(search.ToLower()) ||
+     p.Description.ToLower().Contains(search.ToLower()) ||
+     (!string.IsNullOrEmpty(p.Message) && p.Message.ToLower().Contains(search.ToLower())))
+                                             && // Tìm kiếm toàn diện
+                    (string.IsNullOrEmpty(categoryName) || p.Category.CategoryName.Equals(categoryName)) && // Filter theo category
+                    (!minPrice.HasValue || p.Price >= minPrice.Value) && // Filter giá tối thiểu
+                    (!maxPrice.HasValue || p.Price <= maxPrice.Value), // Filter giá tối đa
                 orderBy: q => isAscending.HasValue
                     ? (isAscending.Value ? q.OrderBy(p => p.Price) : q.OrderByDescending(p => p.Price))
                     : q.OrderByDescending(p => p.InsDate),
@@ -225,8 +237,8 @@ namespace MRC_API.Service.Implement
             {
                 return new ApiResponse
                 {
-                    status = StatusCodes.Status200OK.ToString(),
-                    message = "Products retrieved successfully.",
+                    status = StatusCodes.Status404NotFound.ToString(),
+                    message = "No products found.",
                     data = new Paginate<Product>()
                     {
                         Page = page,
@@ -245,6 +257,7 @@ namespace MRC_API.Service.Implement
                 data = products
             };
         }
+
 
         public async Task<ApiResponse> GetListProductByCategoryId(Guid CateID, int page, int size)
         {
@@ -322,7 +335,7 @@ namespace MRC_API.Service.Implement
                     Quantity = s.Quantity,
                     Message = s.Message,
                     Status = s.Status,
-                    Price = s.Price,    
+                    Price = s.Price,
 
 
                 },
@@ -420,6 +433,15 @@ namespace MRC_API.Service.Implement
             {
                 existingProduct.Status = updateProductRequest.Status;
             }
+
+            if (updateProductRequest.Price.HasValue)
+            {
+                if (updateProductRequest.Price <= 0)
+                {
+                    return new ApiResponse { status = StatusCodes.Status400BadRequest.ToString(), message = MessageConstant.ProductMessage.NegativeQuantity, data = null };
+                }
+                existingProduct.Price = updateProductRequest.Price.Value;
+            }
             // Check quantity if provided
             if (updateProductRequest.Quantity.HasValue)
             {
@@ -491,7 +513,7 @@ namespace MRC_API.Service.Implement
 
             return new ApiResponse { status = StatusCodes.Status500InternalServerError.ToString(), message = "Failed to update product.", data = null };
         }
-        public async Task<ApiResponse> EnableProduct (Guid productId)
+        public async Task<ApiResponse> EnableProduct(Guid productId)
         {
             if (productId == null)
             {
@@ -503,7 +525,7 @@ namespace MRC_API.Service.Implement
                 };
             }
             var product = await _unitOfWork.GetRepository<Product>().SingleOrDefaultAsync(predicate: p => p.Id.Equals(productId));
-            if (product == null) 
+            if (product == null)
             {
                 return new ApiResponse()
                 {
@@ -521,7 +543,7 @@ namespace MRC_API.Service.Implement
 
             if (isSuccessful)
             {
-               
+
                 return new ApiResponse
                 {
                     status = StatusCodes.Status200OK.ToString(),

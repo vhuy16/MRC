@@ -146,23 +146,46 @@ namespace MRC_API.Controllers
         }
 
         [HttpPost(ApiEndPointConstant.User.ForgotPassword)]
-        [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
         {
             var response = await _userService.ForgotPassword(request);
 
+            return StatusCode(int.Parse(response.status), response);
+        }
+
+        [HttpPost(ApiEndPointConstant.User.ResetPassword)]
+        [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(ProblemDetails))]
+        public async Task<IActionResult> ResetPassword([FromBody] VerifyAndResetPasswordRequest request)
+        {
+            var response = await _userService.ResetPassword(request);
+
             return Ok(response);
         }
 
-        [HttpPost(ApiEndPointConstant.User.VerifyAndResetPassword)]
-        [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
+        [HttpPost(ApiEndPointConstant.User.VerifyForgotPassword)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
-        public async Task<IActionResult> VerifyAndResetPassword([FromRoute] Guid id,[FromBody] VerifyAndResetPasswordRequest request)
+        public async Task<IActionResult> VerifyForgotPassword([FromBody] VerifyForgotPasswordRequest request)
         {
-            var response = await _userService.VerifyAndResetPassword(id, request);
+            var response = await _userService.VerifyForgotPassword(request.userId, request.otp);
 
-            return Ok(response);
+            return StatusCode(int.Parse(response.status), response);
+        }
+        [HttpPost(ApiEndPointConstant.User.ChangePassword)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+        [ProducesErrorResponseType(typeof(ProblemDetails))]
+        public async Task<IActionResult> ChangPassword([FromBody] ChangePasswordRequest request)
+        {
+            var response = await _userService.ChangePassword(request);
+
+            return StatusCode(int.Parse(response.status), response);
         }
     }
 }

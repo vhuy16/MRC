@@ -65,6 +65,8 @@ namespace Prepare
             services.AddScoped<HtmlSanitizerUtils>();
             services.AddScoped<INewsService, NewsService>();
             services.AddScoped<IBookingService, BookingService>();
+            services.AddScoped<IFormService, FormService>();
+            services.AddScoped<IDashBoardService, DashBoardService>();
             return services;
         }
         public static IServiceCollection AddHttpClientServices(this IServiceCollection services)
