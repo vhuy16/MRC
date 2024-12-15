@@ -433,6 +433,15 @@ namespace MRC_API.Service.Implement
             {
                 existingProduct.Status = updateProductRequest.Status;
             }
+
+            if (updateProductRequest.Price.HasValue)
+            {
+                if (updateProductRequest.Price <= 0)
+                {
+                    return new ApiResponse { status = StatusCodes.Status400BadRequest.ToString(), message = MessageConstant.ProductMessage.NegativeQuantity, data = null };
+                }
+                existingProduct.Price = updateProductRequest.Price.Value;
+            }
             // Check quantity if provided
             if (updateProductRequest.Quantity.HasValue)
             {
