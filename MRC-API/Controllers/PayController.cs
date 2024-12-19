@@ -68,7 +68,7 @@ namespace MRC_API.Controllers
                 {
 
                     var response = await _payService.HandlePaymentCallback(id, long.Parse(orderCode));
-                    return Redirect("http://localhost:5173/payment/callback?status=success");
+                    return Redirect("https://www.mrc.vn/payment/callback?status=success");
 
                 }
                 catch (Exception ex)
@@ -79,11 +79,11 @@ namespace MRC_API.Controllers
             else if (status == "CANCELLED")
             {
                 var response = await _payService.HandlePaymentCallback(id, long.Parse(orderCode));
-                return Redirect("http://localhost:5173/payment/callback?status=failed");
+                return Redirect("https://www.mrc.vn/payment/callback?status=failed");
             }
             else
             {
-                return Redirect("http://localhost:5173/payment/callback?status=failed");
+                return Redirect("https://www.mrc.vn/payment/callback?status=failed");
             }
         }
     }
