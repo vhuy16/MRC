@@ -3,7 +3,7 @@
     public class UpdateProductRequest
     {
         public string? ProductName { get; set; } // Optional: Product name
-        public Guid? CategoryId { get; set; } // Optional: Category ID
+        public Guid? SubCategoryId { get; set; } // Optional: Category ID
         public int? Quantity { get; set; } // Optional: Quantity
         public string? Description { get; set; } // Optional: Description
         public string? Message { get; set; }

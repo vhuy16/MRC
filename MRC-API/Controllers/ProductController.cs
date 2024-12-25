@@ -98,13 +98,13 @@ namespace MRC_API.Controllers
                                                  [FromQuery] string? status,
                                                  [FromQuery] string searchName = null,
                                                  [FromQuery] bool? isAscending = null,
-                                                 [FromQuery] string? categoryName = null)
+                                                 [FromQuery] string? subCategoryName = null)
         {
 
             int pageNumber = page ?? 1;
             int pageSize = size ?? 10;
             
-            var response = await _productService.GetAllProduct(pageNumber, pageSize, status, searchName, isAscending, categoryName);
+            var response = await _productService.GetAllProduct(pageNumber, pageSize, status, searchName, isAscending, subCategoryName);
 
             if (response == null || response.data == null)
             {
