@@ -140,5 +140,15 @@
             public const string GetDashBoard = DashBoardEndPoint;
         }
 
+        public static class SubCategory
+        {
+            public const string SubCategoryEndPoint = ApiEndpoint + "/sub-category";
+            public const string CreateSubCategory = SubCategoryEndPoint;
+            public const string GetSubCategories = SubCategoryEndPoint;
+            public const string GetSubCategory = SubCategoryEndPoint + "/{id}";
+            public const string DeleteSubCategory = SubCategoryEndPoint + "/{id}";
+            public const string UpdateSubCategory = SubCategoryEndPoint + "/{id}";
+        }
+
     }
 }
