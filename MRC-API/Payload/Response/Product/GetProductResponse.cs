@@ -9,7 +9,7 @@
 
         public int Quantity { get; set; }
         
-        public Guid CategoryID { get; set; }
+        public Guid? SubCategoryId { get; set; }
 
         public string CategoryName { get; set; }
 

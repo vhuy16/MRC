@@ -106,7 +106,7 @@ namespace MRC_API.Service.Implement
             AddCartItemResponse? addCartItemResponse = null;
             if (isSuccesfully)
             {
-                product = await _unitOfWork.GetRepository<Product>().SingleOrDefaultAsync(include: query => query.Include(p => p.Category).Include(p => p.Images),
+                product = await _unitOfWork.GetRepository<Product>().SingleOrDefaultAsync(include: query => query.Include(p => p.SubCategory).Include(p => p.Images),
                                                                                            predicate: p => p.Id.Equals(addCartItemRequest.ProductId)
                                                                                            && p.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum())); // Ensure Category is loaded
 
@@ -117,7 +117,7 @@ namespace MRC_API.Service.Implement
                     ProductName = product.ProductName,
                     Price = product.Price * addCartItemRequest.Quantity,
                     Images = product.Images.Select(i => i.LinkImage).ToList(),
-                    CategoryName = product.Category.CategoryName,
+                    CategoryName = product.SubCategory.SubCategoryName,
                 };
             }
             return new ApiResponse()
@@ -189,7 +189,7 @@ namespace MRC_API.Service.Implement
                              && c.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum())
                              && c.Id.Equals(itemId),
                 include: ci => ci.Include(ci => ci.Product)
-                                 .ThenInclude(p => p.Category)
+                                 .ThenInclude(p => p.SubCategory)
                                  .Include(ci => ci.Product.Images));
 
             if (cartItem == null)
@@ -222,7 +222,7 @@ namespace MRC_API.Service.Implement
                     UnitPrice = cartItem.Product.Price,
                     Price = cartItem.Product.Price * cartItem.Quantity,
                     Images = cartItem.Product.Images?.Select(i => i.LinkImage).ToList() ?? new List<string>(),
-                    CategoryName = cartItem.Product.Category?.CategoryName ?? "Unknown"
+                    CategoryName = cartItem.Product.SubCategory?.SubCategoryName ?? "Unknown"
                 };
 
                 return new ApiResponse()
@@ -259,7 +259,7 @@ namespace MRC_API.Service.Implement
             var cartItems = await _unitOfWork.GetRepository<CartItem>().GetListAsync(
            predicate: c => c.CartId.Equals(cart.Id) && c.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()),
            include: c => c.Include(ci => ci.Product) // Include Product
-                         .ThenInclude(p => p.Category) // Include Category of Product
+                         .ThenInclude(p => p.SubCategory) // Include Category of Product
                          .Include(ci => ci.Product.Images), // Include Images of Product
            orderBy: c => c.OrderByDescending(ci => ci.InsDate));
 
@@ -282,7 +282,7 @@ namespace MRC_API.Service.Implement
                 UnitPrice = cartItem.Product.Price,
                 Price = cartItem.Product.Price * cartItem.Quantity,
                 Images = cartItem.Product.Images.Select(i => i.LinkImage).ToList(),
-                CategoryName = cartItem.Product.Category.CategoryName,
+                CategoryName = cartItem.Product.SubCategory.SubCategoryName,
             }).ToList();
             return new ApiResponse()
             {
@@ -371,7 +371,7 @@ namespace MRC_API.Service.Implement
 
             var existingCartItem = await _unitOfWork.GetRepository<CartItem>().SingleOrDefaultAsync(
         predicate: ci => ci.Id.Equals(id) && ci.CartId.Equals(cart.Id) && ci.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()),
-        include: ci => ci.Include(ci => ci.Product).ThenInclude(p => p.Category).Include(ci => ci.Product.Images));
+        include: ci => ci.Include(ci => ci.Product).ThenInclude(p => p.SubCategory).Include(ci => ci.Product.Images));
 
             if (existingCartItem == null)
             {
@@ -410,7 +410,7 @@ namespace MRC_API.Service.Implement
                         UnitPrice = existingCartItem.Product.Price,
                         Price = existingCartItem.Product.Price * existingCartItem.Quantity,
                         Images = existingCartItem.Product.Images.Select(i => i.LinkImage).ToList(),
-                        CategoryName = existingCartItem.Product.Category.CategoryName
+                        CategoryName = existingCartItem.Product.SubCategory.SubCategoryName
                     }
                 };
 
@@ -438,7 +438,7 @@ namespace MRC_API.Service.Implement
                     UnitPrice = existingCartItem.Product.Price,
                     Price = existingCartItem.Product.Price * existingCartItem.Quantity,
                     Images = existingCartItem.Product.Images.Select(i => i.LinkImage).ToList(),
-                    CategoryName = existingCartItem.Product.Category.CategoryName
+                    CategoryName = existingCartItem.Product.SubCategory.SubCategoryName
                 };
             }
             return new ApiResponse()

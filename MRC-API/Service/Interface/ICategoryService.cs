@@ -11,6 +11,6 @@ namespace MRC_API.Service.Interface
         Task<ApiResponse> GetAllCategory(int page, int size, string? searchName, bool? isAscending);
         Task<ApiResponse> GetCategory(Guid id);
         Task<ApiResponse> UpdateCategory(Guid id, UpdateCategoryRequest updateCategoryRequest);
-        Task<ApiResponse> DeleteCategory(Guid id);
+        //Task<ApiResponse> DeleteCategory(Guid id);
     }
 }

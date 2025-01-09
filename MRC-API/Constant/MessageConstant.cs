@@ -116,5 +116,12 @@
             public const string BookingDateInvalid = "The booking date is invalid. Please select a valid date.";
             public const string BookingAlreadyConfirmed = "This booking has already been confirmed.";
         }
+
+        public static class SubCategoryMessage{
+            public const string CreateSubCategoryFail = "Danh mục và tên không được rỗng. Xin thử lại";
+            public const string SubCategoryExist = "Danh mục đã tồn tại";
+            public const string CreateSubCategorySuccessfully = "Tạo thành công";
+            public const string SubCategoryNotExist = "Không tìm thấy danh mục phụ";
+        }
     }
 }

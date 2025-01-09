@@ -66,15 +66,15 @@ namespace MRC_API.Controllers
             return StatusCode(int.Parse(response.status), response);
         }
 
-        [CustomAuthorize(roles: "Admin,Manager")]
-        [HttpDelete(ApiEndPointConstant.Category.DeleteCategory)]
-        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
-        [ProducesErrorResponseType(typeof(ProblemDetails))]
-        public async Task<IActionResult> DeleteCategory([FromRoute] Guid id)
-        {
-            var response = await _categoryService.DeleteCategory(id);
-            return StatusCode(int.Parse(response.status), response);
-        }
+        //[CustomAuthorize(roles: "Admin,Manager")]
+        //[HttpDelete(ApiEndPointConstant.Category.DeleteCategory)]
+        //[ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+        //[ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+        //[ProducesErrorResponseType(typeof(ProblemDetails))]
+        //public async Task<IActionResult> DeleteCategory([FromRoute] Guid id)
+        //{
+        //    var response = await _categoryService.DeleteCategory(id);
+        //    return StatusCode(int.Parse(response.status), response);
+        //}
     }
 }

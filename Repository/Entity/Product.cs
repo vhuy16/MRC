@@ -17,19 +17,19 @@ public partial class Product
 
     public string Status { get; set; } = null!;
 
-    public Guid CategoryId { get; set; }
-
     public DateTime? InsDate { get; set; }
 
     public DateTime? UpDate { get; set; }
 
     public decimal? Price { get; set; }
 
-    public virtual ICollection<CartItem> CartItems { get; set; } = new List<CartItem>();
+    public Guid? SubCategoryId { get; set; }
 
-    public virtual Category Category { get; set; } = null!;
+    public virtual ICollection<CartItem> CartItems { get; set; } = new List<CartItem>();
 
     public virtual ICollection<Image> Images { get; set; } = new List<Image>();
 
     public virtual ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
+
+    public virtual SubCategory? SubCategory { get; set; }
 }
