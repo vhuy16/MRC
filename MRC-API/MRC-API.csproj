@@ -8,6 +8,7 @@
     <RootNamespace>MRC_API</RootNamespace>
     <UserSecretsId>a7f015b0-8ddf-44a3-ab8e-8cbc617a6724</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <DockerComposeProjectPath>..\docker-compose.dcproj</DockerComposeProjectPath>
   </PropertyGroup>
 
   <ItemGroup>
