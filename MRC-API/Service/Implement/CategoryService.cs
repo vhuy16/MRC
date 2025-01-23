@@ -15,6 +15,7 @@ using Repository.Paginate;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using MRC_API.Payload.Response.SubCategory;
 
 
 namespace MRC_API.Service.Implement
@@ -152,6 +153,13 @@ namespace MRC_API.Service.Implement
                 {
                     CategoryId = c.Id,
                     CategoryName = c.CategoryName,
+                    SubCategories = c.SubCategories
+                    .Where(sc => sc.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()))
+                    .Select(sc => new GetsubCategoryResponse()
+                    {
+                        SubCategoryId = sc.Id,
+                        SubCategoryName = sc.SubCategoryName
+                    }).ToList(),
                 },
                 predicate: p => p.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()) &&
                                 (string.IsNullOrEmpty(searchName) || p.CategoryName.Contains(searchName)),
@@ -194,6 +202,13 @@ namespace MRC_API.Service.Implement
                 {
                     CategoryId = c.Id,
                     CategoryName = c.CategoryName,
+                    SubCategories = c.SubCategories
+                    .Where(sc => sc.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()))
+                    .Select(sc => new GetsubCategoryResponse()
+                    {
+                        SubCategoryId = sc.Id,
+                        SubCategoryName = sc.SubCategoryName
+                    }).ToList(),
                 },
                 predicate: c => c.Id.Equals(id) &&
                                 c.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
