@@ -2,7 +2,7 @@
 {
     public class GetsubCategoryResponse
     {
-        public Guid CategoryId { get; set; }
+        public Guid SubCategoryId { get; set; }
 
         public string SubCategoryName { get; set; } = null!;
     }

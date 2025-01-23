@@ -113,7 +113,7 @@ namespace MRC_API.Service.Implement
             var subCategories = await _unitOfWork.GetRepository<SubCategory>().GetPagingListAsync(
                 selector: s => new GetsubCategoryResponse()
                 {
-                    CategoryId = s.Id,
+                    SubCategoryId = s.Id,
                     SubCategoryName = s.SubCategoryName
                 },
                 //include: s => s.Include(s => s.Products),
@@ -155,7 +155,7 @@ namespace MRC_API.Service.Implement
                 selector: s => new GetsubCategoryResponse()
                 {
                     SubCategoryName = s.SubCategoryName,
-                    CategoryId = s.CategoryId
+                    SubCategoryId = s.CategoryId
                 },
                 predicate: s => s.Id.Equals(id) && s.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
             
