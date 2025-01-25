@@ -199,7 +199,7 @@ namespace MRC_API.Service.Implement
             };
         }
         public async Task<ApiResponse> GetListProduct(int page, int size, string? search, bool? isAscending,
-                                               string? categoryName, decimal? minPrice, decimal? maxPrice)
+                                               string? subCategoryName, decimal? minPrice, decimal? maxPrice)
         {
             var products = await _unitOfWork.GetRepository<Product>().GetPagingListAsync(
                 selector: s => new GetProductResponse
@@ -221,7 +221,7 @@ namespace MRC_API.Service.Implement
      p.Description.ToLower().Contains(search.ToLower()) ||
      (!string.IsNullOrEmpty(p.Message) && p.Message.ToLower().Contains(search.ToLower())))
                                              && // Tìm kiếm toàn diện
-                    (string.IsNullOrEmpty(categoryName) || p.SubCategory.SubCategoryName.Equals(categoryName)) && // Filter theo category
+                    (string.IsNullOrEmpty(subCategoryName) || p.SubCategory.SubCategoryName.Equals(subCategoryName)) && // Filter theo category
                     (!minPrice.HasValue || p.Price >= minPrice.Value) && // Filter giá tối thiểu
                     (!maxPrice.HasValue || p.Price <= maxPrice.Value), // Filter giá tối đa
                 orderBy: q => isAscending.HasValue
@@ -569,6 +569,23 @@ namespace MRC_API.Service.Implement
             {
                 return false;
             }
+
+            var images = await _unitOfWork.GetRepository<Image>().GetListAsync(
+                    predicate: i => i.ProductId.Equals(existingProduct.Id));
+
+            foreach (var image in images)
+            {
+                _unitOfWork.GetRepository<Image>().DeleteAsync(image);
+            }
+
+            var cartItems = await _unitOfWork.GetRepository<CartItem>().GetListAsync(
+                predicate: ci => ci.ProductId.Equals(existingProduct.Id));
+
+            foreach (var cartItem in cartItems)
+            {
+                _unitOfWork.GetRepository<CartItem>().DeleteAsync(cartItem);
+            }
+
 
             // Mark as deleted
             existingProduct.Status = StatusEnum.Unavailable.GetDescriptionFromEnum();

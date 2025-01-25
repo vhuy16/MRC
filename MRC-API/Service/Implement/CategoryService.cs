@@ -79,72 +79,83 @@ namespace MRC_API.Service.Implement
             };
         }
 
-        //public async Task<ApiResponse> DeleteCategory(Guid id)
-        //{
-        //    var category = await _unitOfWork.GetRepository<Category>().SingleOrDefaultAsync(
-        //        predicate: c => c.Id.Equals(id) &&
-        //                        c.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
+        public async Task<ApiResponse> DeleteCategory(Guid id)
+        {
+            var category = await _unitOfWork.GetRepository<Category>().SingleOrDefaultAsync(
+                predicate: c => c.Id.Equals(id) &&
+                                c.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
 
-        //    if (category == null)
-        //    {
-        //        return new ApiResponse
-        //        {
-        //            status = StatusCodes.Status404NotFound.ToString(),
-        //            message = MessageConstant.CategoryMessage.CategoryNotExist,
-        //            data = null
-        //        };
-        //    }
+            if (category == null)
+            {
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status404NotFound.ToString(),
+                    message = MessageConstant.CategoryMessage.CategoryNotExist,
+                    data = null
+                };
+            }
 
-        //    var products = await _unitOfWork.GetRepository<Product>().GetListAsync(
-        //        predicate: p => p.CategoryId.Equals(category.Id) &&
-        //                        p.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
+            var subCates = await _unitOfWork.GetRepository<SubCategory>().GetListAsync(
+                predicate: s => s.CategoryId.Equals(category.Id) &&
+                                s.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
+            foreach(var subCate in subCates)
+            {
+                var products = await _unitOfWork.GetRepository<Product>().GetListAsync(
+                predicate: p => p.SubCategoryId.Equals(subCate.Id) &&
+                                p.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
 
-        //    foreach (var product in products)
-        //    {
-        //        var images = await _unitOfWork.GetRepository<Image>().GetListAsync(
-        //            predicate: i => i.ProductId.Equals(product.Id));
+                foreach (var product in products)
+                {
+                    var images = await _unitOfWork.GetRepository<Image>().GetListAsync(
+                        predicate: i => i.ProductId.Equals(product.Id));
 
-        //        foreach (var image in images)
-        //        {
-        //            _unitOfWork.GetRepository<Image>().DeleteAsync(image);
-        //        }
+                    foreach (var image in images)
+                    {
+                        _unitOfWork.GetRepository<Image>().DeleteAsync(image);
+                    }
 
-        //        var cartItems = await _unitOfWork.GetRepository<CartItem>().GetListAsync(
-        //            predicate: ci => ci.ProductId.Equals(product.Id));
+                    var cartItems = await _unitOfWork.GetRepository<CartItem>().GetListAsync(
+                        predicate: ci => ci.ProductId.Equals(product.Id));
 
-        //        foreach (var cartItem in cartItems)
-        //        {
-        //            _unitOfWork.GetRepository<CartItem>().DeleteAsync(cartItem);
-        //        }
+                    foreach (var cartItem in cartItems)
+                    {
+                        _unitOfWork.GetRepository<CartItem>().DeleteAsync(cartItem);
+                    }
 
-        //        product.Status = StatusEnum.Unavailable.GetDescriptionFromEnum();
-        //        product.UpDate = TimeUtils.GetCurrentSEATime();
-        //        _unitOfWork.GetRepository<Product>().UpdateAsync(product);
-        //    }
+                    product.Status = StatusEnum.Unavailable.GetDescriptionFromEnum();
+                    product.UpDate = TimeUtils.GetCurrentSEATime();
+                    _unitOfWork.GetRepository<Product>().UpdateAsync(product);
+                }
+                subCate.Status = StatusEnum.Unavailable.GetDescriptionFromEnum();
+                subCate.UpDate = TimeUtils.GetCurrentSEATime();
+                _unitOfWork.GetRepository<SubCategory>().UpdateAsync(subCate);
+            }
 
-        //    category.Status = StatusEnum.Unavailable.GetDescriptionFromEnum();
-        //    category.UpDate = TimeUtils.GetCurrentSEATime();
-        //    _unitOfWork.GetRepository<Category>().UpdateAsync(category);
+            
 
-        //    bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
+            category.Status = StatusEnum.Unavailable.GetDescriptionFromEnum();
+            category.UpDate = TimeUtils.GetCurrentSEATime();
+            _unitOfWork.GetRepository<Category>().UpdateAsync(category);
 
-        //    if (!isSuccessful)
-        //    {
-        //        return new ApiResponse
-        //        {
-        //            status = StatusCodes.Status500InternalServerError.ToString(),
-        //            message = "Failed to delete category.",
-        //            data = null
-        //        };
-        //    }
+            bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
 
-        //    return new ApiResponse
-        //    {
-        //        status = StatusCodes.Status200OK.ToString(),
-        //        message = "Category deleted successfully.",
-        //        data = true
-        //    };
-        //}
+            if (!isSuccessful)
+            {
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status500InternalServerError.ToString(),
+                    message = "Failed to delete category.",
+                    data = null
+                };
+            }
+
+            return new ApiResponse
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "Category deleted successfully.",
+                data = true
+            };
+        }
 
         public async Task<ApiResponse> GetAllCategory(int page, int size, string? searchName, bool? isAscending)
         {

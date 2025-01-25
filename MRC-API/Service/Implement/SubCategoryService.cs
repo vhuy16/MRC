@@ -95,6 +95,32 @@ namespace MRC_API.Service.Implement
                     data = false
                 };
             }
+            var products = await _unitOfWork.GetRepository<Product>().GetListAsync(
+                predicate: p => p.SubCategoryId.Equals(subCategory.Id) &&
+                                p.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
+
+            foreach (var product in products)
+            {
+                var images = await _unitOfWork.GetRepository<Image>().GetListAsync(
+                    predicate: i => i.ProductId.Equals(product.Id));
+
+                foreach (var image in images)
+                {
+                    _unitOfWork.GetRepository<Image>().DeleteAsync(image);
+                }
+
+                var cartItems = await _unitOfWork.GetRepository<CartItem>().GetListAsync(
+                    predicate: ci => ci.ProductId.Equals(product.Id));
+
+                foreach (var cartItem in cartItems)
+                {
+                    _unitOfWork.GetRepository<CartItem>().DeleteAsync(cartItem);
+                }
+
+                product.Status = StatusEnum.Unavailable.GetDescriptionFromEnum();
+                product.UpDate = TimeUtils.GetCurrentSEATime();
+                _unitOfWork.GetRepository<Product>().UpdateAsync(product);
+            }
 
             subCategory.Status = StatusEnum.Unavailable.GetDescriptionFromEnum();
             subCategory.UpDate = TimeUtils.GetCurrentSEATime();
