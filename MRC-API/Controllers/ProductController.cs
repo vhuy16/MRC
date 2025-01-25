@@ -63,7 +63,7 @@ namespace MRC_API.Controllers
             [FromQuery] int? size,
             [FromQuery] string? search = null, // Tìm kiếm tổng quát
             [FromQuery] bool? isAscending = null,
-            [FromQuery] string? categoryName = null, // Lọc theo danh mục
+            [FromQuery] string? subCategoryName = null, // Lọc theo danh mục
             [FromQuery] decimal? minPrice = null, // Giá tối thiểu
             [FromQuery] decimal? maxPrice = null // Giá tối đa
         )
@@ -76,7 +76,7 @@ namespace MRC_API.Controllers
                 pageSize,
                 search,
                 isAscending,
-                categoryName,
+                subCategoryName,
                 minPrice,
                 maxPrice
             );
