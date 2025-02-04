@@ -48,7 +48,8 @@ namespace MRC_API.Controllers
             var response = await _subCategoryService.GetSubCategory(id);
             return StatusCode(int.Parse(response.status), response);
         }
-        
+
+        [CustomAuthorize(roles: "Admin,Manager")]
         [HttpDelete(ApiEndPointConstant.SubCategory.DeleteSubCategory)]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
@@ -58,7 +59,8 @@ namespace MRC_API.Controllers
             var response = await _subCategoryService.DeleteSubCategory(id);
             return StatusCode(int.Parse(response.status), response);
         }
-        
+
+        [CustomAuthorize(roles: "Admin,Manager")]
         [HttpPut(ApiEndPointConstant.SubCategory.UpdateSubCategory)]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
