@@ -121,7 +121,7 @@ namespace MRC_API.Service.Implement
                             ProductName = product.ProductName,
                             Quantity = product.Quantity,
                             Message = product.Message,
-                            CategoryName = subCategory.SubCategoryName,
+                            SubCategoryName = subCategory.SubCategoryName,
                             Price = product.Price,
                         }
                     };
@@ -150,7 +150,7 @@ namespace MRC_API.Service.Implement
                 selector: s => new GetProductResponse
                 {
                     Id = s.Id,
-                    CategoryName = s.SubCategory.SubCategoryName,
+                    SubCategoryName = s.SubCategory.SubCategoryName,
                     Description = s.Description,
                     Images = s.Images.Select(i => i.LinkImage).ToList(),
                     ProductName = s.ProductName,
@@ -205,7 +205,7 @@ namespace MRC_API.Service.Implement
                 selector: s => new GetProductResponse
                 {
                     Id = s.Id,
-                    CategoryName = s.SubCategory.SubCategoryName,
+                    SubCategoryName = s.SubCategory.SubCategoryName,
                     Description = s.Description,
                     Images = s.Images.Select(i => i.LinkImage).ToList(),
                     ProductName = s.ProductName,
@@ -281,7 +281,7 @@ namespace MRC_API.Service.Implement
                 selector: s => new GetProductResponse
                 {
                     Id = s.Id,
-                    CategoryName = s.SubCategory.SubCategoryName,
+                    SubCategoryName = s.SubCategory.SubCategoryName,
                     Description = s.Description,
                     Images = s.Images.Select(i => i.LinkImage).ToList(),
                     ProductName = s.ProductName,
@@ -328,7 +328,7 @@ namespace MRC_API.Service.Implement
                 {
                     Id = s.Id,
                     SubCategoryId = s.SubCategoryId,
-                    CategoryName = s.SubCategory.SubCategoryName,
+                    SubCategoryName = s.SubCategory.SubCategoryName,
                     Description = s.Description,
                     Images = s.Images.Select(i => i.LinkImage).ToList(),
                     ProductName = s.ProductName,
@@ -505,7 +505,7 @@ namespace MRC_API.Service.Implement
                         ProductName = existingProduct.ProductName,
                         Quantity = existingProduct.Quantity,
                         Message = existingProduct.Message,
-                        CategoryName = subCategory.SubCategoryName,
+                        SubCategoryName = subCategory.SubCategoryName,
                         Price = existingProduct.Price
                     }
                 };
