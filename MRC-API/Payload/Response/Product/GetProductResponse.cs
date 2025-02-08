@@ -11,7 +11,7 @@
         
         public Guid? SubCategoryId { get; set; }
 
-        public string CategoryName { get; set; }
+        public string SubCategoryName { get; set; }
 
         public decimal? Price { get; set; }
         public string Message { get; set; }
