@@ -158,7 +158,8 @@ namespace MRC_API.Service.Implement
                     Message = s.Message,
                     Price = s.Price,
                     SubCategoryId = s.SubCategoryId,
-                    Status = s.Status
+                    Status = s.Status,
+                    CategoryName = s.SubCategory.Category.CategoryName
                 },
                  include: i => i.Include(p => p.SubCategory),
         predicate: p =>
@@ -212,7 +213,8 @@ namespace MRC_API.Service.Implement
                     Message = s.Message,
                     Quantity = s.Quantity,
                     Price = s.Price,
-                    Status = s.Status
+                    Status = s.Status,
+                    CategoryName = s.SubCategory.Category.CategoryName
                 },
                 predicate: p =>
     p.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()) &&
@@ -336,7 +338,7 @@ namespace MRC_API.Service.Implement
                     Message = s.Message,
                     Status = s.Status,
                     Price = s.Price,
-
+                    CategoryName = s.SubCategory.Category.CategoryName,
 
                 },
                 predicate: p => p.Id.Equals(productId));
