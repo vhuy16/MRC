@@ -222,22 +222,6 @@ namespace MRC_API.Service.Implement
                 ? existingSubCategory.SubCategoryName
                 : updateSubCategoryRequest.SubCategoryName;
 
-            if (updateSubCategoryRequest.CategoryId != null)
-            {
-                var existingCategory = await _unitOfWork.GetRepository<Category>().SingleOrDefaultAsync(
-                    predicate: c => c.Id.Equals(updateSubCategoryRequest.CategoryId) && c.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
-                if (existingCategory == null)
-                {
-                    return new ApiResponse()
-                    {
-                        status = StatusCodes.Status404NotFound.ToString(),
-                        message = MessageConstant.CategoryMessage.CategoryNotExist,
-                        data = null
-                    };
-                }
-
-                existingSubCategory.CategoryId = updateSubCategoryRequest.CategoryId.Value;
-            }
 
             _unitOfWork.GetRepository<SubCategory>().UpdateAsync(existingSubCategory);
             await _unitOfWork.CommitAsync();
