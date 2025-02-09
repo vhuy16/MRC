@@ -2,8 +2,6 @@
 {
     public class UpdateSubCategoryRequest
     {
-        public Guid? CategoryId { get; set; }
-
         public string? SubCategoryName { get; set; }
     }
 }
