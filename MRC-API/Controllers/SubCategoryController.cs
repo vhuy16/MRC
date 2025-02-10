@@ -70,5 +70,17 @@ namespace MRC_API.Controllers
             var response = await _subCategoryService.UpdateSubCategory(id, request);
             return StatusCode(int.Parse(response.status), response);
         }
+        
+        [HttpGet(ApiEndPointConstant.SubCategory.GetListSubCategoryByCategoryId)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+        [ProducesErrorResponseType(typeof(ProblemDetails))]
+        public async Task<IActionResult> GetListsubCategoryByCategoryId([FromRoute] Guid id, [FromQuery] int? page, [FromQuery] int? size)
+        {
+            int pageNumber = page ?? 1;
+            int pageSize = size ?? 10;
+            var response = await _subCategoryService.GetListSubCategoryByCategoryId(id, pageNumber, pageSize);
+            return StatusCode(int.Parse(response.status), response);
+        }
     }
 }

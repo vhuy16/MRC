@@ -10,5 +10,6 @@ namespace MRC_API.Service.Interface
         Task<ApiResponse> UpdateSubCategory(Guid id, UpdateSubCategoryRequest updateSubCategoryRequest);
         Task<ApiResponse> DeleteSubCategory(Guid id);
         Task<ApiResponse> GetSubCategory(Guid id);
+        Task<ApiResponse> GetListSubCategoryByCategoryId(Guid id, int page, int size);
     }
 }
