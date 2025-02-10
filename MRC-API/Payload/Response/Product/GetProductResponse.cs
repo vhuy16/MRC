@@ -11,6 +11,8 @@
         
         public Guid? SubCategoryId { get; set; }
 
+        public Guid? CategoryId { get; set; }
+
         public string SubCategoryName { get; set; }
         public string CategoryName { get; set; }
 
