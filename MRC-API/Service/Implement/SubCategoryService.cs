@@ -134,6 +134,59 @@ namespace MRC_API.Service.Implement
             };
         }
 
+        public async Task<ApiResponse> GetListSubCategoryByCategoryId(Guid id, int page, int size)
+        {
+            var category = await _unitOfWork.GetRepository<Category>().SingleOrDefaultAsync(
+                predicate: c => c.Id.Equals(id) && c.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
+            if(category == null)
+            {
+                return new ApiResponse()
+                {
+                    status = StatusCodes.Status404NotFound.ToString(),
+                    message = MessageConstant.CategoryMessage.CategoryNotExist,
+                    data = null
+                };
+            }
+
+            var subCategories = await _unitOfWork.GetRepository<SubCategory>().GetPagingListAsync(
+                selector: s => new GetsubCategoryResponse()
+                {
+                    SubCategoryId = s.Id,
+                    SubCategoryName = s.SubCategoryName
+                },
+                predicate: s => s.CategoryId.Equals(id) && s.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()),
+                page: page,
+                size: size);
+
+            int totalItems = subCategories.Total;
+            int totalPages = (int)Math.Ceiling((double)totalItems / size);
+
+            if (subCategories == null)
+            {
+                return new ApiResponse()
+                {
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "Danh sách danh mục phụ",
+                    data = new Paginate<SubCategory>()
+                    {
+                        Page = page,
+                        Size = size,
+                        Total = totalItems,
+                        TotalPages = totalPages,
+                        Items = new List<SubCategory>()
+                    }
+                };
+            }
+
+
+            return new ApiResponse()
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "Danh sách danh mục phụ",
+                data = subCategories
+            };
+        }
+
         public async Task<ApiResponse> GetSubCategories(int page, int size)
         {
             var subCategories = await _unitOfWork.GetRepository<SubCategory>().GetPagingListAsync(
