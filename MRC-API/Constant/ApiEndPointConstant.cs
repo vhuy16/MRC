@@ -148,6 +148,7 @@
             public const string GetSubCategory = SubCategoryEndPoint + "/{id}";
             public const string DeleteSubCategory = SubCategoryEndPoint + "/{id}";
             public const string UpdateSubCategory = SubCategoryEndPoint + "/{id}";
+            public const string GetListSubCategoryByCategoryId = SubCategoryEndPoint + "/{id}" + "/category";
         }
 
     }
