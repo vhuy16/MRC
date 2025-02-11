@@ -572,14 +572,6 @@ namespace MRC_API.Service.Implement
                 return false;
             }
 
-            var images = await _unitOfWork.GetRepository<Image>().GetListAsync(
-                    predicate: i => i.ProductId.Equals(existingProduct.Id));
-
-            foreach (var image in images)
-            {
-                _unitOfWork.GetRepository<Image>().DeleteAsync(image);
-            }
-
             var cartItems = await _unitOfWork.GetRepository<CartItem>().GetListAsync(
                 predicate: ci => ci.ProductId.Equals(existingProduct.Id));
 
