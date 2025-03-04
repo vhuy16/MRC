@@ -164,9 +164,10 @@ namespace MRC_API.Service.Implement
                 },
                  include: i => i.Include(p => p.SubCategory),
         predicate: p =>
-            (string.IsNullOrEmpty(searchName) || p.ProductName.Contains(searchName)) && // Filter theo tên
-            (string.IsNullOrEmpty(status) || p.Status.Equals(status)) &&              // Filter theo trạng thái
-            (string.IsNullOrEmpty(subCategoryName) || p.SubCategory.SubCategoryName.Contains(subCategoryName)), // Filter theo tên danh mục
+            p.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum())  &&
+                           (string.IsNullOrEmpty(searchName) || p.ProductName.Contains(searchName)) && // Filter theo tên
+                       // (string.IsNullOrEmpty(status) || p.Status.Equals(status)) &&              // Filter theo trạng thái
+                       (string.IsNullOrEmpty(subCategoryName) || p.SubCategory.SubCategoryName.Contains(subCategoryName)), // Filter theo tên danh mục
         orderBy: q => isAscending.HasValue
             ? (isAscending.Value ? q.OrderBy(p => p.Price) : q.OrderByDescending(p => p.Price))
             : q.OrderByDescending(p => p.InsDate),
