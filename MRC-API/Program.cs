@@ -95,6 +95,13 @@ builder.Services.AddSwaggerGen(c =>
                .Select(name => new OpenApiString(name) as IOpenApiAny)
                .ToList()
     });
+    c.MapType<TypeNewsEnum>(() => new OpenApiSchema
+    {
+        Type = "string",
+        Enum = Enum.GetNames(typeof(TypeNewsEnum))
+               .Select(name => new OpenApiString(name) as IOpenApiAny)
+               .ToList()
+    });
 });
 
 // Add AutoMapper
