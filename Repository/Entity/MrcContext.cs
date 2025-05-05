@@ -27,6 +27,8 @@ public partial class MrcContext : DbContext
 
     public virtual DbSet<Image> Images { get; set; }
 
+    public virtual DbSet<News> News { get; set; }
+
     public virtual DbSet<Order> Orders { get; set; }
 
     public virtual DbSet<OrderDetail> OrderDetails { get; set; }
@@ -194,6 +196,30 @@ public partial class MrcContext : DbContext
             entity.HasOne(d => d.Product).WithMany(p => p.Images)
                 .HasForeignKey(d => d.ProductId)
                 .HasConstraintName("FK__Image__productId__412EB0B6");
+        });
+
+        modelBuilder.Entity<News>(entity =>
+        {
+            entity
+                .HasNoKey()
+                .ToTable("News", "dbo");
+
+            entity.Property(e => e.Content).HasColumnName("content");
+            entity.Property(e => e.DelDate)
+                .HasColumnType("datetime")
+                .HasColumnName("delDate");
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.InsDate)
+                .HasColumnType("datetime")
+                .HasColumnName("insDate");
+            entity.Property(e => e.IsActive).HasColumnName("isActive");
+            entity.Property(e => e.Type)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .HasColumnName("type");
+            entity.Property(e => e.UpDate)
+                .HasColumnType("datetime")
+                .HasColumnName("upDate");
         });
 
         modelBuilder.Entity<Order>(entity =>
