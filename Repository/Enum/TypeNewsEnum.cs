@@ -8,6 +8,13 @@ namespace Repository.Enum
 {
     public enum TypeNewsEnum
     {
-        Service
+        News,
+        About,
+        Vision_Mission,
+        Certification,
+        Message,
+        Manufacture,
+        Product_Machining,
+        Consult
     }
 }
