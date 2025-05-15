@@ -28,7 +28,7 @@ namespace MRC_API.Controllers
         public IActionResult Login()
         {
             //var props = new AuthenticationProperties { RedirectUri = $"https://mrc.vn/auth/callback" };
-            var props = new AuthenticationProperties { RedirectUri = $"http://localhost:5173" };
+            var props = new AuthenticationProperties { RedirectUri = $"http://localhost:5173/callback" };
             //var props = new AuthenticationProperties { RedirectUri = $"api/v1/google-auth/signin-google/" };
             return Challenge(props, GoogleDefaults.AuthenticationScheme);
         }
