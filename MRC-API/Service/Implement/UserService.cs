@@ -162,8 +162,8 @@ namespace MRC_API.Service.Implement
                 {
                     Username = newUser.UserName,
                     Email = newUser.Email,
-                    FullName = newUser.FullName,
-                    Gender = EnumUtil.ParseEnum<GenderEnum>(newUser.Gender),
+                    //FullName = newUser.FullName,
+                    //Gender = EnumUtil.ParseEnum<GenderEnum>(newUser.Gender),
                     PhoneNumber = newUser.PhoneNumber
                 };
 
@@ -279,8 +279,8 @@ namespace MRC_API.Service.Implement
                     Id = newUser.Id,
                     Username = newUser.UserName,
                     Email = newUser.Email,
-                    FullName = newUser.FullName,
-                    Gender = EnumUtil.ParseEnum<GenderEnum>(newUser.Gender),
+                    //FullName = newUser.FullName,
+                    //Gender = EnumUtil.ParseEnum<GenderEnum>(newUser.Gender),
                     PhoneNumber = newUser.PhoneNumber
                 };
                 string otp = OtpUltil.GenerateOtp();
