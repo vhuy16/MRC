@@ -27,6 +27,8 @@ public partial class MrcContext : DbContext
 
     public virtual DbSet<Image> Images { get; set; }
 
+    public virtual DbSet<News> News { get; set; }
+
     public virtual DbSet<Order> Orders { get; set; }
 
     public virtual DbSet<OrderDetail> OrderDetails { get; set; }
@@ -39,11 +41,13 @@ public partial class MrcContext : DbContext
 
     public virtual DbSet<Service> Services { get; set; }
 
+    public virtual DbSet<SubCategory> SubCategories { get; set; }
+
     public virtual DbSet<User> Users { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("Server=137.59.106.46;database=MRC;user=mrcadmin;password=admin@123456;TrustServerCertificate=True");
+        => optionsBuilder.UseSqlServer("Server=137.59.106.46;Database=MRC;User Id=mrcadmin;Password=admin@123456;TrustServerCertificate=True;");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -194,6 +198,30 @@ public partial class MrcContext : DbContext
                 .HasConstraintName("FK__Image__productId__412EB0B6");
         });
 
+        modelBuilder.Entity<News>(entity =>
+        {
+            entity
+                .HasNoKey()
+                .ToTable("News", "dbo");
+
+            entity.Property(e => e.Content).HasColumnName("content");
+            entity.Property(e => e.DelDate)
+                .HasColumnType("datetime")
+                .HasColumnName("delDate");
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.InsDate)
+                .HasColumnType("datetime")
+                .HasColumnName("insDate");
+            entity.Property(e => e.IsActive).HasColumnName("isActive");
+            entity.Property(e => e.Type)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .HasColumnName("type");
+            entity.Property(e => e.UpDate)
+                .HasColumnType("datetime")
+                .HasColumnName("upDate");
+        });
+
         modelBuilder.Entity<Order>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__Order__3213E83F1F39A9ED");
@@ -326,7 +354,9 @@ public partial class MrcContext : DbContext
             entity.Property(e => e.Id)
                 .ValueGeneratedNever()
                 .HasColumnName("id");
-            entity.Property(e => e.CategoryId).HasColumnName("categoryId");
+            entity.Property(e => e.DelDate)
+                .HasColumnType("datetime")
+                .HasColumnName("delDate");
             entity.Property(e => e.Description).HasColumnName("description");
             entity.Property(e => e.InsDate)
                 .HasColumnType("datetime")
@@ -343,14 +373,14 @@ public partial class MrcContext : DbContext
                 .HasMaxLength(50)
                 .IsUnicode(false)
                 .HasColumnName("status");
+            entity.Property(e => e.SubCategoryId).HasColumnName("subCategoryId");
             entity.Property(e => e.UpDate)
                 .HasColumnType("datetime")
                 .HasColumnName("upDate");
 
-            entity.HasOne(d => d.Category).WithMany(p => p.Products)
-                .HasForeignKey(d => d.CategoryId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Product__categor__3E52440B");
+            entity.HasOne(d => d.SubCategory).WithMany(p => p.Products)
+                .HasForeignKey(d => d.SubCategoryId)
+                .HasConstraintName("FK_Product_SubCategory");
         });
 
         modelBuilder.Entity<Service>(entity =>
@@ -376,6 +406,34 @@ public partial class MrcContext : DbContext
             entity.Property(e => e.UpDate)
                 .HasColumnType("datetime")
                 .HasColumnName("upDate");
+        });
+
+        modelBuilder.Entity<SubCategory>(entity =>
+        {
+            entity.ToTable("SubCategory", "dbo");
+
+            entity.Property(e => e.Id)
+                .ValueGeneratedNever()
+                .HasColumnName("id");
+            entity.Property(e => e.CategoryId).HasColumnName("categoryId");
+            entity.Property(e => e.InsDate)
+                .HasColumnType("datetime")
+                .HasColumnName("insDate");
+            entity.Property(e => e.Status)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .HasColumnName("status");
+            entity.Property(e => e.SubCategoryName)
+                .HasMaxLength(50)
+                .HasColumnName("subCategoryName");
+            entity.Property(e => e.UpDate)
+                .HasColumnType("datetime")
+                .HasColumnName("upDate");
+
+            entity.HasOne(d => d.Category).WithMany(p => p.SubCategories)
+                .HasForeignKey(d => d.CategoryId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_SubCategory_Category");
         });
 
         modelBuilder.Entity<User>(entity =>

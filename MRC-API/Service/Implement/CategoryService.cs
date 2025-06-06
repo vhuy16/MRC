@@ -15,6 +15,7 @@ using Repository.Paginate;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using MRC_API.Payload.Response.SubCategory;
 
 
 namespace MRC_API.Service.Implement
@@ -94,32 +95,43 @@ namespace MRC_API.Service.Implement
                 };
             }
 
-            var products = await _unitOfWork.GetRepository<Product>().GetListAsync(
-                predicate: p => p.CategoryId.Equals(category.Id) &&
+            var subCates = await _unitOfWork.GetRepository<SubCategory>().GetListAsync(
+                predicate: s => s.CategoryId.Equals(category.Id) &&
+                                s.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
+            foreach(var subCate in subCates)
+            {
+                var products = await _unitOfWork.GetRepository<Product>().GetListAsync(
+                predicate: p => p.SubCategoryId.Equals(subCate.Id) &&
                                 p.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
 
-            foreach (var product in products)
-            {
-                var images = await _unitOfWork.GetRepository<Image>().GetListAsync(
-                    predicate: i => i.ProductId.Equals(product.Id));
-
-                foreach (var image in images)
+                foreach (var product in products)
                 {
-                    _unitOfWork.GetRepository<Image>().DeleteAsync(image);
+                    var images = await _unitOfWork.GetRepository<Image>().GetListAsync(
+                        predicate: i => i.ProductId.Equals(product.Id));
+
+                    foreach (var image in images)
+                    {
+                        _unitOfWork.GetRepository<Image>().DeleteAsync(image);
+                    }
+
+                    var cartItems = await _unitOfWork.GetRepository<CartItem>().GetListAsync(
+                        predicate: ci => ci.ProductId.Equals(product.Id));
+
+                    foreach (var cartItem in cartItems)
+                    {
+                        _unitOfWork.GetRepository<CartItem>().DeleteAsync(cartItem);
+                    }
+
+                    product.Status = StatusEnum.Unavailable.GetDescriptionFromEnum();
+                    product.UpDate = TimeUtils.GetCurrentSEATime();
+                    _unitOfWork.GetRepository<Product>().UpdateAsync(product);
                 }
-
-                var cartItems = await _unitOfWork.GetRepository<CartItem>().GetListAsync(
-                    predicate: ci => ci.ProductId.Equals(product.Id));
-
-                foreach (var cartItem in cartItems)
-                {
-                    _unitOfWork.GetRepository<CartItem>().DeleteAsync(cartItem);
-                }
-
-                product.Status = StatusEnum.Unavailable.GetDescriptionFromEnum();
-                product.UpDate = TimeUtils.GetCurrentSEATime();
-                _unitOfWork.GetRepository<Product>().UpdateAsync(product);
+                subCate.Status = StatusEnum.Unavailable.GetDescriptionFromEnum();
+                subCate.UpDate = TimeUtils.GetCurrentSEATime();
+                _unitOfWork.GetRepository<SubCategory>().UpdateAsync(subCate);
             }
+
+            
 
             category.Status = StatusEnum.Unavailable.GetDescriptionFromEnum();
             category.UpDate = TimeUtils.GetCurrentSEATime();
@@ -152,6 +164,13 @@ namespace MRC_API.Service.Implement
                 {
                     CategoryId = c.Id,
                     CategoryName = c.CategoryName,
+                    SubCategories = c.SubCategories
+                    .Where(sc => sc.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()))
+                    .Select(sc => new GetsubCategoryResponse()
+                    {
+                        SubCategoryId = sc.Id,
+                        SubCategoryName = sc.SubCategoryName
+                    }).ToList(),
                 },
                 predicate: p => p.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()) &&
                                 (string.IsNullOrEmpty(searchName) || p.CategoryName.Contains(searchName)),
@@ -194,6 +213,13 @@ namespace MRC_API.Service.Implement
                 {
                     CategoryId = c.Id,
                     CategoryName = c.CategoryName,
+                    SubCategories = c.SubCategories
+                    .Where(sc => sc.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()))
+                    .Select(sc => new GetsubCategoryResponse()
+                    {
+                        SubCategoryId = sc.Id,
+                        SubCategoryName = sc.SubCategoryName
+                    }).ToList(),
                 },
                 predicate: c => c.Id.Equals(id) &&
                                 c.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));

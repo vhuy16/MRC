@@ -5,6 +5,8 @@ namespace MRC_API.Payload.Response.CartItem
     public class GetAllCartItemResponse
     {
         public Guid? CartItemId { get; set; }
+        public Guid? SubCategoryId { get; set; }
+        public string? SubCategoryName { get; set; }
         public Guid? ProductId { get; set; }
         public int? Quantity { get; set; }
         public string? ProductName { get; set; }

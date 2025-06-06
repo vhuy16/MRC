@@ -40,8 +40,8 @@ namespace MRC_API.Service.Implement
         public async Task<ApiResponse> CreateProduct(CreateProductRequest createProductRequest)
         {
             // Check category ID
-            var cateCheck = await _unitOfWork.GetRepository<Category>().SingleOrDefaultAsync(predicate: c => c.Id.Equals(createProductRequest.CategoryId));
-            if (cateCheck == null)
+            var subCateCheck = await _unitOfWork.GetRepository<SubCategory>().SingleOrDefaultAsync(predicate: c => c.Id.Equals(createProductRequest.SubCategoryId));
+            if (subCateCheck == null)
             {
                 return new ApiResponse { status = StatusCodes.Status400BadRequest.ToString(), message = MessageConstant.CategoryMessage.CategoryNotExist, data = null };
             }
@@ -74,7 +74,7 @@ namespace MRC_API.Service.Implement
             {
                 Id = Guid.NewGuid(),
                 ProductName = createProductRequest.ProductName,
-                CategoryId = createProductRequest.CategoryId,
+                SubCategoryId = createProductRequest.SubCategoryId,
                 Description = createProductRequest.Description,
                 InsDate = TimeUtils.GetCurrentSEATime(),
                 UpDate = TimeUtils.GetCurrentSEATime(),
@@ -108,7 +108,7 @@ namespace MRC_API.Service.Implement
 
                 if (isSuccessful)
                 {
-                    var category = await _unitOfWork.GetRepository<Category>().SingleOrDefaultAsync(predicate: c => c.Id.Equals(createProductRequest.CategoryId));
+                    var subCategory = await _unitOfWork.GetRepository<SubCategory>().SingleOrDefaultAsync(predicate: c => c.Id.Equals(createProductRequest.SubCategoryId));
                     return new ApiResponse
                     {
                         status = StatusCodes.Status201Created.ToString(),
@@ -121,7 +121,7 @@ namespace MRC_API.Service.Implement
                             ProductName = product.ProductName,
                             Quantity = product.Quantity,
                             Message = product.Message,
-                            CategoryName = category.CategoryName,
+                            SubCategoryName = subCategory.SubCategoryName,
                             Price = product.Price,
                         }
                     };
@@ -144,27 +144,29 @@ namespace MRC_API.Service.Implement
                 };
             }
         }
-        public async Task<ApiResponse> GetAllProduct(int page, int size, string status, string? searchName, bool? isAscending, string? categoryName)
+        public async Task<ApiResponse> GetAllProduct(int page, int size, string status, string? searchName, bool? isAscending, string? subCategoryName)
         {
             var products = await _unitOfWork.GetRepository<Product>().GetPagingListAsync(
                 selector: s => new GetProductResponse
                 {
                     Id = s.Id,
-                    CategoryName = s.Category.CategoryName,
+                    SubCategoryName = s.SubCategory.SubCategoryName,
+                    CategoryId = s.SubCategory.CategoryId,
                     Description = s.Description,
                     Images = s.Images.Select(i => i.LinkImage).ToList(),
                     ProductName = s.ProductName,
                     Quantity = s.Quantity,
                     Message = s.Message,
                     Price = s.Price,
-                    CategoryID = s.CategoryId,
-                    Status = s.Status
+                    SubCategoryId = s.SubCategoryId,
+                    Status = s.Status,
+                    CategoryName = s.SubCategory.Category.CategoryName
                 },
-                 include: i => i.Include(p => p.Category),
+                 include: i => i.Include(p => p.SubCategory),
         predicate: p =>
             (string.IsNullOrEmpty(searchName) || p.ProductName.Contains(searchName)) && // Filter theo tên
             (string.IsNullOrEmpty(status) || p.Status.Equals(status)) &&              // Filter theo trạng thái
-            (string.IsNullOrEmpty(categoryName) || p.Category.CategoryName.Contains(categoryName)), // Filter theo tên danh mục
+            (string.IsNullOrEmpty(subCategoryName) || p.SubCategory.SubCategoryName.Contains(subCategoryName)) && !p.DelDate.HasValue, // Filter theo tên danh mục
         orderBy: q => isAscending.HasValue
             ? (isAscending.Value ? q.OrderBy(p => p.Price) : q.OrderByDescending(p => p.Price))
             : q.OrderByDescending(p => p.InsDate),
@@ -199,20 +201,23 @@ namespace MRC_API.Service.Implement
             };
         }
         public async Task<ApiResponse> GetListProduct(int page, int size, string? search, bool? isAscending,
-                                               string? categoryName, decimal? minPrice, decimal? maxPrice)
+                                               string? subCategoryName, decimal? minPrice, decimal? maxPrice)
         {
             var products = await _unitOfWork.GetRepository<Product>().GetPagingListAsync(
                 selector: s => new GetProductResponse
                 {
                     Id = s.Id,
-                    CategoryName = s.Category.CategoryName,
+                    SubCategoryName = s.SubCategory.SubCategoryName,
                     Description = s.Description,
+                    SubCategoryId = s.SubCategoryId,
+                    CategoryId = s.SubCategory.CategoryId,
                     Images = s.Images.Select(i => i.LinkImage).ToList(),
                     ProductName = s.ProductName,
                     Message = s.Message,
                     Quantity = s.Quantity,
                     Price = s.Price,
-                    Status = s.Status
+                    Status = s.Status,
+                    CategoryName = s.SubCategory.Category.CategoryName
                 },
                 predicate: p =>
     p.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()) &&
@@ -221,7 +226,7 @@ namespace MRC_API.Service.Implement
      p.Description.ToLower().Contains(search.ToLower()) ||
      (!string.IsNullOrEmpty(p.Message) && p.Message.ToLower().Contains(search.ToLower())))
                                              && // Tìm kiếm toàn diện
-                    (string.IsNullOrEmpty(categoryName) || p.Category.CategoryName.Equals(categoryName)) && // Filter theo category
+                    (string.IsNullOrEmpty(subCategoryName) || p.SubCategory.SubCategoryName.Equals(subCategoryName)) && // Filter theo category
                     (!minPrice.HasValue || p.Price >= minPrice.Value) && // Filter giá tối thiểu
                     (!maxPrice.HasValue || p.Price <= maxPrice.Value), // Filter giá tối đa
                 orderBy: q => isAscending.HasValue
@@ -259,14 +264,14 @@ namespace MRC_API.Service.Implement
         }
 
 
-        public async Task<ApiResponse> GetListProductByCategoryId(Guid CateID, int page, int size)
+        public async Task<ApiResponse> GetListProductByCategoryId(Guid subCateId, int page, int size)
         {
             // Check if the category exists
-            var cateCheck = await _unitOfWork.GetRepository<Category>().SingleOrDefaultAsync(
-                predicate: c => c.Id.Equals(CateID)
+            var subCateCheck = await _unitOfWork.GetRepository<SubCategory>().SingleOrDefaultAsync(
+                predicate: c => c.Id.Equals(subCateId)
             );
 
-            if (cateCheck == null)
+            if (subCateCheck == null)
             {
                 return new ApiResponse
                 {
@@ -281,7 +286,7 @@ namespace MRC_API.Service.Implement
                 selector: s => new GetProductResponse
                 {
                     Id = s.Id,
-                    CategoryName = s.Category.CategoryName,
+                    SubCategoryName = s.SubCategory.SubCategoryName,
                     Description = s.Description,
                     Images = s.Images.Select(i => i.LinkImage).ToList(),
                     ProductName = s.ProductName,
@@ -290,7 +295,7 @@ namespace MRC_API.Service.Implement
                     Price = s.Price,
                     Status = s.Status
                 },
-                predicate: p => p.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()) && p.CategoryId.Equals(CateID),
+                predicate: p => p.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()) && p.SubCategoryId.Equals(subCateId),
                 page: page,
                 size: size
             );
@@ -327,8 +332,9 @@ namespace MRC_API.Service.Implement
                 selector: s => new GetProductResponse
                 {
                     Id = s.Id,
-                    CategoryID = s.CategoryId,
-                    CategoryName = s.Category.CategoryName,
+                    SubCategoryId = s.SubCategoryId,
+                    SubCategoryName = s.SubCategory.SubCategoryName,
+                    CategoryId = s.SubCategory.CategoryId,
                     Description = s.Description,
                     Images = s.Images.Select(i => i.LinkImage).ToList(),
                     ProductName = s.ProductName,
@@ -336,7 +342,7 @@ namespace MRC_API.Service.Implement
                     Message = s.Message,
                     Status = s.Status,
                     Price = s.Price,
-
+                    CategoryName = s.SubCategory.Category.CategoryName,
 
                 },
                 predicate: p => p.Id.Equals(productId));
@@ -408,14 +414,14 @@ namespace MRC_API.Service.Implement
             }
 
             // Check CategoryId if provided
-            if (updateProductRequest.CategoryId.HasValue)
+            if (updateProductRequest.SubCategoryId.HasValue)
             {
-                var cateCheck = await _unitOfWork.GetRepository<Category>().SingleOrDefaultAsync(predicate: c => c.Id.Equals(updateProductRequest.CategoryId.Value));
-                if (cateCheck == null)
+                var subCateCheck = await _unitOfWork.GetRepository<SubCategory>().SingleOrDefaultAsync(predicate: c => c.Id.Equals(updateProductRequest.SubCategoryId.Value));
+                if (subCateCheck == null)
                 {
                     return new ApiResponse { status = StatusCodes.Status400BadRequest.ToString(), message = MessageConstant.CategoryMessage.CategoryNotExist, data = null };
                 }
-                existingProduct.CategoryId = updateProductRequest.CategoryId.Value;
+                existingProduct.SubCategoryId = updateProductRequest.SubCategoryId.Value;
             }
 
             // Check product name if provided
@@ -492,7 +498,7 @@ namespace MRC_API.Service.Implement
 
             if (isSuccessful)
             {
-                var category = await _unitOfWork.GetRepository<Category>().SingleOrDefaultAsync(predicate: c => c.Id.Equals(existingProduct.CategoryId));
+                var subCategory = await _unitOfWork.GetRepository<SubCategory>().SingleOrDefaultAsync(predicate: c => c.Id.Equals(existingProduct.SubCategoryId));
                 return new ApiResponse
                 {
                     status = StatusCodes.Status200OK.ToString(),
@@ -505,7 +511,7 @@ namespace MRC_API.Service.Implement
                         ProductName = existingProduct.ProductName,
                         Quantity = existingProduct.Quantity,
                         Message = existingProduct.Message,
-                        CategoryName = category.CategoryName,
+                        SubCategoryName = subCategory.SubCategoryName,
                         Price = existingProduct.Price
                     }
                 };
@@ -564,14 +570,26 @@ namespace MRC_API.Service.Implement
             }
 
             // Find product
-            var existingProduct = await _unitOfWork.GetRepository<Product>().SingleOrDefaultAsync(predicate: p => p.Id.Equals(productId) && p.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
+            var existingProduct = await _unitOfWork.GetRepository<Product>().SingleOrDefaultAsync(predicate: p => p.Id.Equals(productId) 
+                                                                                                            && p.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum())
+                                                                                                            && !p.DelDate.HasValue);
             if (existingProduct == null)
             {
                 return false;
             }
 
+            var cartItems = await _unitOfWork.GetRepository<CartItem>().GetListAsync(
+                predicate: ci => ci.ProductId.Equals(existingProduct.Id));
+
+            foreach (var cartItem in cartItems)
+            {
+                _unitOfWork.GetRepository<CartItem>().DeleteAsync(cartItem);
+            }
+
+
             // Mark as deleted
             existingProduct.Status = StatusEnum.Unavailable.GetDescriptionFromEnum();
+            existingProduct.DelDate = TimeUtils.GetCurrentSEATime();
             _unitOfWork.GetRepository<Product>().UpdateAsync(existingProduct);
             bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
 

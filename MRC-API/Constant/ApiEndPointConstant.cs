@@ -11,10 +11,12 @@
         public const string ApiEndpoint = RootEndPoint + ApiVersion;
         public static class News
         {
+            public const string NewsEndPoint = ApiEndpoint + "/news";
             public const string CreateFromExternal = "api/news/external/create";
-            public const string GetAllNews = "api/news";
-            public const string GetNewsById = "api/news/{newsId}";
-            public const string DeleteNewsById = "api/news/{newsId}";
+            public const string CreateNews = NewsEndPoint;
+            public const string GetAllNews = NewsEndPoint;
+            public const string GetNewsById = NewsEndPoint + "/{id}";
+            public const string DeleteNewsById = NewsEndPoint + "/{id}";
         }
         public static class User
         {
@@ -138,6 +140,17 @@
         {
             public const string DashBoardEndPoint = ApiEndpoint + "/dashboard";
             public const string GetDashBoard = DashBoardEndPoint;
+        }
+
+        public static class SubCategory
+        {
+            public const string SubCategoryEndPoint = ApiEndpoint + "/sub-category";
+            public const string CreateSubCategory = SubCategoryEndPoint;
+            public const string GetSubCategories = SubCategoryEndPoint;
+            public const string GetSubCategory = SubCategoryEndPoint + "/{id}";
+            public const string DeleteSubCategory = SubCategoryEndPoint + "/{id}";
+            public const string UpdateSubCategory = SubCategoryEndPoint + "/{id}";
+            public const string GetListSubCategoryByCategoryId = SubCategoryEndPoint + "/{id}" + "/category";
         }
 
     }
