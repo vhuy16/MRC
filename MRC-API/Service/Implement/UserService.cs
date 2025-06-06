@@ -49,16 +49,16 @@ namespace MRC_API.Service.Implement
                 };
             }
 
-            string phonePattern = @"^0\d{9}$";
-            if (!Regex.IsMatch(createNewAccountRequest.PhoneNumber, phonePattern))
-            {
-                return new ApiResponse
-                {
-                    status = StatusCodes.Status400BadRequest.ToString(),
-                    message = MessageConstant.PatternMessage.PhoneIncorrect,
-                    data = null
-                };
-            }
+            //string phonePattern = @"^0\d{9}$";
+            //if (!Regex.IsMatch(createNewAccountRequest.PhoneNumber, phonePattern))
+            //{
+            //    return new ApiResponse
+            //    {
+            //        status = StatusCodes.Status400BadRequest.ToString(),
+            //        message = MessageConstant.PatternMessage.PhoneIncorrect,
+            //        data = null
+            //    };
+            //}
 
             User newUser = new User
             {
@@ -68,8 +68,8 @@ namespace MRC_API.Service.Implement
                 Status = StatusEnum.Available.GetDescriptionFromEnum(),
                 InsDate = TimeUtils.GetCurrentSEATime(),
                 UpDate = TimeUtils.GetCurrentSEATime(),
-                Gender = createNewAccountRequest.Gender.GetDescriptionFromEnum().ToString(),
-                PhoneNumber = createNewAccountRequest.PhoneNumber,
+                //Gender = createNewAccountRequest.Gender.GetDescriptionFromEnum().ToString(),
+                //PhoneNumber = createNewAccountRequest.PhoneNumber,
                 Role = RoleEnum.Admin.GetDescriptionFromEnum()
             };
 
@@ -114,16 +114,16 @@ namespace MRC_API.Service.Implement
                 };
             }
 
-            string phonePattern = @"^0\d{9}$";
-            if (!Regex.IsMatch(createNewAccountRequest.PhoneNumber, phonePattern))
-            {
-                return new ApiResponse
-                {
-                    status = StatusCodes.Status400BadRequest.ToString(),
-                    message = MessageConstant.PatternMessage.PhoneIncorrect,
-                    data = null
-                };
-            }
+            //string phonePattern = @"^0\d{9}$";
+            //if (!Regex.IsMatch(createNewAccountRequest.PhoneNumber, phonePattern))
+            //{
+            //    return new ApiResponse
+            //    {
+            //        status = StatusCodes.Status400BadRequest.ToString(),
+            //        message = MessageConstant.PatternMessage.PhoneIncorrect,
+            //        data = null
+            //    };
+            //}
 
             var manager = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
                 predicate: m => m.UserName.Equals(createNewAccountRequest.UserName));
@@ -143,13 +143,13 @@ namespace MRC_API.Service.Implement
                 Id = Guid.NewGuid(),
                 UserName = createNewAccountRequest.UserName,
                 Password = PasswordUtil.HashPassword(createNewAccountRequest.Password),
-                FullName = createNewAccountRequest.FullName,
+                //FullName = createNewAccountRequest.FullName,
                 Email = createNewAccountRequest.Email,
                 Status = StatusEnum.Available.GetDescriptionFromEnum(),
                 InsDate = TimeUtils.GetCurrentSEATime(),
                 UpDate = TimeUtils.GetCurrentSEATime(),
-                PhoneNumber = createNewAccountRequest.PhoneNumber,
-                Gender = createNewAccountRequest.Gender.GetDescriptionFromEnum().ToString(),
+                //PhoneNumber = createNewAccountRequest.PhoneNumber,
+                //Gender = createNewAccountRequest.Gender.GetDescriptionFromEnum().ToString(),
                 Role = RoleEnum.Manager.GetDescriptionFromEnum()
             };
 
@@ -162,8 +162,8 @@ namespace MRC_API.Service.Implement
                 {
                     Username = newUser.UserName,
                     Email = newUser.Email,
-                    FullName = newUser.FullName,
-                    Gender = EnumUtil.ParseEnum<GenderEnum>(newUser.Gender),
+                    //FullName = newUser.FullName,
+                    //Gender = EnumUtil.ParseEnum<GenderEnum>(newUser.Gender),
                     PhoneNumber = newUser.PhoneNumber
                 };
 
@@ -219,16 +219,16 @@ namespace MRC_API.Service.Implement
                 };
             }
 
-            string phonePattern = @"^0\d{9}$";
-            if (!Regex.IsMatch(createNewAccountRequest.PhoneNumber, phonePattern))
-            {
-                return new ApiResponse
-                {
-                    status = StatusCodes.Status400BadRequest.ToString(),
-                    message = MessageConstant.PatternMessage.PhoneIncorrect,
-                    data = null
-                };
-            }
+            //string phonePattern = @"^0\d{9}$";
+            //if (!Regex.IsMatch(createNewAccountRequest.PhoneNumber, phonePattern))
+            //{
+            //    return new ApiResponse
+            //    {
+            //        status = StatusCodes.Status400BadRequest.ToString(),
+            //        message = MessageConstant.PatternMessage.PhoneIncorrect,
+            //        data = null
+            //    };
+            //}
 
             var customer = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
                 predicate: m => m.UserName.Equals(createNewAccountRequest.UserName));
@@ -248,14 +248,14 @@ namespace MRC_API.Service.Implement
                 Id = Guid.NewGuid(),
                 UserName = createNewAccountRequest.UserName,
                 Password = PasswordUtil.HashPassword(createNewAccountRequest.Password),
-                FullName = createNewAccountRequest.FullName,
+                //FullName = createNewAccountRequest.FullName,
                 Email = createNewAccountRequest.Email,
                 Status = StatusEnum.Unavailable.GetDescriptionFromEnum(),
                 InsDate = TimeUtils.GetCurrentSEATime(),
                 UpDate = TimeUtils.GetCurrentSEATime(),
                 Role = RoleEnum.Customer.GetDescriptionFromEnum(),
-                PhoneNumber = createNewAccountRequest.PhoneNumber,
-                Gender = createNewAccountRequest.Gender.GetDescriptionFromEnum().ToString()
+                //PhoneNumber = createNewAccountRequest.PhoneNumber,
+                //Gender = createNewAccountRequest.Gender.GetDescriptionFromEnum().ToString()
             };
 
             await _unitOfWork.GetRepository<User>().InsertAsync(newUser);
@@ -279,8 +279,8 @@ namespace MRC_API.Service.Implement
                     Id = newUser.Id,
                     Username = newUser.UserName,
                     Email = newUser.Email,
-                    FullName = newUser.FullName,
-                    Gender = EnumUtil.ParseEnum<GenderEnum>(newUser.Gender),
+                    //FullName = newUser.FullName,
+                    //Gender = EnumUtil.ParseEnum<GenderEnum>(newUser.Gender),
                     PhoneNumber = newUser.PhoneNumber
                 };
                 string otp = OtpUltil.GenerateOtp();

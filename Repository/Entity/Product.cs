@@ -25,6 +25,8 @@ public partial class Product
 
     public Guid? SubCategoryId { get; set; }
 
+    public DateTime? DelDate { get; set; }
+
     public virtual ICollection<CartItem> CartItems { get; set; } = new List<CartItem>();
 
     public virtual ICollection<Image> Images { get; set; } = new List<Image>();

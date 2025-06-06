@@ -54,7 +54,7 @@ builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(name: CorsConstant.PolicyName,
-        policy => { policy.WithOrigins("http://localhost:5173", "https://www.mrc.vn", "https://nhomchiaseyeuthuong.io.vn/", "https://mrc-web-mu.vercel.app", "https://mrc-project.vercel.app", "https://mrc-web-admin.vercel.app", "http://localhost:5174").AllowAnyHeader().AllowAnyMethod().AllowCredentials(); });
+        policy => { policy.WithOrigins("http://localhost:5173", "https://www.mrc.vn", "https://nhomchiaseyeuthuong.io.vn/", "https://mrc-web-mu.vercel.app", "https://mrc-project.vercel.app", "https://mrc-web-admin.vercel.app", "http://localhost:5174", "https://dev-mrc.vercel.app").AllowAnyHeader().AllowAnyMethod().AllowCredentials(); });
 });
 
 // Configure Swagger/OpenAPI
@@ -92,6 +92,13 @@ builder.Services.AddSwaggerGen(c =>
     {
         Type = "string",
         Enum = Enum.GetNames(typeof(OrderStatus))
+               .Select(name => new OpenApiString(name) as IOpenApiAny)
+               .ToList()
+    });
+    c.MapType<TypeNewsEnum>(() => new OpenApiSchema
+    {
+        Type = "string",
+        Enum = Enum.GetNames(typeof(TypeNewsEnum))
                .Select(name => new OpenApiString(name) as IOpenApiAny)
                .ToList()
     });

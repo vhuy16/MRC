@@ -11,10 +11,12 @@
         public const string ApiEndpoint = RootEndPoint + ApiVersion;
         public static class News
         {
+            public const string NewsEndPoint = ApiEndpoint + "/news";
             public const string CreateFromExternal = "api/news/external/create";
-            public const string GetAllNews = "api/news";
-            public const string GetNewsById = "api/news/{newsId}";
-            public const string DeleteNewsById = "api/news/{newsId}";
+            public const string CreateNews = NewsEndPoint;
+            public const string GetAllNews = NewsEndPoint;
+            public const string GetNewsById = NewsEndPoint + "/{id}";
+            public const string DeleteNewsById = NewsEndPoint + "/{id}";
         }
         public static class User
         {

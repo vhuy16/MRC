@@ -276,6 +276,8 @@ namespace MRC_API.Service.Implement
             var response = cartItems.Select(cartItem => new GetAllCartItemResponse
             {
                 CartItemId = cartItem.Id,
+                SubCategoryId = cartItem.Product.SubCategoryId,
+                SubCategoryName = cartItem.Product.SubCategory.SubCategoryName,
                 ProductId = cartItem.ProductId,
                 ProductName = cartItem.Product.ProductName,
                 Quantity = cartItem.Quantity,

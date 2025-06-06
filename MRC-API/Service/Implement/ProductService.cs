@@ -164,10 +164,9 @@ namespace MRC_API.Service.Implement
                 },
                  include: i => i.Include(p => p.SubCategory),
         predicate: p =>
-            p.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum())  &&
-                           (string.IsNullOrEmpty(searchName) || p.ProductName.Contains(searchName)) && // Filter theo tên
-                       // (string.IsNullOrEmpty(status) || p.Status.Equals(status)) &&              // Filter theo trạng thái
-                       (string.IsNullOrEmpty(subCategoryName) || p.SubCategory.SubCategoryName.Contains(subCategoryName)), // Filter theo tên danh mục
+            (string.IsNullOrEmpty(searchName) || p.ProductName.Contains(searchName)) && // Filter theo tên
+            (string.IsNullOrEmpty(status) || p.Status.Equals(status)) &&              // Filter theo trạng thái
+            (string.IsNullOrEmpty(subCategoryName) || p.SubCategory.SubCategoryName.Contains(subCategoryName)) && !p.DelDate.HasValue, // Filter theo tên danh mục
         orderBy: q => isAscending.HasValue
             ? (isAscending.Value ? q.OrderBy(p => p.Price) : q.OrderByDescending(p => p.Price))
             : q.OrderByDescending(p => p.InsDate),
@@ -571,7 +570,9 @@ namespace MRC_API.Service.Implement
             }
 
             // Find product
-            var existingProduct = await _unitOfWork.GetRepository<Product>().SingleOrDefaultAsync(predicate: p => p.Id.Equals(productId) && p.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()));
+            var existingProduct = await _unitOfWork.GetRepository<Product>().SingleOrDefaultAsync(predicate: p => p.Id.Equals(productId) 
+                                                                                                            && p.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum())
+                                                                                                            && !p.DelDate.HasValue);
             if (existingProduct == null)
             {
                 return false;
@@ -588,6 +589,7 @@ namespace MRC_API.Service.Implement
 
             // Mark as deleted
             existingProduct.Status = StatusEnum.Unavailable.GetDescriptionFromEnum();
+            existingProduct.DelDate = TimeUtils.GetCurrentSEATime();
             _unitOfWork.GetRepository<Product>().UpdateAsync(existingProduct);
             bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
 
