@@ -55,7 +55,7 @@ namespace MRC_API.Controllers
         [HttpGet(ApiEndPointConstant.News.GetAllNews)]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
-        public async Task<IActionResult> GetAllNews([FromQuery] int? page, [FromQuery] int? size, [FromQuery][Required] TypeNewsEnum? type, [FromQuery] Guid? ignoreId)
+        public async Task<IActionResult> GetAllNews([FromQuery] int? page, [FromQuery] int? size, [FromQuery] TypeNewsEnum? type, [FromQuery] Guid? ignoreId)
         {
             int pageNumber = page ?? 1;
             int pageSize = size ?? 10;
