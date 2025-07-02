@@ -17,6 +17,7 @@
             public const string GetAllNews = NewsEndPoint;
             public const string GetNewsById = NewsEndPoint + "/{id}";
             public const string DeleteNewsById = NewsEndPoint + "/{id}";
+            public const string UpdateNews = NewsEndPoint + "/{id}";
         }
         public static class User
         {
@@ -67,6 +68,7 @@
             public const string UpdateProduct = ProductEndpoint + "/{id}";
             public const string EnableProduct = ProductEndpoint + "/enable-product" + "/{id}"  ;
             public const string DeleteProduct = ProductEndpoint + "/{id}";
+            public const string DisableProduct = ProductEndpoint + "/disable-product" + "/{id}";
             public const string UploadImg = "upload-img";
         }
 

@@ -89,7 +89,7 @@ namespace MRC_API.Controllers
             return Ok(response);
         }
 
-
+        [CustomAuthorize(roles: "Admin,Manager")]
         [HttpGet(ApiEndPointConstant.Product.GetAllProducts)]
         [ProducesResponseType(typeof(GetProductResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
@@ -162,19 +162,25 @@ namespace MRC_API.Controllers
             return StatusCode(int.Parse(response.status), response);
         }
         [CustomAuthorize(roles: "Admin,Manager")]
-        [HttpDelete(ApiEndPointConstant.Product.UpdateProduct)]
-        [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
+        [HttpDelete(ApiEndPointConstant.Product.DeleteProduct)] // Lưu ý: Có thể cần kiểm tra nếu endpoint này đúng cho Delete
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
         public async Task<IActionResult> DeleteProduct([FromRoute] Guid id)
         {
             var response = await _productService.DeleteProduct(id);
-            if (response == false)
+    
+            if (response.status == StatusCodes.Status404NotFound.ToString())
             {
                 return NotFound(response);
             }
+            if (response.status == StatusCodes.Status500InternalServerError.ToString())
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, response);
+            }
+
             return Ok(response);
         }
-
         [HttpPut(ApiEndPointConstant.Product.EnableProduct)]
         [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
@@ -183,6 +189,21 @@ namespace MRC_API.Controllers
            
 
             var response = await _productService.EnableProduct(id);
+
+            if (response.status == StatusCodes.Status200OK.ToString())
+            {
+                return Ok(response);
+            }
+
+            return StatusCode(int.Parse(response.status), response);
+        }
+        [CustomAuthorize(roles: "Admin,Manager")]
+        [HttpPut(ApiEndPointConstant.Product.DisableProduct)]
+        [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(ProblemDetails))]
+        public async Task<IActionResult> DisableProduct([FromRoute] Guid id)
+        {
+            var response = await _productService.DisableProduct(id);
 
             if (response.status == StatusCodes.Status200OK.ToString())
             {

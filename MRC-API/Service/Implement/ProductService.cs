@@ -19,12 +19,13 @@ using System.Text.Json;
 using Image = Repository.Entity.Image;
 
 
-
 namespace MRC_API.Service.Implement
 {
     public class ProductService : BaseService<Product>, IProductService
     {
-        private const string FirebaseStorageBaseUrl = "https://firebasestorage.googleapis.com/v0/b/mrc-firebase-d6e85.appspot.com/o";
+        private const string FirebaseStorageBaseUrl =
+            "https://firebasestorage.googleapis.com/v0/b/mrc-firebase-d6e85.appspot.com/o";
+
         private readonly HtmlSanitizerUtils _sanitizer;
 
         public ProductService(
@@ -37,27 +38,43 @@ namespace MRC_API.Service.Implement
         {
             _sanitizer = htmlSanitizer;
         }
+
         public async Task<ApiResponse> CreateProduct(CreateProductRequest createProductRequest)
         {
             // Check category ID
-            var subCateCheck = await _unitOfWork.GetRepository<SubCategory>().SingleOrDefaultAsync(predicate: c => c.Id.Equals(createProductRequest.SubCategoryId));
+            var subCateCheck = await _unitOfWork.GetRepository<SubCategory>()
+                .SingleOrDefaultAsync(predicate: c => c.Id.Equals(createProductRequest.SubCategoryId));
             if (subCateCheck == null)
             {
-                return new ApiResponse { status = StatusCodes.Status400BadRequest.ToString(), message = MessageConstant.CategoryMessage.CategoryNotExist, data = null };
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status400BadRequest.ToString(),
+                    message = MessageConstant.CategoryMessage.CategoryNotExist, data = null
+                };
             }
 
             // Check product name
-            var prodCheck = await _unitOfWork.GetRepository<Product>().SingleOrDefaultAsync(predicate: p => p.ProductName.Equals(createProductRequest.ProductName));
+            var prodCheck = await _unitOfWork.GetRepository<Product>()
+                .SingleOrDefaultAsync(predicate: p => p.ProductName.Equals(createProductRequest.ProductName));
             if (prodCheck != null)
             {
-                return new ApiResponse { status = StatusCodes.Status400BadRequest.ToString(), message = MessageConstant.ProductMessage.ProductNameExisted, data = null };
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status400BadRequest.ToString(),
+                    message = MessageConstant.ProductMessage.ProductNameExisted, data = null
+                };
             }
 
             // Validate quantity
             if (createProductRequest.Quantity < 0)
             {
-                return new ApiResponse { status = StatusCodes.Status400BadRequest.ToString(), message = MessageConstant.ProductMessage.NegativeQuantity, data = null };
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status400BadRequest.ToString(),
+                    message = MessageConstant.ProductMessage.NegativeQuantity, data = null
+                };
             }
+
             var validationResult = ValidateImages(createProductRequest.ImageLink);
             if (validationResult.Any())
             {
@@ -68,6 +85,7 @@ namespace MRC_API.Service.Implement
                     data = null
                 };
             }
+
             createProductRequest.Description = _sanitizer.Sanitize(createProductRequest.Description);
             createProductRequest.Message = _sanitizer.Sanitize(createProductRequest.Message);
             Product product = new Product
@@ -108,7 +126,8 @@ namespace MRC_API.Service.Implement
 
                 if (isSuccessful)
                 {
-                    var subCategory = await _unitOfWork.GetRepository<SubCategory>().SingleOrDefaultAsync(predicate: c => c.Id.Equals(createProductRequest.SubCategoryId));
+                    var subCategory = await _unitOfWork.GetRepository<SubCategory>()
+                        .SingleOrDefaultAsync(predicate: c => c.Id.Equals(createProductRequest.SubCategoryId));
                     return new ApiResponse
                     {
                         status = StatusCodes.Status201Created.ToString(),
@@ -144,7 +163,9 @@ namespace MRC_API.Service.Implement
                 };
             }
         }
-        public async Task<ApiResponse> GetAllProduct(int page, int size, string status, string? searchName, bool? isAscending, string? subCategoryName)
+
+        public async Task<ApiResponse> GetAllProduct(int page, int size, string status, string? searchName,
+            bool? isAscending, string? subCategoryName)
         {
             var products = await _unitOfWork.GetRepository<Product>().GetPagingListAsync(
                 selector: s => new GetProductResponse
@@ -162,17 +183,18 @@ namespace MRC_API.Service.Implement
                     Status = s.Status,
                     CategoryName = s.SubCategory.Category.CategoryName
                 },
-                 include: i => i.Include(p => p.SubCategory),
-        predicate: p =>
-            (string.IsNullOrEmpty(searchName) || p.ProductName.Contains(searchName)) && // Filter theo tên
-            (string.IsNullOrEmpty(status) || p.Status.Equals(status)) &&              // Filter theo trạng thái
-            (string.IsNullOrEmpty(subCategoryName) || p.SubCategory.SubCategoryName.Contains(subCategoryName)) && !p.DelDate.HasValue, // Filter theo tên danh mục
-        orderBy: q => isAscending.HasValue
-            ? (isAscending.Value ? q.OrderBy(p => p.Price) : q.OrderByDescending(p => p.Price))
-            : q.OrderByDescending(p => p.InsDate),
-        page: page,
-        size: size
-                );
+                include: i => i.Include(p => p.SubCategory),
+                predicate: p =>
+                    (string.IsNullOrEmpty(searchName) || p.ProductName.Contains(searchName)) && // Filter by name
+                    (string.IsNullOrEmpty(status) || p.Status.Equals(status)) && // Filter by status
+                    (string.IsNullOrEmpty(subCategoryName) ||
+                     p.SubCategory.SubCategoryName.Contains(subCategoryName)), // Filter by subcategory
+                orderBy: q => isAscending.HasValue
+                    ? (isAscending.Value ? q.OrderBy(p => p.Price) : q.OrderByDescending(p => p.Price))
+                    : q.OrderByDescending(p => p.InsDate),
+                page: page,
+                size: size
+            );
 
             int totalItems = products.Total;
             int totalPages = (int)Math.Ceiling((double)totalItems / size);
@@ -200,8 +222,9 @@ namespace MRC_API.Service.Implement
                 data = products
             };
         }
+
         public async Task<ApiResponse> GetListProduct(int page, int size, string? search, bool? isAscending,
-                                               string? subCategoryName, decimal? minPrice, decimal? maxPrice)
+            string? subCategoryName, decimal? minPrice, decimal? maxPrice)
         {
             var products = await _unitOfWork.GetRepository<Product>().GetPagingListAsync(
                 selector: s => new GetProductResponse
@@ -220,13 +243,14 @@ namespace MRC_API.Service.Implement
                     CategoryName = s.SubCategory.Category.CategoryName
                 },
                 predicate: p =>
-    p.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()) &&
-    (string.IsNullOrEmpty(search) ||
-     p.ProductName.ToLower().Contains(search.ToLower()) ||
-     p.Description.ToLower().Contains(search.ToLower()) ||
-     (!string.IsNullOrEmpty(p.Message) && p.Message.ToLower().Contains(search.ToLower())))
-                                             && // Tìm kiếm toàn diện
-                    (string.IsNullOrEmpty(subCategoryName) || p.SubCategory.SubCategoryName.Equals(subCategoryName)) && // Filter theo category
+                    p.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()) &&
+                    (string.IsNullOrEmpty(search) ||
+                     p.ProductName.ToLower().Contains(search.ToLower()) ||
+                     p.Description.ToLower().Contains(search.ToLower()) ||
+                     (!string.IsNullOrEmpty(p.Message) && p.Message.ToLower().Contains(search.ToLower())))
+                    && // Tìm kiếm toàn diện
+                    (string.IsNullOrEmpty(subCategoryName) ||
+                     p.SubCategory.SubCategoryName.Equals(subCategoryName)) && // Filter theo category
                     (!minPrice.HasValue || p.Price >= minPrice.Value) && // Filter giá tối thiểu
                     (!maxPrice.HasValue || p.Price <= maxPrice.Value), // Filter giá tối đa
                 orderBy: q => isAscending.HasValue
@@ -295,7 +319,8 @@ namespace MRC_API.Service.Implement
                     Price = s.Price,
                     Status = s.Status
                 },
-                predicate: p => p.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()) && p.SubCategoryId.Equals(subCateId),
+                predicate: p =>
+                    p.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()) && p.SubCategoryId.Equals(subCateId),
                 page: page,
                 size: size
             );
@@ -326,6 +351,7 @@ namespace MRC_API.Service.Implement
                 data = products
             };
         }
+
         public async Task<ApiResponse> GetProductById(Guid productId)
         {
             var product = await _unitOfWork.GetRepository<Product>().SingleOrDefaultAsync(
@@ -343,13 +369,16 @@ namespace MRC_API.Service.Implement
                     Status = s.Status,
                     Price = s.Price,
                     CategoryName = s.SubCategory.Category.CategoryName,
-
                 },
                 predicate: p => p.Id.Equals(productId));
 
             if (product == null)
             {
-                return new ApiResponse { status = StatusCodes.Status404NotFound.ToString(), message = MessageConstant.ProductMessage.ProductNotExist, data = null };
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status404NotFound.ToString(),
+                    message = MessageConstant.ProductMessage.ProductNotExist, data = null
+                };
             }
 
             return new ApiResponse
@@ -407,35 +436,54 @@ namespace MRC_API.Service.Implement
         public async Task<ApiResponse> UpdateProduct(Guid productId, UpdateProductRequest updateProductRequest)
         {
             // Check if the product exists
-            var existingProduct = await _unitOfWork.GetRepository<Product>().SingleOrDefaultAsync(predicate: p => p.Id.Equals(productId));
+            var existingProduct = await _unitOfWork.GetRepository<Product>()
+                .SingleOrDefaultAsync(predicate: p => p.Id.Equals(productId));
             if (existingProduct == null)
             {
-                return new ApiResponse { status = StatusCodes.Status404NotFound.ToString(), message = MessageConstant.ProductMessage.ProductNotExist, data = null };
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status404NotFound.ToString(),
+                    message = MessageConstant.ProductMessage.ProductNotExist, data = null
+                };
             }
 
             // Check CategoryId if provided
             if (updateProductRequest.SubCategoryId.HasValue)
             {
-                var subCateCheck = await _unitOfWork.GetRepository<SubCategory>().SingleOrDefaultAsync(predicate: c => c.Id.Equals(updateProductRequest.SubCategoryId.Value));
+                var subCateCheck = await _unitOfWork.GetRepository<SubCategory>()
+                    .SingleOrDefaultAsync(predicate: c => c.Id.Equals(updateProductRequest.SubCategoryId.Value));
                 if (subCateCheck == null)
                 {
-                    return new ApiResponse { status = StatusCodes.Status400BadRequest.ToString(), message = MessageConstant.CategoryMessage.CategoryNotExist, data = null };
+                    return new ApiResponse
+                    {
+                        status = StatusCodes.Status400BadRequest.ToString(),
+                        message = MessageConstant.CategoryMessage.CategoryNotExist, data = null
+                    };
                 }
+
                 existingProduct.SubCategoryId = updateProductRequest.SubCategoryId.Value;
             }
 
             // Check product name if provided
-            if (!string.IsNullOrEmpty(updateProductRequest.ProductName) && !existingProduct.ProductName.Equals(updateProductRequest.ProductName))
+            if (!string.IsNullOrEmpty(updateProductRequest.ProductName) &&
+                !existingProduct.ProductName.Equals(updateProductRequest.ProductName))
             {
-                var prodCheck = await _unitOfWork.GetRepository<Product>().SingleOrDefaultAsync(predicate: p => p.ProductName.Equals(updateProductRequest.ProductName));
+                var prodCheck = await _unitOfWork.GetRepository<Product>()
+                    .SingleOrDefaultAsync(predicate: p => p.ProductName.Equals(updateProductRequest.ProductName));
                 if (prodCheck != null)
                 {
-                    return new ApiResponse { status = StatusCodes.Status400BadRequest.ToString(), message = MessageConstant.ProductMessage.ProductNameExisted, data = null };
+                    return new ApiResponse
+                    {
+                        status = StatusCodes.Status400BadRequest.ToString(),
+                        message = MessageConstant.ProductMessage.ProductNameExisted, data = null
+                    };
                 }
+
                 existingProduct.ProductName = updateProductRequest.ProductName;
             }
 
-            if (!string.IsNullOrEmpty(updateProductRequest.Status) && !existingProduct.Status.Equals(updateProductRequest.Status))
+            if (!string.IsNullOrEmpty(updateProductRequest.Status) &&
+                !existingProduct.Status.Equals(updateProductRequest.Status))
             {
                 existingProduct.Status = updateProductRequest.Status;
             }
@@ -444,33 +492,48 @@ namespace MRC_API.Service.Implement
             {
                 if (updateProductRequest.Price <= 0)
                 {
-                    return new ApiResponse { status = StatusCodes.Status400BadRequest.ToString(), message = MessageConstant.ProductMessage.NegativeQuantity, data = null };
+                    return new ApiResponse
+                    {
+                        status = StatusCodes.Status400BadRequest.ToString(),
+                        message = MessageConstant.ProductMessage.NegativeQuantity, data = null
+                    };
                 }
+
                 existingProduct.Price = updateProductRequest.Price.Value;
             }
+
             // Check quantity if provided
             if (updateProductRequest.Quantity.HasValue)
             {
                 if (updateProductRequest.Quantity < 0)
                 {
-                    return new ApiResponse { status = StatusCodes.Status400BadRequest.ToString(), message = MessageConstant.ProductMessage.NegativeQuantity, data = null };
+                    return new ApiResponse
+                    {
+                        status = StatusCodes.Status400BadRequest.ToString(),
+                        message = MessageConstant.ProductMessage.NegativeQuantity, data = null
+                    };
                 }
+
                 existingProduct.Quantity = updateProductRequest.Quantity.Value;
             }
+
             if (!string.IsNullOrEmpty(updateProductRequest.Message))
             {
                 existingProduct.Message = updateProductRequest.Message;
             }
+
             // Update description if provided
             if (!string.IsNullOrEmpty(updateProductRequest.Description))
             {
-                existingProduct.Description = _sanitizer.Sanitize(updateProductRequest.Description); ;
+                existingProduct.Description = _sanitizer.Sanitize(updateProductRequest.Description);
+                ;
             }
 
             // Update images if provided
             if (updateProductRequest.ImageLink != null && updateProductRequest.ImageLink.Any())
             {
-                var existingImages = await _unitOfWork.GetRepository<Image>().GetListAsync(predicate: i => i.ProductId.Equals(existingProduct.Id));
+                var existingImages = await _unitOfWork.GetRepository<Image>()
+                    .GetListAsync(predicate: i => i.ProductId.Equals(existingProduct.Id));
                 foreach (var img in existingImages)
                 {
                     _unitOfWork.GetRepository<Image>().DeleteAsync(img);
@@ -498,7 +561,8 @@ namespace MRC_API.Service.Implement
 
             if (isSuccessful)
             {
-                var subCategory = await _unitOfWork.GetRepository<SubCategory>().SingleOrDefaultAsync(predicate: c => c.Id.Equals(existingProduct.SubCategoryId));
+                var subCategory = await _unitOfWork.GetRepository<SubCategory>()
+                    .SingleOrDefaultAsync(predicate: c => c.Id.Equals(existingProduct.SubCategoryId));
                 return new ApiResponse
                 {
                     status = StatusCodes.Status200OK.ToString(),
@@ -517,8 +581,13 @@ namespace MRC_API.Service.Implement
                 };
             }
 
-            return new ApiResponse { status = StatusCodes.Status500InternalServerError.ToString(), message = "Failed to update product.", data = null };
+            return new ApiResponse
+            {
+                status = StatusCodes.Status500InternalServerError.ToString(), message = "Failed to update product.",
+                data = null
+            };
         }
+
         public async Task<ApiResponse> EnableProduct(Guid productId)
         {
             if (productId == null)
@@ -530,7 +599,9 @@ namespace MRC_API.Service.Implement
                     status = StatusCodes.Status400BadRequest.ToString()
                 };
             }
-            var product = await _unitOfWork.GetRepository<Product>().SingleOrDefaultAsync(predicate: p => p.Id.Equals(productId));
+
+            var product = await _unitOfWork.GetRepository<Product>()
+                .SingleOrDefaultAsync(predicate: p => p.Id.Equals(productId));
             if (product == null)
             {
                 return new ApiResponse()
@@ -540,66 +611,95 @@ namespace MRC_API.Service.Implement
                     status = StatusCodes.Status400BadRequest.ToString()
                 };
             }
+
             if (product.Status.Equals(StatusEnum.Unavailable.ToString()))
             {
                 product.Status = StatusEnum.Available.ToString();
             }
+
             _unitOfWork.GetRepository<Product>().UpdateAsync(product);
             bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
 
             if (isSuccessful)
             {
-
                 return new ApiResponse
                 {
                     status = StatusCodes.Status200OK.ToString(),
                     message = "Product updated successfully.",
                     data = product.Status,
-
                 };
             }
 
-            return new ApiResponse { status = StatusCodes.Status500InternalServerError.ToString(), message = "Failed to update product.", data = null };
-
+            return new ApiResponse
+            {
+                status = StatusCodes.Status500InternalServerError.ToString(), message = "Failed to update product.",
+                data = null
+            };
         }
-        public async Task<bool> DeleteProduct(Guid productId)
+
+        public async Task<ApiResponse> DeleteProduct(Guid productId)
         {
             if (productId == Guid.Empty)
             {
-                throw new BadHttpRequestException(MessageConstant.ProductMessage.ProductIdEmpty);
+                return new ApiResponse
+                {
+                    data = null,
+                    message = MessageConstant.ProductMessage.ProductIdEmpty,
+                    status = StatusCodes.Status400BadRequest.ToString()
+                };
             }
 
             // Find product
-            var existingProduct = await _unitOfWork.GetRepository<Product>().SingleOrDefaultAsync(predicate: p => p.Id.Equals(productId) 
-                                                                                                            && p.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum())
-                                                                                                            && !p.DelDate.HasValue);
+            var existingProduct = await _unitOfWork.GetRepository<Product>()
+                .SingleOrDefaultAsync(predicate: p => p.Id.Equals(productId));
             if (existingProduct == null)
             {
-                return false;
+                return new ApiResponse
+                {
+                    data = null,
+                    message = MessageConstant.ProductMessage.ProductNotExist,
+                    status = StatusCodes.Status404NotFound.ToString()
+                };
             }
 
-            var cartItems = await _unitOfWork.GetRepository<CartItem>().GetListAsync(
-                predicate: ci => ci.ProductId.Equals(existingProduct.Id));
-
+            // Delete related cart items
+            var cartItems = await _unitOfWork.GetRepository<CartItem>()
+                .GetListAsync(predicate: ci => ci.ProductId.Equals(existingProduct.Id));
             foreach (var cartItem in cartItems)
             {
                 _unitOfWork.GetRepository<CartItem>().DeleteAsync(cartItem);
             }
 
+            // Delete related images
+            var images = await _unitOfWork.GetRepository<Image>()
+                .GetListAsync(predicate: i => i.ProductId.Equals(existingProduct.Id));
+            foreach (var image in images)
+            {
+                _unitOfWork.GetRepository<Image>().DeleteAsync(image);
+            }
 
-            // Mark as deleted
-            existingProduct.Status = StatusEnum.Unavailable.GetDescriptionFromEnum();
-            existingProduct.DelDate = TimeUtils.GetCurrentSEATime();
-            _unitOfWork.GetRepository<Product>().UpdateAsync(existingProduct);
+            // Delete the product
+            _unitOfWork.GetRepository<Product>().DeleteAsync(existingProduct);
             bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
 
             if (isSuccessful)
             {
-                return true;
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "Product deleted successfully.",
+                    data = true
+                };
             }
 
-            return false;
+            return new ApiResponse
+            {
+                status = StatusCodes.Status500InternalServerError.ToString(),
+                message = "Failed to delete product.",
+                data = null
+            };
         }
+
         private async Task<List<string>> UploadFilesToFirebase(List<IFormFile> formFiles)
         {
             var uploadedUrls = new List<string>();
@@ -613,7 +713,8 @@ namespace MRC_API.Service.Implement
                         if (formFile.Length > 0)
                         {
                             string fileName = Path.GetFileName(formFile.FileName);
-                            string firebaseStorageUrl = $"{FirebaseStorageBaseUrl}?uploadType=media&name=images/{Guid.NewGuid()}_{fileName}";
+                            string firebaseStorageUrl =
+                                $"{FirebaseStorageBaseUrl}?uploadType=media&name=images/{Guid.NewGuid()}_{fileName}";
 
                             using (var stream = new MemoryStream())
                             {
@@ -631,8 +732,8 @@ namespace MRC_API.Service.Implement
                                 }
                                 else
                                 {
-                                    var errorMessage = $"Error uploading file {fileName} to Firebase Storage. Status Code: {response.StatusCode}\nContent: {await response.Content.ReadAsStringAsync()}";
-
+                                    var errorMessage =
+                                        $"Error uploading file {fileName} to Firebase Storage. Status Code: {response.StatusCode}\nContent: {await response.Content.ReadAsStringAsync()}";
                                 }
                             }
                         }
@@ -641,10 +742,69 @@ namespace MRC_API.Service.Implement
             }
             catch (Exception ex)
             {
-
             }
 
             return uploadedUrls;
+        }
+
+        public async Task<ApiResponse> DisableProduct(Guid productId)
+        {
+            if (productId == Guid.Empty)
+            {
+                return new ApiResponse
+                {
+                    data = null,
+                    message = "productId is empty",
+                    status = StatusCodes.Status400BadRequest.ToString()
+                };
+            }
+
+            var product = await _unitOfWork.GetRepository<Product>()
+                .SingleOrDefaultAsync(predicate: p => p.Id.Equals(productId));
+            if (product == null)
+            {
+                return new ApiResponse
+                {
+                    data = null,
+                    message = MessageConstant.ProductMessage.ProductNotExist,
+                    status = StatusCodes.Status404NotFound.ToString()
+                };
+            }
+
+            if (product.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()))
+            {
+                product.Status = StatusEnum.Unavailable.GetDescriptionFromEnum();
+                product.UpDate = TimeUtils.GetCurrentSEATime();
+            }
+            else
+            {
+                return new ApiResponse
+                {
+                    data = product.Status,
+                    message = "Product is already disabled",
+                    status = StatusCodes.Status400BadRequest.ToString()
+                };
+            }
+
+            _unitOfWork.GetRepository<Product>().UpdateAsync(product);
+            bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
+
+            if (isSuccessful)
+            {
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "Product disabled successfully.",
+                    data = product.Status
+                };
+            }
+
+            return new ApiResponse
+            {
+                status = StatusCodes.Status500InternalServerError.ToString(),
+                message = "Failed to disable product.",
+                data = null
+            };
         }
 
         private string ParseDownloadUrl(string responseBody, string fileName)
@@ -667,10 +827,11 @@ namespace MRC_API.Service.Implement
                     data = null
                 };
             }
+
             var allowedExtensions = new[] { ".jpg", ".jpeg", ".png" };
             var allowedContentTypes = new[] { "image/jpeg", "image/png" };
             if (!allowedContentTypes.Contains(formFile.ContentType, StringComparer.OrdinalIgnoreCase) ||
-    !allowedExtensions.Contains(Path.GetExtension(formFile.FileName), StringComparer.OrdinalIgnoreCase))
+                !allowedExtensions.Contains(Path.GetExtension(formFile.FileName), StringComparer.OrdinalIgnoreCase))
             {
                 return new ApiResponse
                 {
@@ -696,7 +857,8 @@ namespace MRC_API.Service.Implement
                 using (var client = new HttpClient())
                 {
                     string fileName = Path.GetFileName(formFile.FileName);
-                    string firebaseStorageUrl = $"{FirebaseStorageBaseUrl}?uploadType=media&name=images/{Guid.NewGuid()}_{fileName}";
+                    string firebaseStorageUrl =
+                        $"{FirebaseStorageBaseUrl}?uploadType=media&name=images/{Guid.NewGuid()}_{fileName}";
 
                     using (var stream = new MemoryStream())
                     {
@@ -721,7 +883,8 @@ namespace MRC_API.Service.Implement
                         }
                         else
                         {
-                            var errorMessage = $"Error uploading file {fileName} to Firebase Storage. Status Code: {response.StatusCode}\nContent: {await response.Content.ReadAsStringAsync()}";
+                            var errorMessage =
+                                $"Error uploading file {fileName} to Firebase Storage. Status Code: {response.StatusCode}\nContent: {await response.Content.ReadAsStringAsync()}";
                             throw new Exception(errorMessage);
                         }
                     }
@@ -732,6 +895,7 @@ namespace MRC_API.Service.Implement
                 throw new Exception("An error occurred while uploading the file to Firebase.", ex);
             }
         }
+
         private List<string> ValidateImages(List<IFormFile> imageLinks)
         {
             var errorList = new List<string>();
@@ -744,7 +908,8 @@ namespace MRC_API.Service.Implement
                 if (!allowedContentTypes.Contains(formFile.ContentType, StringComparer.OrdinalIgnoreCase) ||
                     !allowedExtensions.Contains(Path.GetExtension(formFile.FileName), StringComparer.OrdinalIgnoreCase))
                 {
-                    errorList.Add($"File '{formFile.FileName}' is invalid. Only .jpg, .jpeg, and .png files are allowed.");
+                    errorList.Add(
+                        $"File '{formFile.FileName}' is invalid. Only .jpg, .jpeg, and .png files are allowed.");
                 }
 
                 if (formFile.Length > maxFileSize)

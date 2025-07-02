@@ -8,6 +8,7 @@ using AutoMapper;
 using MRC_API.Payload.Request.News;
 using Repository.Enum;
 using System.ComponentModel.DataAnnotations;
+using MRC_API.Infrastructure;
 
 namespace MRC_API.Controllers
 {
@@ -54,7 +55,7 @@ namespace MRC_API.Controllers
         [HttpGet(ApiEndPointConstant.News.GetAllNews)]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
-        public async Task<IActionResult> GetAllNews([FromQuery] int? page, [FromQuery] int? size, [FromQuery][Required] TypeNewsEnum type, [FromQuery] Guid? ignoreId)
+        public async Task<IActionResult> GetAllNews([FromQuery] int? page, [FromQuery] int? size, [FromQuery][Required] TypeNewsEnum? type, [FromQuery] Guid? ignoreId)
         {
             int pageNumber = page ?? 1;
             int pageSize = size ?? 10;
@@ -89,6 +90,26 @@ namespace MRC_API.Controllers
 
             return StatusCode(int.Parse(response.status), response);
 
+        }
+        [CustomAuthorize(roles: "Admin,Manager")]
+        [HttpPut(ApiEndPointConstant.News.UpdateNews)] // Đảm bảo endpoint được định nghĩa
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+        [ProducesErrorResponseType(typeof(ProblemDetails))]
+        public async Task<IActionResult> UpdateNews([FromRoute] Guid id, [FromBody] UpdateNewsRequest request)
+        {
+            var response = await _newsService.UpdateNews(id, request);
+
+            if (response.status == StatusCodes.Status404NotFound.ToString())
+            {
+                return NotFound(response);
+            }
+            if (response.status == StatusCodes.Status500InternalServerError.ToString())
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, response);
+            }
+
+            return Ok(response);
         }
     }
 }
