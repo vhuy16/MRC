@@ -111,7 +111,7 @@ namespace MRC_API.Service.Implement
             };
         }
 
-        public async Task<ApiResponse> GetAllNews(int page, int size, TypeNewsEnum type, Guid? ignoredId)
+        public async Task<ApiResponse> GetAllNews(int page, int size, TypeNewsEnum? type, Guid? ignoredId)
         {
             var news = await _unitOfWork.GetRepository<News>().GetPagingListAsync(
                 selector: n => new GetNewsResponse()
@@ -181,7 +181,60 @@ namespace MRC_API.Service.Implement
                 data = news
             };
         }
+        public async Task<ApiResponse> UpdateNews(Guid id, UpdateNewsRequest request)
+        {
+            // Kiểm tra xem tin tức có tồn tại không
+            var existingNews = await _unitOfWork.GetRepository<News>().SingleOrDefaultAsync(predicate: n => n.Id.Equals(id));
+            if (existingNews == null)
+            {
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status404NotFound.ToString(),
+                    message = "Không tìm thấy tin tức này",
+                    data = null
+                };
+            }
 
+            // Cập nhật các trường nếu được cung cấp
+            if (!string.IsNullOrEmpty(request.Content))
+            {
+                existingNews.Content = _sanitizer.Sanitize(request.Content);
+            }
+
+            if (!string.IsNullOrEmpty(request.Type))
+            {
+                existingNews.Type = request.Type;
+            }
+
+            // Cập nhật thời gian
+            existingNews.UpDate = TimeUtils.GetCurrentSEATime();
+
+            // Thực hiện cập nhật
+            _unitOfWork.GetRepository<News>().UpdateAsync(existingNews);
+            bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
+
+            if (isSuccessful)
+            {
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "Cập nhật tin tức thành công",
+                    data = new GetNewsResponse
+                    {
+                        Id = existingNews.Id,
+                        Content = existingNews.Content,
+                        Type = existingNews.Type
+                    }
+                };
+            }
+
+            return new ApiResponse
+            {
+                status = StatusCodes.Status500InternalServerError.ToString(),
+                message = "Cập nhật tin tức thất bại",
+                data = null
+            };
+        }
         public async Task<ApiResponse> DeleteNews(Guid id)
         {
             var news = await _unitOfWork.GetRepository<News>().SingleOrDefaultAsync(

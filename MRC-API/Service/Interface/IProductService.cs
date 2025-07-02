@@ -14,12 +14,13 @@ namespace MRC_API.Service.Interface
         Task<ApiResponse> GetListProductByCategoryId(Guid subCateId, int page, int size);
         //Task<bool> UpdateProduct(Guid ProID, UpdateProductRequest updateProductRequest);
         Task<ApiResponse> UpdateProduct(Guid productId, UpdateProductRequest updateProductRequest);
-        Task<bool> DeleteProduct(Guid productId);
+        Task<ApiResponse> DeleteProduct(Guid productId);
         Task<ApiResponse> GetProductById(Guid productId);
 
         Task<ApiResponse> EnableProduct(Guid productId);
 
         Task<ApiResponse> UpImageForDescription(IFormFile formFile);
+        Task<ApiResponse> DisableProduct(Guid productId);
 
     }
 }
