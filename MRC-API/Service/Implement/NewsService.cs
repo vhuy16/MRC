@@ -120,8 +120,8 @@ namespace MRC_API.Service.Implement
                     Content = n.Content,
                     Type = n.Type,
                 },
-                predicate: n => n.IsActive == true && 
-                                n.Type.Equals(type.GetDescriptionFromEnum()) && 
+                predicate: n => n.IsActive == true &&
+                                (type == null || n.Type.Equals(type.GetDescriptionFromEnum())) &&
                                 (ignoredId == null || n.Id != ignoredId),
                 orderBy: n => n.OrderByDescending(n => n.InsDate),
                 page: page,
