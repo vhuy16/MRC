@@ -82,7 +82,7 @@ namespace MRC_API.Service.Implement
             {
                 Id = Guid.NewGuid(),
                 Content = _sanitizer.Sanitize(request.Content),
-                Type = request.GetDescriptionFromEnum(),
+                Type = request.Type.GetDescriptionFromEnum(),
                 IsActive = true,
                 InsDate = TimeUtils.GetCurrentSEATime(),
                 UpDate = TimeUtils.GetCurrentSEATime(),

@@ -200,15 +200,15 @@ public partial class MrcContext : DbContext
 
         modelBuilder.Entity<News>(entity =>
         {
-            entity
-                .HasNoKey()
-                .ToTable("News", "dbo");
+            entity.ToTable("News", "dbo");
 
+            entity.Property(e => e.Id)
+                .ValueGeneratedNever()
+                .HasColumnName("id");
             entity.Property(e => e.Content).HasColumnName("content");
             entity.Property(e => e.DelDate)
                 .HasColumnType("datetime")
                 .HasColumnName("delDate");
-            entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.InsDate)
                 .HasColumnType("datetime")
                 .HasColumnName("insDate");
