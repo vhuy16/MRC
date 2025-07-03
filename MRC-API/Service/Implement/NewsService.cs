@@ -199,6 +199,11 @@ namespace MRC_API.Service.Implement
                 };
             }
 
+            if (!string.IsNullOrEmpty(request.Title))
+            {
+                existingNews.Content = request.Title;
+            }
+
             // Cập nhật các trường nếu được cung cấp
             if (!string.IsNullOrEmpty(request.Content))
             {
@@ -226,6 +231,7 @@ namespace MRC_API.Service.Implement
                     data = new GetNewsResponse
                     {
                         Id = existingNews.Id,
+                        Title = existingNews.Title,
                         Content = existingNews.Content,
                         Type = existingNews.Type
                     }
