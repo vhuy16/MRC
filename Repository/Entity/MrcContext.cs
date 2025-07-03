@@ -213,6 +213,7 @@ public partial class MrcContext : DbContext
                 .HasColumnType("datetime")
                 .HasColumnName("insDate");
             entity.Property(e => e.IsActive).HasColumnName("isActive");
+            entity.Property(e => e.Title).HasColumnName("title");
             entity.Property(e => e.Type)
                 .HasMaxLength(50)
                 .IsUnicode(false)

@@ -81,6 +81,7 @@ namespace MRC_API.Service.Implement
             News news = new News()
             {
                 Id = Guid.NewGuid(),
+                Title = request.Title,
                 Content = _sanitizer.Sanitize(request.Content),
                 Type = request.Type.GetDescriptionFromEnum(),
                 IsActive = true,
@@ -98,6 +99,7 @@ namespace MRC_API.Service.Implement
                     message = "Tạo tin tức thành công",
                     data = new CreateNewsResponse()
                     {
+                        Title = news.Title,
                         Content = news.Content,
                         Type = news.Type
                     }
@@ -117,6 +119,7 @@ namespace MRC_API.Service.Implement
                 selector: n => new GetNewsResponse()
                 {
                     Id = n.Id,
+                    Title = n.Title,
                     Content = n.Content,
                     Type = n.Type,
                 },
@@ -160,6 +163,7 @@ namespace MRC_API.Service.Implement
                 selector: n => new GetNewsResponse()
                 {
                     Id = n.Id,
+                    Title = n.Title,
                     Content = n.Content,
                     Type = n.Type,
                 },
