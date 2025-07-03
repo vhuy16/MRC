@@ -201,7 +201,7 @@ namespace MRC_API.Service.Implement
 
             if (!string.IsNullOrEmpty(request.Title))
             {
-                existingNews.Content = request.Title;
+                existingNews.Title = request.Title;
             }
 
             // Cập nhật các trường nếu được cung cấp
