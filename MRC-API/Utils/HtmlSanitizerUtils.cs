@@ -23,6 +23,7 @@ namespace MRC_API.Utils
             sanitizer.AllowedAttributes.Add("style");
             sanitizer.AllowedAttributes.Add("src");
             sanitizer.AllowedAttributes.Add("alt");
+            sanitizer.AllowedAttributes.Add("class");
 
             return sanitizer.Sanitize(htmlContent);
         }
