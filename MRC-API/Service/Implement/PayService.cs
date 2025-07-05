@@ -237,7 +237,7 @@ namespace MRC_API.Service.Implement
                 {
                     data = string.Empty,
                     message = "User ID is null",
-                    status = StatusCodes.Status400BadRequest.ToString(),
+                    status = StatusCodes.Status401Unauthorized.ToString(),
                 };
             }
 

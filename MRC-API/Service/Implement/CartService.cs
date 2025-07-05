@@ -299,7 +299,12 @@ namespace MRC_API.Service.Implement
             Guid? userId = UserUtil.GetAccountId(_httpContextAccessor.HttpContext);
             if (userId == null)
             {
-                throw new BadHttpRequestException("User not logged in.");
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status401Unauthorized.ToString(),
+                    message = "User ID not found.",
+                    data = null
+                };
             }
 
             var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
