@@ -878,7 +878,7 @@ namespace MRC_API.Service.Implement
             {
                 return new ApiResponse
                 {
-                    status = StatusCodes.Status400BadRequest.ToString(),
+                    status = StatusCodes.Status401Unauthorized.ToString(),
                     message = "User ID not found.",
                     data = null
                 };
