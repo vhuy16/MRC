@@ -69,6 +69,7 @@
             public const string EnableProduct = ProductEndpoint + "/enable-product" + "/{id}"  ;
             public const string DeleteProduct = ProductEndpoint + "/{id}";
             public const string DisableProduct = ProductEndpoint + "/disable-product" + "/{id}";
+            public const string PatchProductImages = ProductEndpoint + "/patch-product-images" + "/{id}";
             public const string UploadImg = "upload-img";
         }
 

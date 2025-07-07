@@ -587,7 +587,112 @@ namespace MRC_API.Service.Implement
                 data = null
             };
         }
+    public async Task<ApiResponse> PatchProductImages(Guid productId, List<IFormFile> newImages)
+        {
+            // Check if the product exists
+            var existingProduct = await _unitOfWork.GetRepository<Product>()
+                .SingleOrDefaultAsync(predicate: p => p.Id.Equals(productId), include: p => p.Include(i => i.Images));
+            if (existingProduct == null)
+            {
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status404NotFound.ToString(),
+                    message = MessageConstant.ProductMessage.ProductNotExist,
+                    data = null
+                };
+            }
 
+            // Validate new images if provided
+            if (newImages != null && newImages.Any())
+            {
+                var validationResult = ValidateImages(newImages);
+                if (validationResult.Any())
+                {
+                    return new ApiResponse
+                    {
+                        status = StatusCodes.Status400BadRequest.ToString(),
+                        listErrorMessage = validationResult,
+                        data = null
+                    };
+                }
+            }
+
+            try
+            {
+                // Remove all existing images
+                var existingImages = existingProduct.Images.ToList();
+                foreach (var image in existingImages)
+                {
+                    existingProduct.Images.Remove(image);
+                     _unitOfWork.GetRepository<Image>().DeleteAsync(image);
+                }
+
+                // Add new images if provided
+                if (newImages != null && newImages.Any())
+                {
+                    var imageUrls = await UploadFilesToFirebase(newImages);
+                    foreach (var imageUrl in imageUrls)
+                    {
+                        var newImage = new Image
+                        {
+                            Id = Guid.NewGuid(),
+                            ProductId = existingProduct.Id,
+                            InsDate = TimeUtils.GetCurrentSEATime(),
+                            UpDate = TimeUtils.GetCurrentSEATime(),
+                            LinkImage = imageUrl
+                        };
+                        existingProduct.Images.Add(newImage);
+                        await _unitOfWork.GetRepository<Image>().InsertAsync(newImage);
+                    }
+                }
+
+                // Update timestamp
+                existingProduct.UpDate = TimeUtils.GetCurrentSEATime();
+
+                // Commit changes
+                _unitOfWork.GetRepository<Product>().UpdateAsync(existingProduct);
+                bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
+
+                if (isSuccessful)
+                {
+                    var subCategory = await _unitOfWork.GetRepository<SubCategory>()
+                        .SingleOrDefaultAsync(predicate: c => c.Id.Equals(existingProduct.SubCategoryId));
+                    
+                    return new ApiResponse
+                    {
+                        status = StatusCodes.Status200OK.ToString(),
+                        message = "Product images updated successfully.",
+                        data = new UpdateProductResponse
+                        {
+                            Id = existingProduct.Id,
+                            Description = existingProduct.Description,
+                            Images = existingProduct.Images.Select(i => i.LinkImage).ToList(),
+                            ProductName = existingProduct.ProductName,
+                            Quantity = existingProduct.Quantity,
+                            Message = existingProduct.Message,
+                            SubCategoryName = subCategory?.SubCategoryName,
+                            Price = existingProduct.Price
+                        }
+                    };
+                }
+
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status500InternalServerError.ToString(),
+                    message = "Failed to update product images.",
+                    data = null
+                };
+            }
+            catch (Exception ex)
+            {
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status500InternalServerError.ToString(),
+                    message = $"An error occurred: {ex.Message}",
+                    data = null
+                };
+            }
+        }
         public async Task<ApiResponse> EnableProduct(Guid productId)
         {
             if (productId == null)

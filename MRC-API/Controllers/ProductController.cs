@@ -162,6 +162,28 @@ namespace MRC_API.Controllers
             return StatusCode(int.Parse(response.status), response);
         }
         [CustomAuthorize(roles: "Admin,Manager")]
+        [HttpPut(ApiEndPointConstant.Product.PatchProductImages)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+        [ProducesErrorResponseType(typeof(ProblemDetails))]
+        public async Task<IActionResult> PatchProductImages([FromRoute] Guid id, [FromForm] List<IFormFile> newImages)
+        {
+            if (newImages == null)
+            {
+                return BadRequest("Image list cannot be null.");
+            }
+
+            var response = await _productService.PatchProductImages(id, newImages);
+
+            if (response.status == StatusCodes.Status200OK.ToString())
+            {
+                return Ok(response);
+            }
+
+            return StatusCode(int.Parse(response.status), response);
+        }
+        [CustomAuthorize(roles: "Admin,Manager")]
         [HttpDelete(ApiEndPointConstant.Product.DeleteProduct)] // Lưu ý: Có thể cần kiểm tra nếu endpoint này đúng cho Delete
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
