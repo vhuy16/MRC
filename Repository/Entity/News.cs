@@ -18,4 +18,6 @@ public partial class News
     public DateTime? UpDate { get; set; }
 
     public DateTime? DelDate { get; set; }
+
+    public string? Title { get; set; }
 }

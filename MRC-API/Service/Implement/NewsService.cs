@@ -81,8 +81,9 @@ namespace MRC_API.Service.Implement
             News news = new News()
             {
                 Id = Guid.NewGuid(),
+                Title = request.Title,
                 Content = _sanitizer.Sanitize(request.Content),
-                Type = request.GetDescriptionFromEnum(),
+                Type = request.Type.GetDescriptionFromEnum(),
                 IsActive = true,
                 InsDate = TimeUtils.GetCurrentSEATime(),
                 UpDate = TimeUtils.GetCurrentSEATime(),
@@ -98,6 +99,7 @@ namespace MRC_API.Service.Implement
                     message = "Tạo tin tức thành công",
                     data = new CreateNewsResponse()
                     {
+                        Title = news.Title,
                         Content = news.Content,
                         Type = news.Type
                     }
@@ -117,6 +119,7 @@ namespace MRC_API.Service.Implement
                 selector: n => new GetNewsResponse()
                 {
                     Id = n.Id,
+                    Title = n.Title,
                     Content = n.Content,
                     Type = n.Type,
                 },
@@ -160,6 +163,7 @@ namespace MRC_API.Service.Implement
                 selector: n => new GetNewsResponse()
                 {
                     Id = n.Id,
+                    Title = n.Title,
                     Content = n.Content,
                     Type = n.Type,
                 },
@@ -195,6 +199,11 @@ namespace MRC_API.Service.Implement
                 };
             }
 
+            if (!string.IsNullOrEmpty(request.Title))
+            {
+                existingNews.Title = request.Title;
+            }
+
             // Cập nhật các trường nếu được cung cấp
             if (!string.IsNullOrEmpty(request.Content))
             {
@@ -222,6 +231,7 @@ namespace MRC_API.Service.Implement
                     data = new GetNewsResponse
                     {
                         Id = existingNews.Id,
+                        Title = existingNews.Title,
                         Content = existingNews.Content,
                         Type = existingNews.Type
                     }
