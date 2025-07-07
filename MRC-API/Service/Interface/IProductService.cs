@@ -18,6 +18,7 @@ namespace MRC_API.Service.Interface
         Task<ApiResponse> GetProductById(Guid productId);
 
         Task<ApiResponse> EnableProduct(Guid productId);
+        Task<ApiResponse> PatchProductImages(Guid productId, List<IFormFile> newImages);
 
         Task<ApiResponse> UpImageForDescription(IFormFile formFile);
         Task<ApiResponse> DisableProduct(Guid productId);
