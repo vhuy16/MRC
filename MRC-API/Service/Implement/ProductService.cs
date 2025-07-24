@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Bean_Mind.API.Utils;
 using Business.Interface;
 using Ganss.Xss;
@@ -17,7 +17,6 @@ using System.Drawing;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using Image = Repository.Entity.Image;
-
 
 namespace MRC_API.Service.Implement
 {
@@ -152,9 +151,6 @@ namespace MRC_API.Service.Implement
             }
             catch (Exception ex)
             {
-                // Log the exception if a logging framework is in place
-                // Example: _logger.LogError(ex, "An error occurred while creating the product.");
-
                 return new ApiResponse
                 {
                     status = "error",
@@ -287,7 +283,6 @@ namespace MRC_API.Service.Implement
             };
         }
 
-
         public async Task<ApiResponse> GetListProductByCategoryId(Guid subCateId, int page, int size)
         {
             // Check if the category exists
@@ -389,50 +384,6 @@ namespace MRC_API.Service.Implement
             };
         }
 
-        //public async Task<bool> UpdateProduct(Guid ProID, UpdateProductRequest updateProductRequest)
-        //{
-        //    var productUpdate = await _unitOfWork.GetRepository<Product>().SingleOrDefaultAsync(
-        //        predicate: p => p.Id.Equals(ProID)
-        //        );
-        //    if (productUpdate == null)
-        //    {
-        //        throw new BadHttpRequestException(MessageConstant.ProductMessage.ProductNotExist);
-        //    }
-        //    productUpdate.ProductName = string.IsNullOrEmpty(updateProductRequest.ProductName) ? productUpdate.ProductName : updateProductRequest.ProductName;
-        //    productUpdate.Description = string.IsNullOrEmpty(updateProductRequest.Description) ? productUpdate.Description : updateProductRequest.Description;
-        //    if (updateProductRequest.CategoryId.HasValue)
-        //    {
-        //        productUpdate.CategoryId = updateProductRequest.CategoryId.Value;
-        //    }
-        //    if (updateProductRequest.Quantity.HasValue)
-        //    {
-        //        productUpdate.Quantity = updateProductRequest.Quantity.Value;
-        //    }
-        //    if (updateProductRequest.ImageLink != null && updateProductRequest.ImageLink.Any())
-        //    {
-        //        foreach (var image in productUpdate.Images)
-        //        {
-        //            _unitOfWork.GetRepository<Image>().DeleteAsync(image);
-        //        }
-
-        //        // Upload new images
-        //        var imageUrls = await UploadFilesToFirebase(updateProductRequest.ImageLink);
-        //        foreach (var imageUrl in imageUrls)
-        //        {
-        //            productUpdate.Images.Add(new Image {
-        //                Id = Guid.NewGuid(),
-        //                ProductId = productUpdate.Id,
-        //                InsDate = TimeUtils.GetCurrentSEATime(),
-        //                UpDate = TimeUtils.GetCurrentSEATime(),
-        //                LinkImage = imageUrl
-        //                 });
-        //        }
-        //    }
-        //    productUpdate.UpDate = TimeUtils.GetCurrentSEATime();
-        //    _unitOfWork.GetRepository<Product>().UpdateAsync(productUpdate);
-        //    bool IsSuccessful = await _unitOfWork.CommitAsync() > 0;
-        //    return IsSuccessful;
-        //}
         public async Task<ApiResponse> UpdateProduct(Guid productId, UpdateProductRequest updateProductRequest)
         {
             // Check if the product exists
@@ -526,7 +477,6 @@ namespace MRC_API.Service.Implement
             if (!string.IsNullOrEmpty(updateProductRequest.Description))
             {
                 existingProduct.Description = _sanitizer.Sanitize(updateProductRequest.Description);
-                ;
             }
 
             // Update images if provided
@@ -587,7 +537,8 @@ namespace MRC_API.Service.Implement
                 data = null
             };
         }
-    public async Task<ApiResponse> PatchProductImages(Guid productId, List<IFormFile> newImages)
+
+        public async Task<ApiResponse> PatchProductImages(Guid productId, List<IFormFile> newImages)
         {
             // Check if the product exists
             var existingProduct = await _unitOfWork.GetRepository<Product>()
@@ -624,7 +575,7 @@ namespace MRC_API.Service.Implement
                 foreach (var image in existingImages)
                 {
                     existingProduct.Images.Remove(image);
-                     _unitOfWork.GetRepository<Image>().DeleteAsync(image);
+                    _unitOfWork.GetRepository<Image>().DeleteAsync(image);
                 }
 
                 // Add new images if provided
@@ -693,337 +644,3 @@ namespace MRC_API.Service.Implement
                 };
             }
         }
-        public async Task<ApiResponse> EnableProduct(Guid productId)
-        {
-            if (productId == null)
-            {
-                return new ApiResponse
-                {
-                    data = null,
-                    message = "productId is null",
-                    status = StatusCodes.Status400BadRequest.ToString()
-                };
-            }
-
-            var product = await _unitOfWork.GetRepository<Product>()
-                .SingleOrDefaultAsync(predicate: p => p.Id.Equals(productId));
-            if (product == null)
-            {
-                return new ApiResponse()
-                {
-                    data = null,
-                    message = MessageConstant.ProductMessage.ProductNotExist,
-                    status = StatusCodes.Status400BadRequest.ToString()
-                };
-            }
-
-            if (product.Status.Equals(StatusEnum.Unavailable.ToString()))
-            {
-                product.Status = StatusEnum.Available.ToString();
-            }
-
-            _unitOfWork.GetRepository<Product>().UpdateAsync(product);
-            bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
-
-            if (isSuccessful)
-            {
-                return new ApiResponse
-                {
-                    status = StatusCodes.Status200OK.ToString(),
-                    message = "Product updated successfully.",
-                    data = product.Status,
-                };
-            }
-
-            return new ApiResponse
-            {
-                status = StatusCodes.Status500InternalServerError.ToString(), message = "Failed to update product.",
-                data = null
-            };
-        }
-
-        public async Task<ApiResponse> DeleteProduct(Guid productId)
-        {
-            if (productId == Guid.Empty)
-            {
-                return new ApiResponse
-                {
-                    data = null,
-                    message = MessageConstant.ProductMessage.ProductIdEmpty,
-                    status = StatusCodes.Status400BadRequest.ToString()
-                };
-            }
-
-            // Find product
-            var existingProduct = await _unitOfWork.GetRepository<Product>()
-                .SingleOrDefaultAsync(predicate: p => p.Id.Equals(productId));
-            if (existingProduct == null)
-            {
-                return new ApiResponse
-                {
-                    data = null,
-                    message = MessageConstant.ProductMessage.ProductNotExist,
-                    status = StatusCodes.Status404NotFound.ToString()
-                };
-            }
-
-            // Delete related cart items
-            var cartItems = await _unitOfWork.GetRepository<CartItem>()
-                .GetListAsync(predicate: ci => ci.ProductId.Equals(existingProduct.Id));
-            foreach (var cartItem in cartItems)
-            {
-                _unitOfWork.GetRepository<CartItem>().DeleteAsync(cartItem);
-            }
-
-            // Delete related images
-            var images = await _unitOfWork.GetRepository<Image>()
-                .GetListAsync(predicate: i => i.ProductId.Equals(existingProduct.Id));
-            foreach (var image in images)
-            {
-                _unitOfWork.GetRepository<Image>().DeleteAsync(image);
-            }
-
-            // Delete the product
-            _unitOfWork.GetRepository<Product>().DeleteAsync(existingProduct);
-            bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
-
-            if (isSuccessful)
-            {
-                return new ApiResponse
-                {
-                    status = StatusCodes.Status200OK.ToString(),
-                    message = "Product deleted successfully.",
-                    data = true
-                };
-            }
-
-            return new ApiResponse
-            {
-                status = StatusCodes.Status500InternalServerError.ToString(),
-                message = "Failed to delete product.",
-                data = null
-            };
-        }
-
-        private async Task<List<string>> UploadFilesToFirebase(List<IFormFile> formFiles)
-        {
-            var uploadedUrls = new List<string>();
-
-            try
-            {
-                using (var client = new HttpClient())
-                {
-                    foreach (var formFile in formFiles)
-                    {
-                        if (formFile.Length > 0)
-                        {
-                            string fileName = Path.GetFileName(formFile.FileName);
-                            string firebaseStorageUrl =
-                                $"{FirebaseStorageBaseUrl}?uploadType=media&name=images/{Guid.NewGuid()}_{fileName}";
-
-                            using (var stream = new MemoryStream())
-                            {
-                                await formFile.CopyToAsync(stream);
-                                stream.Position = 0;
-                                var content = new ByteArrayContent(stream.ToArray());
-                                content.Headers.ContentType = new MediaTypeHeaderValue(formFile.ContentType);
-
-                                var response = await client.PostAsync(firebaseStorageUrl, content);
-                                if (response.IsSuccessStatusCode)
-                                {
-                                    var responseBody = await response.Content.ReadAsStringAsync();
-                                    var downloadUrl = ParseDownloadUrl(responseBody, fileName);
-                                    uploadedUrls.Add(downloadUrl);
-                                }
-                                else
-                                {
-                                    var errorMessage =
-                                        $"Error uploading file {fileName} to Firebase Storage. Status Code: {response.StatusCode}\nContent: {await response.Content.ReadAsStringAsync()}";
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-            }
-
-            return uploadedUrls;
-        }
-
-        public async Task<ApiResponse> DisableProduct(Guid productId)
-        {
-            if (productId == Guid.Empty)
-            {
-                return new ApiResponse
-                {
-                    data = null,
-                    message = "productId is empty",
-                    status = StatusCodes.Status400BadRequest.ToString()
-                };
-            }
-
-            var product = await _unitOfWork.GetRepository<Product>()
-                .SingleOrDefaultAsync(predicate: p => p.Id.Equals(productId));
-            if (product == null)
-            {
-                return new ApiResponse
-                {
-                    data = null,
-                    message = MessageConstant.ProductMessage.ProductNotExist,
-                    status = StatusCodes.Status404NotFound.ToString()
-                };
-            }
-
-            if (product.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()))
-            {
-                product.Status = StatusEnum.Unavailable.GetDescriptionFromEnum();
-                product.UpDate = TimeUtils.GetCurrentSEATime();
-            }
-            else
-            {
-                return new ApiResponse
-                {
-                    data = product.Status,
-                    message = "Product is already disabled",
-                    status = StatusCodes.Status400BadRequest.ToString()
-                };
-            }
-
-            _unitOfWork.GetRepository<Product>().UpdateAsync(product);
-            bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
-
-            if (isSuccessful)
-            {
-                return new ApiResponse
-                {
-                    status = StatusCodes.Status200OK.ToString(),
-                    message = "Product disabled successfully.",
-                    data = product.Status
-                };
-            }
-
-            return new ApiResponse
-            {
-                status = StatusCodes.Status500InternalServerError.ToString(),
-                message = "Failed to disable product.",
-                data = null
-            };
-        }
-
-        private string ParseDownloadUrl(string responseBody, string fileName)
-        {
-            // This assumes the response contains a JSON object with the field "name" which is the path to the uploaded file.
-            var json = JsonDocument.Parse(responseBody);
-            var nameElement = json.RootElement.GetProperty("name");
-            var downloadUrl = $"{FirebaseStorageBaseUrl}/{Uri.EscapeDataString(nameElement.GetString())}?alt=media";
-            return downloadUrl;
-        }
-
-        async Task<ApiResponse> IProductService.UpImageForDescription(IFormFile formFile)
-        {
-            if (formFile == null || formFile.Length == 0)
-            {
-                return new ApiResponse
-                {
-                    status = StatusCodes.Status400BadRequest.ToString(),
-                    message = "File is null or empty",
-                    data = null
-                };
-            }
-
-            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png" };
-            var allowedContentTypes = new[] { "image/jpeg", "image/png" };
-            if (!allowedContentTypes.Contains(formFile.ContentType, StringComparer.OrdinalIgnoreCase) ||
-                !allowedExtensions.Contains(Path.GetExtension(formFile.FileName), StringComparer.OrdinalIgnoreCase))
-            {
-                return new ApiResponse
-                {
-                    status = StatusCodes.Status400BadRequest.ToString(),
-                    message = "Only .jpg, .jpeg, and .png files are allowed",
-                    data = null
-                };
-            }
-
-            long maxFileSize = 300 * 1024;
-            if (formFile.Length > maxFileSize)
-            {
-                return new ApiResponse
-                {
-                    status = StatusCodes.Status400BadRequest.ToString(),
-                    message = "File size must not exceed 300 KB",
-                    data = null
-                };
-            }
-
-            try
-            {
-                using (var client = new HttpClient())
-                {
-                    string fileName = Path.GetFileName(formFile.FileName);
-                    string firebaseStorageUrl =
-                        $"{FirebaseStorageBaseUrl}?uploadType=media&name=images/{Guid.NewGuid()}_{fileName}";
-
-                    using (var stream = new MemoryStream())
-                    {
-                        await formFile.CopyToAsync(stream);
-                        stream.Position = 0;
-
-                        var content = new ByteArrayContent(stream.ToArray());
-                        content.Headers.ContentType = new MediaTypeHeaderValue(formFile.ContentType);
-
-                        var response = await client.PostAsync(firebaseStorageUrl, content);
-
-                        if (response.IsSuccessStatusCode)
-                        {
-                            var responseBody = await response.Content.ReadAsStringAsync();
-                            var dowloadUrl = ParseDownloadUrl(responseBody, fileName);
-                            return new ApiResponse()
-                            {
-                                status = StatusCodes.Status200OK.ToString(),
-                                message = "Upload image successful",
-                                data = dowloadUrl
-                            };
-                        }
-                        else
-                        {
-                            var errorMessage =
-                                $"Error uploading file {fileName} to Firebase Storage. Status Code: {response.StatusCode}\nContent: {await response.Content.ReadAsStringAsync()}";
-                            throw new Exception(errorMessage);
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("An error occurred while uploading the file to Firebase.", ex);
-            }
-        }
-
-        private List<string> ValidateImages(List<IFormFile> imageLinks)
-        {
-            var errorList = new List<string>();
-            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png" };
-            var allowedContentTypes = new[] { "image/jpeg", "image/png" };
-            long maxFileSize = 300 * 1024;
-
-            foreach (var formFile in imageLinks)
-            {
-                if (!allowedContentTypes.Contains(formFile.ContentType, StringComparer.OrdinalIgnoreCase) ||
-                    !allowedExtensions.Contains(Path.GetExtension(formFile.FileName), StringComparer.OrdinalIgnoreCase))
-                {
-                    errorList.Add(
-                        $"File '{formFile.FileName}' is invalid. Only .jpg, .jpeg, and .png files are allowed.");
-                }
-
-                if (formFile.Length > maxFileSize)
-                {
-                    errorList.Add($"File '{formFile.FileName}' is too large. Maximum size is 300 KB.");
-                }
-            }
-
-            return errorList;
-        }
-    }
-}
