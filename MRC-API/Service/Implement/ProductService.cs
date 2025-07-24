@@ -644,3 +644,342 @@ namespace MRC_API.Service.Implement
                 };
             }
         }
+
+        public async Task<ApiResponse> EnableProduct(Guid productId)
+        {
+            if (productId == null)
+            {
+                return new ApiResponse
+                {
+                    data = null,
+                    message = "productId is null",
+                    status = StatusCodes.Status400BadRequest.ToString()
+                };
+            }
+
+            var product = await _unitOfWork.GetRepository<Product>()
+                .SingleOrDefaultAsync(predicate: p => p.Id.Equals(productId));
+            if (product == null)
+            {
+                return new ApiResponse()
+                {
+                    data = null,
+                    message = MessageConstant.ProductMessage.ProductNotExist,
+                    status = StatusCodes.Status400BadRequest.ToString()
+                };
+            }
+
+            if (product.Status.Equals(StatusEnum.Unavailable.ToString()))
+            {
+                product.Status = StatusEnum.Available.ToString();
+            }
+
+            _unitOfWork.GetRepository<Product>().UpdateAsync(product);
+            bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
+
+            if (isSuccessful)
+            {
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "Product updated successfully.",
+                    data = product.Status,
+                };
+            }
+
+            return new ApiResponse
+            {
+                status = StatusCodes.Status500InternalServerError.ToString(), message = "Failed to update product.",
+                data = null
+            };
+        }
+
+   public async Task<ApiResponse> DeleteProduct(Guid productId)
+{
+    if (productId == Guid.Empty)
+    {
+        return new ApiResponse
+        {
+            data = null,
+            message = MessageConstant.ProductMessage.ProductIdEmpty,
+            status = StatusCodes.Status400BadRequest.ToString()
+        };
+    }
+
+    // Find product
+    var existingProduct = await _unitOfWork.GetRepository<Product>()
+        .SingleOrDefaultAsync(predicate: p => p.Id.Equals(productId));
+    if (existingProduct == null)
+    {
+        return new ApiResponse
+        {
+            data = null,
+            message = MessageConstant.ProductMessage.ProductNotExist,
+            status = StatusCodes.Status404NotFound.ToString()
+        };
+    }
+
+    try
+    {
+        // Delete related order details
+        var orderDetails = await _unitOfWork.GetRepository<OrderDetail>()
+            .GetListAsync(predicate: od => od.ProductId.Equals(existingProduct.Id));
+        foreach (var orderDetail in orderDetails)
+        {
+            _unitOfWork.GetRepository<OrderDetail>().DeleteAsync(orderDetail); // Xóa đồng bộ
+        }
+
+        // Delete related cart items
+        var cartItems = await _unitOfWork.GetRepository<CartItem>()
+            .GetListAsync(predicate: ci => ci.ProductId.Equals(existingProduct.Id));
+        foreach (var cartItem in cartItems)
+        {
+            _unitOfWork.GetRepository<CartItem>().DeleteAsync(cartItem); // Xóa đồng bộ
+        }
+
+        // Delete related images
+        var images = await _unitOfWork.GetRepository<Image>()
+            .GetListAsync(predicate: i => i.ProductId.Equals(existingProduct.Id));
+        foreach (var image in images)
+        {
+            _unitOfWork.GetRepository<Image>().DeleteAsync(image); // Xóa đồng bộ
+        }
+
+        // Delete the product
+        _unitOfWork.GetRepository<Product>().DeleteAsync(existingProduct); // Xóa đồng bộ
+        bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
+
+        if (isSuccessful)
+        {
+            return new ApiResponse
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "Product deleted successfully.",
+                data = true
+            };
+        }
+
+        return new ApiResponse
+        {
+            status = StatusCodes.Status500InternalServerError.ToString(),
+            message = "Failed to delete product.",
+            data = null
+        };
+    }
+    catch (Exception ex)
+    {
+        // Ghi log chi tiết lỗi (nếu có logger)
+        // _logger.LogError(ex, "Error deleting product with ID: {ProductId}", productId);
+        return new ApiResponse
+        {
+            status = StatusCodes.Status500InternalServerError.ToString(),
+            message = $"An error occurred while deleting the product: {ex.InnerException?.Message ?? ex.Message}",
+            data = null
+        };
+    }
+}
+        private async Task<List<string>> UploadFilesToFirebase(List<IFormFile> formFiles)
+        {
+            var uploadedUrls = new List<string>();
+
+            try
+            {
+                using (var client = new HttpClient())
+                {
+                    foreach (var formFile in formFiles)
+                    {
+                        if (formFile.Length > 0)
+                        {
+                            string fileName = Path.GetFileName(formFile.FileName);
+                            string firebaseStorageUrl =
+                                $"{FirebaseStorageBaseUrl}?uploadType=media&name=images/{Guid.NewGuid()}_{fileName}";
+
+                            using (var stream = new MemoryStream())
+                            {
+                                await formFile.CopyToAsync(stream);
+                                stream.Position = 0;
+                                var content = new ByteArrayContent(stream.ToArray());
+                                content.Headers.ContentType = new MediaTypeHeaderValue(formFile.ContentType);
+
+                                var response = await client.PostAsync(firebaseStorageUrl, content);
+                                if (response.IsSuccessStatusCode)
+                                {
+                                    var responseBody = await response.Content.ReadAsStringAsync();
+                                    var downloadUrl = ParseDownloadUrl(responseBody, fileName);
+                                    uploadedUrls.Add(downloadUrl);
+                                }
+                                else
+                                {
+                                    var errorMessage =
+                                        $"Error uploading file {fileName} to Firebase Storage. Status Code: {response.StatusCode}\nContent: {await response.Content.ReadAsStringAsync()}";
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+            }
+
+            return uploadedUrls;
+        }
+
+        public async Task<ApiResponse> DisableProduct(Guid productId)
+        {
+            if (productId == Guid.Empty)
+            {
+                return new ApiResponse
+                {
+                    data = null,
+                    message = "productId is empty",
+                    status = StatusCodes.Status400BadRequest.ToString()
+                };
+            }
+
+            var product = await _unitOfWork.GetRepository<Product>()
+                .SingleOrDefaultAsync(predicate: p => p.Id.Equals(productId));
+            if (product == null)
+            {
+                return new ApiResponse
+                {
+                    data = null,
+                    message = MessageConstant.ProductMessage.ProductNotExist,
+                    status = StatusCodes.Status404NotFound.ToString()
+                };
+            }
+
+            if (product.Status.Equals(StatusEnum.Available.GetDescriptionFromEnum()))
+            {
+                product.Status = StatusEnum.Unavailable.GetDescriptionFromEnum();
+                product.UpDate = TimeUtils.GetCurrentSEATime();
+            }
+            else
+            {
+                return new ApiResponse
+                {
+                    data = product.Status,
+                    message = "Product is already disabled",
+                    status = StatusCodes.Status400BadRequest.ToString()
+                };
+            }
+
+            _unitOfWork.GetRepository<Product>().UpdateAsync(product);
+            bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
+
+            if (isSuccessful)
+            {
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "Product disabled successfully.",
+                    data = product.Status
+                };
+            }
+
+            return new ApiResponse
+            {
+                status = StatusCodes.Status500InternalServerError.ToString(),
+                message = "Failed to disable product.",
+                data = null
+            };
+        }
+
+        private string ParseDownloadUrl(string responseBody, string fileName)
+        {
+            // This assumes the response contains a JSON object with the field "name" which is the path to the uploaded file.
+            var json = JsonDocument.Parse(responseBody);
+            var nameElement = json.RootElement.GetProperty("name");
+            var downloadUrl = $"{FirebaseStorageBaseUrl}/{Uri.EscapeDataString(nameElement.GetString())}?alt=media";
+            return downloadUrl;
+        }
+
+        async Task<ApiResponse> IProductService.UpImageForDescription(IFormFile formFile)
+        {
+            if (formFile == null || formFile.Length == 0)
+            {
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status400BadRequest.ToString(),
+                    message = "File is null or empty",
+                    data = null
+                };
+            }
+
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png" };
+            var allowedContentTypes = new[] { "image/jpeg", "image/png" };
+            if (!allowedContentTypes.Contains(formFile.ContentType, StringComparer.OrdinalIgnoreCase) ||
+                !allowedExtensions.Contains(Path.GetExtension(formFile.FileName), StringComparer.OrdinalIgnoreCase))
+            {
+                return new ApiResponse
+                {
+                    status = StatusCodes.Status400BadRequest.ToString(),
+                    message = "Only .jpg, .jpeg, and .png files are allowed",
+                    data = null
+                };
+            }
+
+            try
+            {
+                using (var client = new HttpClient())
+                {
+                    string fileName = Path.GetFileName(formFile.FileName);
+                    string firebaseStorageUrl =
+                        $"{FirebaseStorageBaseUrl}?uploadType=media&name=images/{Guid.NewGuid()}_{fileName}";
+
+                    using (var stream = new MemoryStream())
+                    {
+                        await formFile.CopyToAsync(stream);
+                        stream.Position = 0;
+
+                        var content = new ByteArrayContent(stream.ToArray());
+                        content.Headers.ContentType = new MediaTypeHeaderValue(formFile.ContentType);
+
+                        var response = await client.PostAsync(firebaseStorageUrl, content);
+
+                        if (response.IsSuccessStatusCode)
+                        {
+                            var responseBody = await response.Content.ReadAsStringAsync();
+                            var dowloadUrl = ParseDownloadUrl(responseBody, fileName);
+                            return new ApiResponse()
+                            {
+                                status = StatusCodes.Status200OK.ToString(),
+                                message = "Upload image successful",
+                                data = dowloadUrl
+                            };
+                        }
+                        else
+                        {
+                            var errorMessage =
+                                $"Error uploading file {fileName} to Firebase Storage. Status Code: {response.StatusCode}\nContent: {await response.Content.ReadAsStringAsync()}";
+                            throw new Exception(errorMessage);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("An error occurred while uploading the file to Firebase.", ex);
+            }
+        }
+
+        private List<string> ValidateImages(List<IFormFile> imageLinks)
+        {
+            var errorList = new List<string>();
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png" };
+            var allowedContentTypes = new[] { "image/jpeg", "image/png" };
+
+            foreach (var formFile in imageLinks)
+            {
+                if (!allowedContentTypes.Contains(formFile.ContentType, StringComparer.OrdinalIgnoreCase) ||
+                    !allowedExtensions.Contains(Path.GetExtension(formFile.FileName), StringComparer.OrdinalIgnoreCase))
+                {
+                    errorList.Add(
+                        $"File '{formFile.FileName}' is invalid. Only .jpg, .jpeg, and .png files are allowed.");
+                }
+            }
+
+            return errorList;
+        }
+    }
+}
