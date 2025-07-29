@@ -88,7 +88,7 @@
         {
             public const string GoogleAuthenticationEndpoint = ApiEndpoint + "/google-auth";
             public const string GoogleLogin = GoogleAuthenticationEndpoint + "/login";
-            public const string GoogleSignIn = GoogleAuthenticationEndpoint + "/signin-google/";
+            public const string GoogleSignIn = GoogleAuthenticationEndpoint + "/signin-google";
 
         }
 
