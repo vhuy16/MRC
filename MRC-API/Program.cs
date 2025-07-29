@@ -128,6 +128,7 @@ else
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseSwagger();
 app.UseCors(CorsConstant.PolicyName);
+app.UseCookiePolicy();
 app.UseAuthentication();
 app.UseHttpsRedirection();
 app.UseAuthorization();
