@@ -83,11 +83,14 @@ namespace Prepare
             .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true).Build();
             services.AddAuthentication(options =>
             {
+                // options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                // options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                // options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                // options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                // options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                 options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-                //options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
                 options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
             }).AddJwtBearer(options =>
             {
                 options.TokenValidationParameters = new TokenValidationParameters()
